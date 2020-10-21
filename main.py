@@ -6,6 +6,7 @@ class python_aer:
 
     def __init__(self):
         self.root = tk.Tk()
+        self.root.iconphoto(False,tk.PhotoImage(file="./atc.png"))
         # self.root.columnconfigure(0, weight=1)
         # self.root.rowconfigure(0, weight=1)
         self.motorvarlist = {}
