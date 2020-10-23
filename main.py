@@ -1,19 +1,37 @@
 import tkinter as tk
-from tkinter import ttk
-
+from tkinter import ttk,messagebox
+import usb1
 
 class python_aer:
 
     def __init__(self):
+        #Initialize GUI: create root Tk object
         self.root = tk.Tk()
+
+        #Set the icon
         self.root.iconphoto(False,tk.PhotoImage(file="./atc.png"))
-        # self.root.columnconfigure(0, weight=1)
-        # self.root.rowconfigure(0, weight=1)
+
+        #Create dictionaries where the interface data will be stored
         self.motorvarlist = {}
         self.jointvarlist = {}
         self.scanparametervarlist = {}
-        return
 
+        #Standalone variable to control if USB is enabled
+        self.checked = False
+
+        #Set vendor and product id for USB connection
+        self.VID = 0x10c4
+        self.PID = 0x0000
+
+        #Handle for USB connection
+        self.handle = None
+
+
+        return
+    def alert(self,text):
+        messagebox.showinfo(message=text)
+
+    
     def render_motor(self, motor_number, row, col):
         labels = ["EI_FD_bank3_18bits", "PF_FD_bank3_22bits",
                   "PI_FD_bank3_18bits", "leds", "ref", "spike_expansor"]
@@ -114,10 +132,34 @@ class python_aer:
         ttk.Button(labelframe,text="SwitchOffLEDS",command=self.ConfigureInit).grid(column=3,row=6,sticky=(tk.W,tk.E))
         ttk.Button(labelframe,text="GenerateConfig",command=self.ConfigureInit).grid(column=1,row=7,sticky=(tk.W,tk.E))
         ttk.Button(labelframe,text="LoadConfig",command=self.ConfigureInit).grid(column=2,row=7,sticky=(tk.W,tk.E))
-        
-        
+
+    def render_usbEnable(self,row,col):
+
+        labelframe = ttk.LabelFrame(self.root, text="USB")
+        labelframe.grid(column=col, row=row, sticky=(
+            tk.N, tk.W), padx=5, pady=5)
+
+        checked = tk.BooleanVar()
 
 
+        ttk.Checkbutton(labelframe,text="Open device",command=self.openUSB,variable=checked,onvalue=True,offvalue=False).grid(column=1,row=3,sticky=(tk.W))
+        self.checked = checked
+    
+    def openUSB(self):
+
+        if self.checked.get() == False:
+            return
+        
+        else:
+            with usb1.USBContext() as context:
+                self.handle = context.openByVendorIDAndProductID(self.VID,self.PID)
+
+                if self.handle == None:
+                    self.alert("Unable to open device. Try again or check wiring")
+                    
+            
+
+        
 
     def render_gui(self):
 
@@ -133,6 +175,7 @@ class python_aer:
         self.frame_list.append(self.render_joints(3, 1))
         self.frame_list.append(self.render_scan_parameters(3, 2))
         self.render_buttons(3, 3)
+        self.render_usbEnable(4,1)
 
         self.root.mainloop()
 
@@ -147,6 +190,29 @@ class python_aer:
             self.scanparametervarlist[key].set(45)
 
         return
+    
+    def sendCommand16(self, cmd, data1, data2, spiEnable):
+        
+        if(self.devhandle == None):
+            self.alert("There is no opened device. Try opening one first")
+        
+        else:
+            header = bytearray()
+            header.append('A')
+            header.append('T')
+            header.append('C')
+            header.append(0x01)
+            header.append(0x02)
+            header.append(0x00)
+            header.append(0x00)
+            header.append(0x00)
+            header.append(cmd)
+            header.append(1 if spiEnable else 0)
+
+            pass
+
+
+        
 
 if __name__ == "__main__":
 
