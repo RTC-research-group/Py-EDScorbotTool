@@ -1,6 +1,10 @@
 import tkinter as tk
 from tkinter import ttk,messagebox
-import usb1
+import usb.core
+import usb.util
+import json
+import copy 
+from tkinter import filedialog
 
 class python_aer:
 
@@ -12,10 +16,11 @@ class python_aer:
         self.root.iconphoto(False,tk.PhotoImage(file="./atc.png"))
 
         #Create dictionaries where the interface data will be stored
-        self.motorvarlist = {}
-        self.jointvarlist = {}
-        self.scanparametervarlist = {}
-
+        self.d = {}
+        self.d["Motor Config"] = {}
+        self.d["Joints"] = {}
+        self.d["Scan Parameters"] = {}
+        
         #Standalone variable to control if USB is enabled
         self.checked = False
 
@@ -24,7 +29,7 @@ class python_aer:
         self.PID = 0x0000
 
         #Handle for USB connection
-        self.handle = None
+        self.dev = None
 
 
         return
@@ -54,7 +59,7 @@ class python_aer:
             labeltext = label + "_M" + str(motor_number)
             ttk.Label(labelframe, text=labeltext).grid(
                 column=1, row=row_, sticky=(tk.W))
-            self.motorvarlist[labeltext] = var
+            self.d["Motor Config"][labeltext] = var
             # ttk.Scale(labelframe,from_=0,to=65535,orient=tk.HORIZONTAL,variable=var).grid(column=3,row=row,sticky=(tk.W))
 
         return labelframe
@@ -80,7 +85,7 @@ class python_aer:
             ttk.Label(labelframe, text=labeltext).grid(
                 column=1, row=row_, sticky=tk.W)
             i += 1
-            self.jointvarlist[labeltext] = var
+            self.d["Joints"][labeltext] = var
 
         return labelframe
 
@@ -101,7 +106,7 @@ class python_aer:
             labeltext = "scan_" + label
             ttk.Label(labelframe, text=labeltext).grid(
                 column=1, row=row_, sticky=tk.W)
-            self.scanparametervarlist[labeltext] = var
+            self.d["Scan Parameters"][labeltext] = var
 
         return labelframe
 
@@ -130,8 +135,8 @@ class python_aer:
         ttk.Button(labelframe,text="SetAERIN_ref",command=self.ConfigureInit).grid(column=1,row=6,sticky=(tk.W,tk.E))
         ttk.Button(labelframe,text="SetUSBSPI_ref",command=self.ConfigureInit).grid(column=2,row=6,sticky=(tk.W,tk.E))
         ttk.Button(labelframe,text="SwitchOffLEDS",command=self.ConfigureInit).grid(column=3,row=6,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="GenerateConfig",command=self.ConfigureInit).grid(column=1,row=7,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="LoadConfig",command=self.ConfigureInit).grid(column=2,row=7,sticky=(tk.W,tk.E))
+        ttk.Button(labelframe,text="DumpConfig",command=self.dumpConfig).grid(column=1,row=7,sticky=(tk.W,tk.E))
+        ttk.Button(labelframe,text="LoadConfig",command=self.loadConfig).grid(column=2,row=7,sticky=(tk.W,tk.E))
 
     def render_usbEnable(self,row,col):
 
@@ -148,17 +153,62 @@ class python_aer:
     def openUSB(self):
 
         if self.checked.get() == False:
+            usb.util.release_interface(self.dev,0)
+            self.dev = None
+            print("Device disconnected successfully")
             return
         
         else:
-            with usb1.USBContext() as context:
-                self.handle = context.openByVendorIDAndProductID(self.VID,self.PID)
+            dev = usb.core.find(idVendor=self.VID,idProduct=self.PID)
+            if dev is None:
+                self.alert("Device not found, try again or check the connection")
+            else:
+                
+                dev.set_configuration()
+                usb.util.claim_interface(dev,0)
+                self.dev = dev
+                print("Device found and initialized successfully")
 
-                if self.handle == None:
-                    self.alert("Unable to open device. Try again or check wiring")
-                    
+                
+
+    
+    def dumpConfig(self):
+        d = {}
+        d["Motor Config"] = {}
+        d["Joints"] = {}
+        d["Scan Parameters"] = {}
+        for key in self.d["Motor Config"].keys():
+            d["Motor Config"][key] =  self.d["Motor Config"][key].get()
+        
+        for key in self.d["Joints"].keys():
+            d["Joints"][key] = self.d["Joints"][key].get()
+        
+        for key in self.d["Scan Parameters"].keys():
+            d["Scan Parameters"][key] = self.d["Scan Parameters"][key].get()
+
+        
+        with open('config.json','w') as f:
+            json.dump(d,f)
+        
+        print("Settings generated: "+str(d))
+
             
+    def loadConfig(self):
+       
+        filename = filedialog.askopenfile(mode="r")
+        obj = filename.read()
+        j = json.loads(obj)
+        for key in self.d["Motor Config"].keys():
+            self.d["Motor Config"][key].set(j["Motor Config"][key])
+        
+        for key in self.d["Joints"].keys():
+            self.d["Joints"][key].set(j["Joints"][key])
+        
+        for key in self.d["Scan Parameters"].keys():
+            self.d["Scan Parameters"][key].set(j["Scan Parameters"][key])
 
+        
+        pass
         
 
     def render_gui(self):
@@ -180,6 +230,20 @@ class python_aer:
         self.root.mainloop()
 
     def ConfigureInit(self):
+        
+        for key in self.d["Motor Config"].keys():
+            self.d["Motor Config"][key].set(45)
+        
+        for key in self.d["Joints"].keys():
+            self.d["Joints"][key].set(45)
+        
+        for key in self.d["Scan Parameters"].keys():
+            self.d["Scan Parameters"][key].set(45)
+
+        return
+    
+    def ConfigureInit2(self):
+        
         for key in self.motorvarlist.keys():
             self.motorvarlist[key].set(45)
         
@@ -191,9 +255,10 @@ class python_aer:
 
         return
     
+
     def sendCommand16(self, cmd, data1, data2, spiEnable):
         
-        if(self.devhandle == None):
+        if(self.dev == None):
             self.alert("There is no opened device. Try opening one first")
         
         else:
@@ -207,8 +272,14 @@ class python_aer:
             header.append(0x00)
             header.append(0x00)
             header.append(cmd)
-            header.append(1 if spiEnable else 0)
+            header.append(0 if spiEnable else 1)
 
+            cfg = self.dev.get_active_configuration()
+            intf = cfg[(0,0)]
+
+            ep = usb.util.find_descriptor(intf,custom_match=lambda e: usb.util.endpoint_address == 0x02)
+            assert ep is not None
+            ep.write(header)
             pass
 
 
@@ -218,5 +289,4 @@ if __name__ == "__main__":
 
     config = python_aer()
     config.render_gui()
-
     pass
