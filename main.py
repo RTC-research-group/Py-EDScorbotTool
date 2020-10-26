@@ -24,19 +24,22 @@ class python_aer:
         #Standalone variable to control if USB is enabled
         self.checked = False
 
-        #Set vendor and product id for USB connection
+        #Set USB constants needed
         self.VID = 0x10c4
         self.PID = 0x0000
+        self.ENDPOINT_OUT = 0x02
+        self.ENDPOINT_IN = 0x81
+        self.PACKET_LENGTH = 64
 
         #Handle for USB connection
         self.dev = None
 
 
         return
+    
     def alert(self,text):
         messagebox.showinfo(message=text)
 
-    
     def render_motor(self, motor_number, row, col):
         labels = ["EI_FD_bank3_18bits", "PF_FD_bank3_22bits",
                   "PI_FD_bank3_18bits", "leds", "ref", "spike_expansor"]
@@ -169,9 +172,6 @@ class python_aer:
                 self.dev = dev
                 print("Device found and initialized successfully")
 
-                
-
-    
     def dumpConfig(self):
         d = {}
         d["Motor Config"] = {}
@@ -188,11 +188,12 @@ class python_aer:
 
         
         with open('config.json','w') as f:
-            json.dump(d,f)
-        
-        print("Settings generated: "+str(d))
-
             
+            json.dump(d,f,indent=2)
+            jsondict = json.dumps(d,indent=2)
+            print("Settings generated: \n"+jsondict)
+        
+        
     def loadConfig(self):
        
         filename = filedialog.askopenfile(mode="r")
@@ -209,8 +210,7 @@ class python_aer:
 
         
         pass
-        
-
+    
     def render_gui(self):
 
         self.root.title("ATCEDScorbotConfig")
@@ -255,33 +255,53 @@ class python_aer:
 
         return
     
-
     def sendCommand16(self, cmd, data1, data2, spiEnable):
         
         if(self.dev == None):
             self.alert("There is no opened device. Try opening one first")
+            return
         
         else:
-            header = bytearray()
-            header.append('A')
-            header.append('T')
-            header.append('C')
-            header.append(0x01)
-            header.append(0x02)
-            header.append(0x00)
-            header.append(0x00)
-            header.append(0x00)
-            header.append(cmd)
-            header.append(0 if spiEnable else 1)
+            dataBuffer = bytearray(length=self.PACKET_LENGTH)
+            dataBuffer[0] = ord('A')
+            dataBuffer[1] = ord('T')
+            dataBuffer[2] = ord('C')
+            dataBuffer[3] = 0x01 # Command always 1 for SPI upload.
+            dataBuffer[4] = 0x02 # Data length always 2 for 2 bytes.
+            dataBuffer[5] = 0x00
+            dataBuffer[6] = 0x00
+            dataBuffer[7] = 0x00
+            dataBuffer[8] = cmd
+            dataBuffer[9] = 0 if spiEnable else 1
 
-            cfg = self.dev.get_active_configuration()
-            intf = cfg[(0,0)]
+            # ep = usb.util.find_descriptor(intf,custom_match=lambda e: usb.util.endpoint_address == 0x02)
+            # assert ep is not None
 
-            ep = usb.util.find_descriptor(intf,custom_match=lambda e: usb.util.endpoint_address == 0x02)
-            assert ep is not None
-            ep.write(header)
+            #Library determines automatically transfer type via endpoint addresses
+            written = self.dev.write(self.ENDPOINT_OUT,dataBuffer)
+            if(written != 64): #64 is packet length
+                print("Failed to transfer whole packet")
+            
+            dataBuffer[0] = cmd
+            dataBuffer[1] = data1
+            dataBuffer[2] = data2
+            
+            written = self.dev.write(self.ENDPOINT_OUT,dataBuffer)
+            
+            if(written != 64): #64 is packet length
+                print("Failed to transfer whole packet")
+
+
             pass
 
+    def SendFPGAReset(self,spiEnable):
+
+        if self.dev==None:
+            self.alert("There is no opened device. Try opening one first")
+            return
+        else:
+            dataBuffer = bytearray(length=self.PACKET_LENGTH)
+            
 
         
 
@@ -289,4 +309,5 @@ if __name__ == "__main__":
 
     config = python_aer()
     config.render_gui()
+    
     pass
