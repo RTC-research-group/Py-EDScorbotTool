@@ -67,7 +67,7 @@ class python_aer:
 
         Returns the labelframe in which the inputs are rendered
         '''
-        labels = ["EI_FD_bank3_18bits", "PF_FD_bank3_22bits",
+        labels = ["EI_FD_bank3_18bits", "PD_FD_bank3_22bits",
                   "PI_FD_bank3_18bits", "leds", "ref", "spike_expansor"]
         labelframe = ttk.LabelFrame(
             self.root, text="Motor " + str(motor_number))
@@ -364,6 +364,7 @@ class python_aer:
             self.alert("No device opened. Try checking USB option first")
             return
         else:
+            
             if self.checked.get():
                 for i in range(0,6):
                     #Motor 1
@@ -378,7 +379,7 @@ class python_aer:
                     self.sendCommand16(0x09, ((512 >> 8) & 0xFF),((512) & 0xFF), True) #FD I&G bank 0 M1
                     self.sendCommand16(0x0A, ((512 >> 8) & 0xFF), ((512) & 0xFF), True) #FD I&G bank 1 M1
                     self.sendCommand16(0x0B, ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M1
-                    self.sendCommand16(0x0C, ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 3 M1
+                    self.sendCommand16(0x0C, ((self.d["Motor Config"]["PD_FD_bank3_18bits_M1"].get() >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 3 M1
                     self.sendCommand16(0x12, (0x00),  (0x0), True); #spike expansor M1
                     self.sendCommand16(0x13, (0x00),  (0x0f), True); #d banks disabled M1
                     self.sendCommand16(0x14, ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M1
@@ -550,7 +551,42 @@ class python_aer:
             self.d["Scan Parameters"][key].set(45)
 
         return
-    
+    def SendCommandJoint1(self,ref):
+
+        self.sendCommand16( 0,  (0x00), ((self.d["Motor Config"]["leds_M1"].get()) & 0xFF), True); #LEDs M1
+        self.sendCommand16( 0x03,  (0x00),  ((3)&0xFF), True); #I banks disabled M1
+        self.sendCommand16( 0x04,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M1
+        self.sendCommand16( 0x05,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 1 M1
+        self.sendCommand16( 0x06,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 2 M1
+        self.sendCommand16( 0x07,  ((PI_FD_bank3_18bits_M1 >> 8) & 0xFF),  ((PI_FD_bank3_18bits_M1) & 0xFF), True); #FD I&G bank 3 M1
+        self.sendCommand16( 0x08,  (0x00),  ((512)&0xFF), True); #D banks disabled M1
+        self.sendCommand16( 0x09,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M1
+        self.sendCommand16( 0x0A,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 1 M1
+        self.sendCommand16( 0x0B,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 2 M1
+        self.sendCommand16( 0x0C,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 3 M1
+        self.sendCommand16( 0x12,  ((SpikeExpansor_M1 >> 8) & 0xFF),  ((SpikeExpansor_M1) & 0xFF), True); #spike expansor M1
+        self.sendCommand16( 0x13,  (0x00),  ((EI_bank_select_M1)&0xFF), True); #EI bank enabled M1
+        self.sendCommand16( 0x14,  ((EI_FD_bank0_12bits_M1 >> 8) & 0xFF),  ((EI_FD_bank0_12bits_M1) & 0xFF), True); #FD I&G bank 0 M1
+        self.sendCommand16( 0x15,  ((EI_FD_bank1_14bits_M1 >> 8) & 0xFF),  ((EI_FD_bank1_14bits_M1) & 0xFF), True); #FD I&G bank 1 M1
+        self.sendCommand16( 0x16,  ((EI_FD_bank2_16bits_M1 >> 8) & 0xFF),  ((EI_FD_bank2_16bits_M1) & 0xFF), True); #FD I&G bank 2 M1
+        self.sendCommand16( 0x17,  ((EI_FD_bank3_18bits_M1 >> 8) & 0xFF),  ((EI_FD_bank3_18bits_M1) & 0xFF), True); #FD I&G bank 3 M1
+        #self.sendCommand16( 0,  0,  0, false); #LEDs M1 off
+        self.sendCommand16( 0x02,  ((Ref_M1 >> 8) & 0xFF),  ((Ref_M1) & 0xFF), True); #Ref M1 0
+        self.sendCommand16( 0x02,  ((Ref_M1 >> 8) & 0xFF),  ((Ref_M1) & 0xFF), True); #Ref M1 0
+        self.sendCommand16( 0x02,  ((Ref_M1 >> 8) & 0xFF),  ((Ref_M1) & 0xFF), True); #Ref M1 0
+        pass
+
+    def ConfigureSPID(self):
+        if (((self.dev and self.checked.get()) == None) or (self.checked.get() == False)):
+            self.alert("No device opened. Try checking USB option first")
+            return
+        else:
+            if self.checked.get():
+                for i in range(0,6):
+                    self.SendCommandJoint(d["Motor Config"]["ref_M1"].get())
+
+        pass
+
     def sendCommand16(self, cmd, data1, data2, spiEnable):
         '''
         This function allows to send 2 bytes of data to 
