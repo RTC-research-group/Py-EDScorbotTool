@@ -413,6 +413,47 @@ class python_aer:
                 print("Failed to transfer whole packet")
 
 
+    def readSensor(self,sensor):
+
+        if(self.dev == None):
+            self.alert("There is no opened device. Try opening one first")
+            return   
+
+        else:
+            #Allocate data buffer as a byte array
+            dataBuffer = bytearray(self.PACKET_LENGTH)
+            
+            #Then fill it for the first transfer
+            dataBuffer[0] = ord('A')
+            dataBuffer[1] = ord('T')
+            dataBuffer[2] = ord('C')
+            dataBuffer[3] = 0x02 # Command always 2 for reading operation
+            dataBuffer[4] = 64 # Data length always 3 for 3 bytes.
+
+            readBuffer = bytearray(self.PACKET_LENGTH)
+
+            written = self.dev.write(self.ENDPOINT_OUT,dataBuffer)
+
+            #Check for a correct transfer
+            if(written != self.PACKET_LENGTH):
+                print("Failed to transfer whole packet")
+
+
+            read = self.dev.read(self.ENDPOINT_IN,readBuffer)
+            if read==0:
+                 print("Failed to receive whole packet")
+            
+            if readBuffer[34] == sensor:
+                sensor_data = (0x0ff & readBuffer[35])*256 + readBuffer[36])
+            else:
+                sensor_data = -1
+
+            return sensor_data
+
+            
+            
+              
+
     def SendFPGAReset(self,spiEnable):
 
         if self.dev==None:
