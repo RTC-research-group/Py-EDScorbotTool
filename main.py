@@ -667,7 +667,7 @@ class python_aer:
                  print("Failed to receive whole packet")
             
             if readBuffer[34] == sensor:
-                sensor_data = (0x0ff & readBuffer[35])*256 + readBuffer[36])
+                sensor_data = (0x0ff & readBuffer[35])*256 + readBuffer[36]
             else:
                 sensor_data = -1
 
