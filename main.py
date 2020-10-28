@@ -1,10 +1,15 @@
+from datetime import time
 import tkinter as tk
 from tkinter import ttk,messagebox
 import usb.core
 import usb.util
 import json
-import copy 
 from tkinter import filedialog
+import datetime
+import logging
+import math
+
+
 
 class python_aer:
 
@@ -47,7 +52,11 @@ class python_aer:
 
 
         return
-    
+    def now(self):
+
+        return datetime.datetime.now()/1000
+
+
     def alert(self,text):
         '''
         This function creates a messagebox with the text parameter as data
@@ -884,9 +893,475 @@ class python_aer:
             return sensor_data
 
             
-            
-              
+    def scanMotor1(self):
+        
+        if self.dev==None:
+            self.alert("There is no opened device. Try opening one first")
+            return
+        # Convert ms time into clock cycles.
+        scanInitValue = self.d["Scan Parameters"]["scanInitValue"].get()
+        scanFinalValue = self.d["Scan Parameters"]["scanFinalValue"].get()
+        scanStepValue = self.d["Scan Parameters"]["scanStepValue"].get()
+        scanWaitTime = self.d["Scan Parameters"]["scanWaitTime"].get()
 
+        if self.checked.get():
+            
+            #Fecha en str, formato: yyyy_MM_dd_HH_mm_ss
+
+            date = datetime.datetime.now()
+            timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
+            #Abrir archivo de log con el nombre de la fecha
+            logging.basicConfig(filename='./logs/Scan1_' + timeStamp + '.log',filemode='w')
+            logging.info("SMALL ED-Scorbot Joint1 Scan Log file")
+
+            #
+            self.sendCommand16( 0x03,  (0x00),  ((3)&0xFF), True) #I banks disabled M1 PI_bank_select_M1 = 3
+            self.sendCommand16( 0x07,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
+            self.sendCommand16( 0x08,  (0x00),  ((3)&0xFF), True) #D banks disabled M1 PD_bank_select_M1 = 3
+            self.sendCommand16( 0x0C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
+            self.sendCommand16( 0x12,  ((self.d["Motor Config"]["SpikeExpansor_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M1"].get()) & 0xFF), True) #spike expansor M1
+            self.sendCommand16( 0x13,  (0x00),  ((3)&0xFF), True) #EI bank enabled M1 EI_bank_select_M1 = 3
+            self.sendCommand16( 0x17,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
+            self.sendCommand16( 0x02,  ((scanInitValue >> 8) & 0xFF),  ((scanInitValue) & 0xFF), True) #Ref M1 0
+
+
+            logging.info("Time\tM1 Ref\tJ1 Pos\tM2 Ref\tJ2 Pos\tM3 Ref\tJ3 Pos\tM4 Ref\tJ4 Pos\tM5 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
+
+            start = self.now()
+            now = self.now()
+            while (abs(now-start) < 1500):
+                lap = self.now()
+                while(abs(now-lap) < 100):
+                    now = self.now()
+                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.now()-start),scanInitValue,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                now = self.now()
+
+
+            for j in range(0,5):
+                i = scanInitValue
+                while(i <= scanFinalValue):
+                    self.sendCommand16( 0x02,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True); #Ref M1 0
+
+                    start2 = self.now()
+                    now = self.now()
+
+                    while (abs(now-start2) < scanWaitTime):
+                        lap = self.now()
+                        while((now-lap) < 100):
+                            now = self.now()
+                        logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                        now = self.now()
+                    i = i + scanStepValue
+                
+                i = scanFinalValue
+                while(i>=scanInitValue):
+                    self.sendCommand16( 0x02,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True); #Ref M1 0
+
+
+                    start2 = self.now()
+                    now = self.now()
+                    while (abs(now-start2) < scanWaitTime):
+                        lap = self.now()
+                        while((now-lap) < 100):
+                            now = self.now()
+                        logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                        now = self.now()
+                    
+                    i = i - scanStepValue
+                    
+        pass
+                      
+    def scanMotor2(self):
+        
+        if self.dev==None:
+            self.alert("There is no opened device. Try opening one first")
+            return
+        # Convert ms time into clock cycles.
+        scanInitValue = self.d["Scan Parameters"]["scanInitValue"].get()
+        scanFinalValue = self.d["Scan Parameters"]["scanFinalValue"].get()
+        scanStepValue = self.d["Scan Parameters"]["scanStepValue"].get()
+        scanWaitTime = self.d["Scan Parameters"]["scanWaitTime"].get()
+
+        if self.checked.get():
+            
+            #Fecha en str, formato: yyyy_MM_dd_HH_mm_ss
+
+            date = datetime.datetime.now()
+            timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
+            #Abrir archivo de log con el nombre de la fecha
+            logging.basicConfig(filename='./logs/Scan2_' + timeStamp + '.log',filemode='w')
+            logging.info("SMALL ED-Scorbot Joint2 Scan Log file")
+
+            #
+            self.sendCommand16( 0x23,  (0x00),  ((3)&0xFF), True) #I banks disabled M2 PI_bank_select_M2 = 3
+            self.sendCommand16( 0x27,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M2
+            self.sendCommand16( 0x28,  (0x00),  ((3)&0xFF), True) #D banks disabled M2 PD_bank_select_M2 = 3
+            self.sendCommand16( 0x2C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M2
+            self.sendCommand16( 0x32,  ((self.d["Motor Config"]["SpikeExpansor_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M2"].get()) & 0xFF), True) #spike expansor M2
+            self.sendCommand16( 0x33,  (0x00),  ((3)&0xFF), True) #EI bank enabled M2 EI_bank_select_M2 = 3
+            self.sendCommand16( 0x37,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M2
+            self.sendCommand16( 0x22,  ((scanInitValue >> 8) & 0xFF),  ((scanInitValue) & 0xFF), True) #Ref M2 0
+
+
+            logging.info("Time\tM2 Ref\tJ1 Pos\tM2 Ref\tJ2 Pos\tM3 Ref\tJ3 Pos\tM4 Ref\tJ4 Pos\tM5 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
+
+            start = self.now()
+            now = self.now()
+            while (abs(now-start) < 1500):
+                lap = self.now()
+                while(abs(now-lap) < 100):
+                    now = self.now()
+                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.now()-start),scanInitValue,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                now = self.now()
+
+
+            for j in range(0,5):
+                i = scanInitValue
+                while(i <= scanFinalValue):
+                    self.sendCommand16( 0x22,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True); #Ref M2 0
+
+                    start2 = self.now()
+                    now = self.now()
+
+                    while (abs(now-start2) < scanWaitTime):
+                        lap = self.now()
+                        while((now-lap) < 100):
+                            now = self.now()
+                        logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                        now = self.now()
+                    i = i + scanStepValue
+                
+                i = scanFinalValue
+                while(i>=scanInitValue):
+                    self.sendCommand16( 0x22,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True); #Ref M2 0
+
+
+                    start2 = self.now()
+                    now = self.now()
+                    while (abs(now-start2) < scanWaitTime):
+                        lap = self.now()
+                        while((now-lap) < 100):
+                            now = self.now()
+                        logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                        now = self.now()
+                    
+                    i = i - scanStepValue
+                    
+        pass
+              
+    def scanMotor3(self):
+        
+        if self.dev==None:
+            self.alert("There is no opened device. Try opening one first")
+            return
+        # Convert ms time into clock cycles.
+        scanInitValue = self.d["Scan Parameters"]["scanInitValue"].get()
+        scanFinalValue = self.d["Scan Parameters"]["scanFinalValue"].get()
+        scanStepValue = self.d["Scan Parameters"]["scanStepValue"].get()
+        scanWaitTime = self.d["Scan Parameters"]["scanWaitTime"].get()
+
+        if self.checked.get():
+            
+            #Fecha en str, formato: yyyy_MM_dd_HH_mm_ss
+
+            date = datetime.datetime.now()
+            timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
+            #Abrir archivo de log con el nombre de la fecha
+            logging.basicConfig(filename='./logs/Scan3_' + timeStamp + '.log',filemode='w')
+            logging.info("SMALL ED-Scorbot Joint3 Scan Log file")
+
+            #
+            self.sendCommand16( 0x43,  (0x00),  ((3)&0xFF), True) #I banks disabled M3 PI_bank_select_M3 = 3
+            self.sendCommand16( 0x47,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M3
+            self.sendCommand16( 0x48,  (0x00),  ((3)&0xFF), True) #D banks disabled M3 PD_bank_select_M3 = 3
+            self.sendCommand16( 0x4C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M3
+            self.sendCommand16( 0x52,  ((self.d["Motor Config"]["SpikeExpansor_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M3"].get()) & 0xFF), True) #spike expansor M3
+            self.sendCommand16( 0x53,  (0x00),  ((3)&0xFF), True) #EI bank enabled M3 EI_bank_select_M3 = 3
+            self.sendCommand16( 0x57,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M3
+            self.sendCommand16( 0x42,  ((scanInitValue >> 8) & 0xFF),  ((scanInitValue) & 0xFF), True) #Ref M3 0
+
+
+            logging.info("Time\tM3 Ref\tJ1 Pos\tM3 Ref\tJ2 Pos\tM3 Ref\tJ3 Pos\tM4 Ref\tJ4 Pos\tM5 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
+
+            start = self.now()
+            now = self.now()
+            while (abs(now-start) < 1500):
+                lap = self.now()
+                while(abs(now-lap) < 100):
+                    now = self.now()
+                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.now()-start),scanInitValue,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                now = self.now()
+
+
+            for j in range(0,5):
+                i = scanInitValue
+                while(i <= scanFinalValue):
+                    self.sendCommand16( 0x42,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True); #Ref M3 0
+
+                    start2 = self.now()
+                    now = self.now()
+
+                    while (abs(now-start2) < scanWaitTime):
+                        lap = self.now()
+                        while((now-lap) < 100):
+                            now = self.now()
+                        logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                        now = self.now()
+                    i = i + scanStepValue
+                
+                i = scanFinalValue
+                while(i>=scanInitValue):
+                    self.sendCommand16( 0x42,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True); #Ref M3 0
+
+
+                    start2 = self.now()
+                    now = self.now()
+                    while (abs(now-start2) < scanWaitTime):
+                        lap = self.now()
+                        while((now-lap) < 100):
+                            now = self.now()
+                        logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                        now = self.now()
+                    
+                    i = i - scanStepValue
+                    
+        pass
+      
+            
+    def scanMotor4(self):
+        
+        if self.dev==None:
+            self.alert("There is no opened device. Try opening one first")
+            return
+        # Convert ms time into clock cycles.
+        scanInitValue = self.d["Scan Parameters"]["scanInitValue"].get()
+        scanFinalValue = self.d["Scan Parameters"]["scanFinalValue"].get()
+        scanStepValue = self.d["Scan Parameters"]["scanStepValue"].get()
+        scanWaitTime = self.d["Scan Parameters"]["scanWaitTime"].get()
+
+        if self.checked.get():
+            
+            #Fecha en str, formato: yyyy_MM_dd_HH_mm_ss
+
+            date = datetime.datetime.now()
+            timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
+            #Abrir archivo de log con el nombre de la fecha
+            logging.basicConfig(filename='./logs/Scan4_' + timeStamp + '.log',filemode='w')
+            logging.info("SMALL ED-Scorbot Joint4 Scan Log file")
+
+            #
+            self.sendCommand16( 0x63,  (0x00),  ((3)&0xFF), True) #I banks disabled M4 PI_bank_select_M4 = 3
+            self.sendCommand16( 0x67,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
+            self.sendCommand16( 0x68,  (0x00),  ((3)&0xFF), True) #D banks disabled M4 PD_bank_select_M4 = 3
+            self.sendCommand16( 0x6C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
+            self.sendCommand16( 0x72,  ((self.d["Motor Config"]["SpikeExpansor_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M4"].get()) & 0xFF), True) #spike expansor M4
+            self.sendCommand16( 0x73,  (0x00),  ((3)&0xFF), True) #EI bank enabled M4 EI_bank_select_M4 = 3
+            self.sendCommand16( 0x77,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
+            self.sendCommand16( 0x62,  ((scanInitValue >> 8) & 0xFF),  ((scanInitValue) & 0xFF), True) #Ref M4 0
+
+
+            logging.info("Time\tM4 Ref\tJ1 Pos\tM4 Ref\tJ2 Pos\tM4 Ref\tJ3 Pos\tM4 Ref\tJ4 Pos\tM5 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
+
+            start = self.now()
+            now = self.now()
+            while (abs(now-start) < 1500):
+                lap = self.now()
+                while(abs(now-lap) < 100):
+                    now = self.now()
+                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.now()-start),scanInitValue,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                now = self.now()
+
+
+            for j in range(0,5):
+                i = scanInitValue
+                while(i <= scanFinalValue):
+                    self.sendCommand16( 0x62,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True); #Ref M4 0
+
+                    start2 = self.now()
+                    now = self.now()
+
+                    while (abs(now-start2) < scanWaitTime):
+                        lap = self.now()
+                        while((now-lap) < 100):
+                            now = self.now()
+                        logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                        now = self.now()
+                    i = i + scanStepValue
+                
+                i = scanFinalValue
+                while(i>=scanInitValue):
+                    self.sendCommand16( 0x62,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True); #Ref M4 0
+
+
+                    start2 = self.now()
+                    now = self.now()
+                    while (abs(now-start2) < scanWaitTime):
+                        lap = self.now()
+                        while((now-lap) < 100):
+                            now = self.now()
+                        logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                        now = self.now()
+                    
+                    i = i - scanStepValue
+                    
+        pass
+      
+    def scanMotor5(self):
+        
+        if self.dev==None:
+            self.alert("There is no opened device. Try opening one first")
+            return
+        # Convert ms time into clock cycles.
+        scanInitValue = self.d["Scan Parameters"]["scanInitValue"].get()
+        scanFinalValue = self.d["Scan Parameters"]["scanFinalValue"].get()
+        scanStepValue = self.d["Scan Parameters"]["scanStepValue"].get()
+        scanWaitTime = self.d["Scan Parameters"]["scanWaitTime"].get()
+
+        if self.checked.get():
+            
+            #Fecha en str, formato: yyyy_MM_dd_HH_mm_ss
+
+            date = datetime.datetime.now()
+            timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
+            #Abrir archivo de log con el nombre de la fecha
+            logging.basicConfig(filename='./logs/Scan5_' + timeStamp + '.log',filemode='w')
+            logging.info("SMALL ED-Scorbot Joint5 Scan Log file")
+
+            #
+            self.sendCommand16( 0x83,  (0x00),  ((3)&0xFF), True) #I banks disabled M5 PI_bank_select_M5 = 3
+            self.sendCommand16( 0x87,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M5"].get()) & 0xFF), True) #FD I&G bank 3 M5
+            self.sendCommand16( 0x88,  (0x00),  ((3)&0xFF), True) #D banks disabled M5 PD_bank_select_M5 = 3
+            self.sendCommand16( 0x8C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M5"].get()) & 0xFF), True) #FD I&G bank 3 M5
+            self.sendCommand16( 0x92,  ((self.d["Motor Config"]["SpikeExpansor_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M5"].get()) & 0xFF), True) #spike expansor M5
+            self.sendCommand16( 0x93,  (0x00),  ((3)&0xFF), True) #EI bank enabled M5 EI_bank_select_M5 = 3
+            self.sendCommand16( 0x97,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M5"].get()) & 0xFF), True) #FD I&G bank 3 M5
+            self.sendCommand16( 0x82,  ((scanInitValue >> 8) & 0xFF),  ((scanInitValue) & 0xFF), True) #Ref M5 0
+
+
+            logging.info("Time\tM5 Ref\tJ1 Pos\tM5 Ref\tJ2 Pos\tM5 Ref\tJ3 Pos\tM5 Ref\tJ4 Pos\tM5 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
+
+            start = self.now()
+            now = self.now()
+            while (abs(now-start) < 1500):
+                lap = self.now()
+                while(abs(now-lap) < 100):
+                    now = self.now()
+                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.now()-start),scanInitValue,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                now = self.now()
+
+
+            for j in range(0,5):
+                i = scanInitValue
+                while(i <= scanFinalValue):
+                    self.sendCommand16( 0x82,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True); #Ref M5 0
+
+                    start2 = self.now()
+                    now = self.now()
+
+                    while (abs(now-start2) < scanWaitTime):
+                        lap = self.now()
+                        while((now-lap) < 100):
+                            now = self.now()
+                        logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                        now = self.now()
+                    i = i + scanStepValue
+                
+                i = scanFinalValue
+                while(i>=scanInitValue):
+                    self.sendCommand16( 0x82,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True); #Ref M5 0
+
+
+                    start2 = self.now()
+                    now = self.now()
+                    while (abs(now-start2) < scanWaitTime):
+                        lap = self.now()
+                        while((now-lap) < 100):
+                            now = self.now()
+                        logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                        now = self.now()
+                    
+                    i = i - scanStepValue
+                    
+        pass
+   
+    def scanMotor6(self):
+        
+        if self.dev==None:
+            self.alert("There is no opened device. Try opening one first")
+            return
+        # Convert ms time into clock cycles.
+        scanInitValue = self.d["Scan Parameters"]["scanInitValue"].get()
+        scanFinalValue = self.d["Scan Parameters"]["scanFinalValue"].get()
+        scanStepValue = self.d["Scan Parameters"]["scanStepValue"].get()
+        scanWaitTime = self.d["Scan Parameters"]["scanWaitTime"].get()
+
+        if self.checked.get():
+            
+            #Fecha en str, formato: yyyy_MM_dd_HH_mm_ss
+
+            date = datetime.datetime.now()
+            timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
+            #Abrir archivo de log con el nombre de la fecha
+            logging.basicConfig(filename='./logs/Scan6_' + timeStamp + '.log',filemode='w')
+            logging.info("SMALL ED-Scorbot Joint6 Scan Log file")
+
+            #
+            self.sendCommand16( 0xA3,  (0x00),  ((3)&0xFF), True) #I banks disabled M6 PI_bank_select_M6 = 3
+            self.sendCommand16( 0xA7,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M6"].get()) & 0xFF), True) #FD I&G bank 3 M6
+            self.sendCommand16( 0xA8,  (0x00),  ((3)&0xFF), True) #D banks disabled M6 PD_bank_select_M6 = 3
+            self.sendCommand16( 0xAC,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M6"].get()) & 0xFF), True) #FD I&G bank 3 M6
+            self.sendCommand16( 0xB2,  ((self.d["Motor Config"]["SpikeExpansor_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M6"].get()) & 0xFF), True) #spike expansor M6
+            self.sendCommand16( 0xB3,  (0x00),  ((3)&0xFF), True) #EI bank enabled M6 EI_bank_select_M6 = 3
+            self.sendCommand16( 0xB7,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M6"].get()) & 0xFF), True) #FD I&G bank 3 M6
+            self.sendCommand16( 0xA2,  ((scanInitValue >> 8) & 0xFF),  ((scanInitValue) & 0xFF), True) #Ref M6 0
+
+
+            logging.info("Time\tM6 Ref\tJ1 Pos\tM6 Ref\tJ2 Pos\tM6 Ref\tJ3 Pos\tM6 Ref\tJ4 Pos\tM6 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
+
+            start = self.now()
+            now = self.now()
+            while (abs(now-start) < 1500):
+                lap = self.now()
+                while(abs(now-lap) < 100):
+                    now = self.now()
+                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.now()-start),scanInitValue,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                now = self.now()
+
+
+            for j in range(0,5):
+                i = scanInitValue
+                while(i <= scanFinalValue):
+                    self.sendCommand16( 0xA2,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True); #Ref M6 0
+
+                    start2 = self.now()
+                    now = self.now()
+
+                    while (abs(now-start2) < scanWaitTime):
+                        lap = self.now()
+                        while((now-lap) < 100):
+                            now = self.now()
+                        logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                        now = self.now()
+                    i = i + scanStepValue
+                
+                i = scanFinalValue
+                while(i>=scanInitValue):
+                    self.sendCommand16( 0xA2,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True); #Ref M6 0
+
+
+                    start2 = self.now()
+                    now = self.now()
+                    while (abs(now-start2) < scanWaitTime):
+                        lap = self.now()
+                        while((now-lap) < 100):
+                            now = self.now()
+                        logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                        now = self.now()
+                    
+                    i = i - scanStepValue
+                    
+        pass
+   
     def SendFPGAReset(self,spiEnable):
 
         if self.dev==None:
