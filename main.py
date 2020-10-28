@@ -551,29 +551,191 @@ class python_aer:
             self.d["Scan Parameters"][key].set(45)
 
         return
-    def SendCommandJoint1(self,ref):
 
-        self.sendCommand16( 0,  (0x00), ((self.d["Motor Config"]["leds_M1"].get()) & 0xFF), True); #LEDs M1
-        self.sendCommand16( 0x03,  (0x00),  ((3)&0xFF), True); #I banks disabled M1
-        self.sendCommand16( 0x04,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M1
-        self.sendCommand16( 0x05,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 1 M1
-        self.sendCommand16( 0x06,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 2 M1
-        self.sendCommand16( 0x07,  ((PI_FD_bank3_18bits_M1 >> 8) & 0xFF),  ((PI_FD_bank3_18bits_M1) & 0xFF), True); #FD I&G bank 3 M1
-        self.sendCommand16( 0x08,  (0x00),  ((512)&0xFF), True); #D banks disabled M1
-        self.sendCommand16( 0x09,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M1
-        self.sendCommand16( 0x0A,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 1 M1
-        self.sendCommand16( 0x0B,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 2 M1
-        self.sendCommand16( 0x0C,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 3 M1
-        self.sendCommand16( 0x12,  ((SpikeExpansor_M1 >> 8) & 0xFF),  ((SpikeExpansor_M1) & 0xFF), True); #spike expansor M1
-        self.sendCommand16( 0x13,  (0x00),  ((EI_bank_select_M1)&0xFF), True); #EI bank enabled M1
-        self.sendCommand16( 0x14,  ((EI_FD_bank0_12bits_M1 >> 8) & 0xFF),  ((EI_FD_bank0_12bits_M1) & 0xFF), True); #FD I&G bank 0 M1
-        self.sendCommand16( 0x15,  ((EI_FD_bank1_14bits_M1 >> 8) & 0xFF),  ((EI_FD_bank1_14bits_M1) & 0xFF), True); #FD I&G bank 1 M1
-        self.sendCommand16( 0x16,  ((EI_FD_bank2_16bits_M1 >> 8) & 0xFF),  ((EI_FD_bank2_16bits_M1) & 0xFF), True); #FD I&G bank 2 M1
-        self.sendCommand16( 0x17,  ((EI_FD_bank3_18bits_M1 >> 8) & 0xFF),  ((EI_FD_bank3_18bits_M1) & 0xFF), True); #FD I&G bank 3 M1
-        #self.sendCommand16( 0,  0,  0, false); #LEDs M1 off
-        self.sendCommand16( 0x02,  ((Ref_M1 >> 8) & 0xFF),  ((Ref_M1) & 0xFF), True); #Ref M1 0
-        self.sendCommand16( 0x02,  ((Ref_M1 >> 8) & 0xFF),  ((Ref_M1) & 0xFF), True); #Ref M1 0
-        self.sendCommand16( 0x02,  ((Ref_M1 >> 8) & 0xFF),  ((Ref_M1) & 0xFF), True); #Ref M1 0
+    def SendCommandJoint1(self,ref):
+        
+        #EI_FD_bank0_12bits_M1 = 512
+        #EI_FD_bank0_14bits_M1 = 512
+        #EI_FD_bank0_16bits_M1 = 512
+        #PI_FD_bank0_12bits_M1 = 512
+        #PI_FD_bank0_14bits_M1 = 512
+        #PI_FD_bank0_16bits_M1 = 512
+        self.sendCommand16( 0,  (0x00), ((self.d["Motor Config"]["leds_M1"].get()) & 0xFF), True) #LEDs M1
+        self.sendCommand16( 0x03,  (0x00),  ((3)&0xFF), True) #I banks disabled M1
+        self.sendCommand16( 0x04,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M1
+        self.sendCommand16( 0x05,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M1
+        self.sendCommand16( 0x06,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M1
+        self.sendCommand16( 0x07,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
+        self.sendCommand16( 0x08,  (0x00),  ((512)&0xFF), True) #D banks disabled M1
+        self.sendCommand16( 0x09,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M1
+        self.sendCommand16( 0x0A,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M1
+        self.sendCommand16( 0x0B,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M1
+        self.sendCommand16( 0x0C,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 3 M1
+        self.sendCommand16( 0x12,  ((self.d["Motor Config"]["SpikeExpansor_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M1"].get()) & 0xFF), True) #spike expansor M1
+        self.sendCommand16( 0x13,  (0x00),  ((3)&0xFF), True) #EI bank enabled M1 EI_bank_select_M1 = 3
+        self.sendCommand16( 0x14,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M1
+        self.sendCommand16( 0x15,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M1
+        self.sendCommand16( 0x16,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M1
+        self.sendCommand16( 0x17,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
+        #self.sendCommand16( 0,  0,  0, false) #LEDs M1 off
+        self.sendCommand16( 0x02,  ((ref >> 8) & 0xFF),  ((ref) & 0xFF), True) #Ref M1 0
+        self.sendCommand16( 0x02,  ((ref >> 8) & 0xFF),  ((ref) & 0xFF), True) #Ref M1 0
+        self.sendCommand16( 0x02,  ((ref >> 8) & 0xFF),  ((ref) & 0xFF), True) #Ref M1 0
+        pass
+
+    def SendCommandJoint2(self,ref):
+        
+        #EI_FD_bank0_12bits_M2 = 512
+        #EI_FD_bank0_14bits_M2 = 512
+        #EI_FD_bank0_16bits_M2 = 512
+        #PI_FD_bank0_12bits_M2 = 512
+        #PI_FD_bank0_14bits_M2 = 512
+        #PI_FD_bank0_16bits_M2 = 512
+        self.sendCommand16( 0x20,  (0x00), ((self.d["Motor Config"]["leds_M2"].get()) & 0xFF), True) #LEDs M2
+        self.sendCommand16( 0x23,  (0x00),  ((3)&0xFF), True) #I banks disabled M2
+        self.sendCommand16( 0x24,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M2
+        self.sendCommand16( 0x25,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M2
+        self.sendCommand16( 0x26,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M2
+        self.sendCommand16( 0x27,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M2
+        self.sendCommand16( 0x28,  (0x00),  ((512)&0xFF), True) #D banks disabled M2
+        self.sendCommand16( 0x29,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M2
+        self.sendCommand16( 0x2A,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M2
+        self.sendCommand16( 0x2B,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M2
+        self.sendCommand16( 0x2C,  ((self.d["Motor Config"]["PD_FD_bank3_18bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_18bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M2
+        self.sendCommand16( 0x32,  ((self.d["Motor Config"]["SpikeExpansor_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M2"].get()) & 0xFF), True) #spike expansor M2
+        self.sendCommand16( 0x33,  (0x00),  ((3)&0xFF), True) #EI bank enabled M2 EI_bank_select_M2 = 3
+        self.sendCommand16( 0x34,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M2
+        self.sendCommand16( 0x35,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M2
+        self.sendCommand16( 0x36,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M2
+        self.sendCommand16( 0x37,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M2
+        #self.sendCommand16( 0,  0,  0, false) #LEDs M2 off
+        self.sendCommand16( 0x22,  ((ref >> 8) & 0xFF),  ((ref) & 0xFF), True) #Ref M2 0
+        self.sendCommand16( 0x22,  ((ref >> 8) & 0xFF),  ((ref) & 0xFF), True) #Ref M2 0
+        self.sendCommand16( 0x22,  ((ref >> 8) & 0xFF),  ((ref) & 0xFF), True) #Ref M2 0
+        pass
+
+    def SendCommandJoint3(self,ref):
+        
+        #EI_FD_bank0_12bits_M3 = 512
+        #EI_FD_bank0_14bits_M3 = 512
+        #EI_FD_bank0_16bits_M3 = 512
+        #PI_FD_bank0_12bits_M3 = 512
+        #PI_FD_bank0_14bits_M3 = 512
+        #PI_FD_bank0_16bits_M3 = 512
+        self.sendCommand16( 0x40,  (0x00), ((self.d["Motor Config"]["leds_M3"].get()) & 0xFF), True) #LEDs M3
+        self.sendCommand16( 0x43,  (0x00),  ((3)&0xFF), True) #I banks disabled M3
+        self.sendCommand16( 0x44,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M3
+        self.sendCommand16( 0x45,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M3
+        self.sendCommand16( 0x46,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M3
+        self.sendCommand16( 0x47,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M3
+        self.sendCommand16( 0x48,  (0x00),  ((512)&0xFF), True) #D banks disabled M3
+        self.sendCommand16( 0x49,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M3
+        self.sendCommand16( 0x4A,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M3
+        self.sendCommand16( 0x4B,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M3
+        self.sendCommand16( 0x4C,  ((self.d["Motor Config"]["PD_FD_bank3_18bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_18bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M3
+        self.sendCommand16( 0x52,  ((self.d["Motor Config"]["SpikeExpansor_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M3"].get()) & 0xFF), True) #spike expansor M3
+        self.sendCommand16( 0x53,  (0x00),  ((3)&0xFF), True) #EI bank enabled M3 EI_bank_select_M3 = 3
+        self.sendCommand16( 0x54,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M3
+        self.sendCommand16( 0x55,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M3
+        self.sendCommand16( 0x56,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M3
+        self.sendCommand16( 0x57,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M3
+        #self.sendCommand16( 0,  0,  0, false) #LEDs M3 off
+        self.sendCommand16( 0x42,  ((ref >> 8) & 0xFF),  ((ref) & 0xFF), True) #Ref M3 0
+        self.sendCommand16( 0x42,  ((ref >> 8) & 0xFF),  ((ref) & 0xFF), True) #Ref M3 0
+        self.sendCommand16( 0x42,  ((ref >> 8) & 0xFF),  ((ref) & 0xFF), True) #Ref M3 0
+        pass
+        
+    def SendCommandJoint4(self,ref):
+        
+        #EI_FD_bank0_12bits_M4 = 512
+        #EI_FD_bank0_14bits_M4 = 512
+        #EI_FD_bank0_16bits_M4 = 512
+        #PI_FD_bank0_12bits_M4 = 512
+        #PI_FD_bank0_14bits_M4 = 512
+        #PI_FD_bank0_16bits_M4 = 512
+        self.sendCommand16( 0x60,  (0x00), ((self.d["Motor Config"]["leds_M4"].get()) & 0xFF), True) #LEDs M4
+        self.sendCommand16( 0x63,  (0x00),  ((3)&0xFF), True) #I banks disabled M4
+        self.sendCommand16( 0x64,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M4
+        self.sendCommand16( 0x65,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M4
+        self.sendCommand16( 0x66,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M4
+        self.sendCommand16( 0x67,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
+        self.sendCommand16( 0x68,  (0x00),  ((512)&0xFF), True) #D banks disabled M4
+        self.sendCommand16( 0x69,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M4
+        self.sendCommand16( 0x6A,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M4
+        self.sendCommand16( 0x6B,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M4
+        self.sendCommand16( 0x6C,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 3 M4
+        self.sendCommand16( 0x72,  ((self.d["Motor Config"]["SpikeExpansor_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M4"].get()) & 0xFF), True) #spike expansor M4
+        self.sendCommand16( 0x73,  (0x00),  ((3)&0xFF), True) #EI bank enabled M4 EI_bank_select_M4 = 3
+        self.sendCommand16( 0x74,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M4
+        self.sendCommand16( 0x75,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M4
+        self.sendCommand16( 0x76,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M4
+        self.sendCommand16( 0x77,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
+        #self.sendCommand16( 0,  0,  0, false) #LEDs M4 off
+        self.sendCommand16( 0x62,  ((ref >> 8) & 0xFF),  ((ref) & 0xFF), True) #Ref M4 0
+        self.sendCommand16( 0x62,  ((ref >> 8) & 0xFF),  ((ref) & 0xFF), True) #Ref M4 0
+        self.sendCommand16( 0x62,  ((ref >> 8) & 0xFF),  ((ref) & 0xFF), True) #Ref M4 0
+        pass
+
+    def SendCommandJoint5(self,ref):
+        
+        #EI_FD_bank0_12bits_M5 = 512
+        #EI_FD_bank0_14bits_M5 = 512
+        #EI_FD_bank0_16bits_M5 = 512
+        #PI_FD_bank0_12bits_M5 = 512
+        #PI_FD_bank0_14bits_M5 = 512
+        #PI_FD_bank0_16bits_M5 = 512
+        self.sendCommand16( 0x80,  (0x00), ((self.d["Motor Config"]["leds_M5"].get()) & 0xFF), True) #LEDs M5
+        self.sendCommand16( 0x83,  (0x00),  ((3)&0xFF), True) #I banks disabled M5
+        self.sendCommand16( 0x84,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M5
+        self.sendCommand16( 0x85,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M5
+        self.sendCommand16( 0x86,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M5
+        self.sendCommand16( 0x87,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M5"].get()) & 0xFF), True) #FD I&G bank 3 M5
+        self.sendCommand16( 0x88,  (0x00),  ((512)&0xFF), True) #D banks disabled M5
+        self.sendCommand16( 0x89,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M5
+        self.sendCommand16( 0x8A,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M5
+        self.sendCommand16( 0x8B,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M5
+        self.sendCommand16( 0x8C,  ((self.d["Motor Config"]["PD_FD_bank3_18bits_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_18bits_M5"].get()) & 0xFF), True) #FD I&G bank 3 M5
+        self.sendCommand16( 0x92,  ((self.d["Motor Config"]["SpikeExpansor_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M5"].get()) & 0xFF), True) #spike expansor M5
+        self.sendCommand16( 0x93,  (0x00),  ((3)&0xFF), True) #EI bank enabled M5 EI_bank_select_M5 = 3
+        self.sendCommand16( 0x94,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M5
+        self.sendCommand16( 0x95,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M5
+        self.sendCommand16( 0x96,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M5
+        self.sendCommand16( 0x97,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M5"].get()) & 0xFF), True) #FD I&G bank 3 M5
+        #self.sendCommand16( 0,  0,  0, false) #LEDs M5 off
+        self.sendCommand16( 0x82,  ((ref >> 8) & 0xFF),  ((ref) & 0xFF), True) #Ref M5 0
+        self.sendCommand16( 0x82,  ((ref >> 8) & 0xFF),  ((ref) & 0xFF), True) #Ref M5 0
+        self.sendCommand16( 0x82,  ((ref >> 8) & 0xFF),  ((ref) & 0xFF), True) #Ref M5 0
+        pass
+
+    def SendCommandJoint6(self,ref):
+        
+        #EI_FD_bank0_12bits_M6 = 512
+        #EI_FD_bank0_14bits_M6 = 512
+        #EI_FD_bank0_16bits_M6 = 512
+        #PI_FD_bank0_12bits_M6 = 512
+        #PI_FD_bank0_14bits_M6 = 512
+        #PI_FD_bank0_16bits_M6 = 512
+        self.sendCommand16( 0xA0,  (0x00), ((self.d["Motor Config"]["leds_M6"].get()) & 0xFF), True) #LEDs M6
+        self.sendCommand16( 0xA3,  (0x00),  ((3)&0xFF), True) #I banks disabled M6
+        self.sendCommand16( 0xA4,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M6
+        self.sendCommand16( 0xA5,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M6
+        self.sendCommand16( 0xA6,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M6
+        self.sendCommand16( 0xA7,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M6"].get()) & 0xFF), True) #FD I&G bank 3 M6
+        self.sendCommand16( 0xA8,  (0x00),  ((512)&0xFF), True) #D banks disabled M6
+        self.sendCommand16( 0xA9,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M6
+        self.sendCommand16( 0xAA,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M6
+        self.sendCommand16( 0xAB,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M6
+        self.sendCommand16( 0xAC,  ((self.d["Motor Config"]["PD_FD_bank3_18bits_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_18bits_M6"].get()) & 0xFF), True) #FD I&G bank 3 M6
+        self.sendCommand16( 0xB2,  ((self.d["Motor Config"]["SpikeExpansor_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M6"].get()) & 0xFF), True) #spike expansor M6
+        self.sendCommand16( 0xB3,  (0x00),  ((3)&0xFF), True) #EI bank enabled M6 EI_bank_select_M6 = 3
+        self.sendCommand16( 0xB4,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M6
+        self.sendCommand16( 0xB5,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M6
+        self.sendCommand16( 0xB6,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M6
+        self.sendCommand16( 0xB7,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M6"].get()) & 0xFF), True) #FD I&G bank 3 M6
+        #self.sendCommand16( 0,  0,  0, false) #LEDs M6 off
+        self.sendCommand16( 0xA2,  ((ref >> 8) & 0xFF),  ((ref) & 0xFF), True) #Ref M6 0
+        self.sendCommand16( 0xA2,  ((ref >> 8) & 0xFF),  ((ref) & 0xFF), True) #Ref M6 0
+        self.sendCommand16( 0xA2,  ((ref >> 8) & 0xFF),  ((ref) & 0xFF), True) #Ref M6 0
         pass
 
     def ConfigureSPID(self):
@@ -583,10 +745,58 @@ class python_aer:
         else:
             if self.checked.get():
                 for i in range(0,6):
-                    self.SendCommandJoint(d["Motor Config"]["ref_M1"].get())
 
-        pass
+                    self.SendCommandJoint1(self.d["Motor Config"]["ref_M1"])
+                    print("PI_FD_bank0_12bits_M1={} \t PI_FD_bank1_14bits_M1={} \t PI_FD_bank2_16bits_M1={} \t PI_FD_bank3_18bits_M1={}\n"
+                          .format(512,512,512,self.d["Motor Config"]["PI_FD_bank3_18bits_M1"].get()) +
+                          "PD_FD_bank0_16bits_M1={} \t PD_FD_bank1_18bits_M1={} \t PD_FD_bank2_20bits_M1={} \t PD_FD_bank3_22bits_M1={}\n"
+                          .format(512,512,512,512) +
+                          "EI_FD_bank0_12bits_M1={} \t EI_FD_bank1_14bits_M1={} \t EI_FD_bank2_16bits_M1={} \t EI_FD_bank3_18bits_M1={}\n"
+                          .format(512,512,512,self.d["Motor Config"]["EI_FD_bank3_18bits_M1"].get()))
+                    
+                    self.SendCommandJoint2(self.d["Motor Config"]["ref_M2"])
+                    print("PI_FD_bank0_12bits_M2={} \t PI_FD_bank1_14bits_M2={} \t PI_FD_bank2_16bits_M2={} \t PI_FD_bank3_18bits_M2={}\n"
+                          .format(512,512,512,self.d["Motor Config"]["PI_FD_bank3_18bits_M2"].get()) +
+                          "PD_FD_bank0_16bits_M2={} \t PD_FD_bank1_18bits_M2={} \t PD_FD_bank2_20bits_M2={} \t PD_FD_bank3_22bits_M2={}\n"
+                          .format(512,512,512,512) +
+                          "EI_FD_bank0_12bits_M2={} \t EI_FD_bank1_14bits_M2={} \t EI_FD_bank2_16bits_M2={} \t EI_FD_bank3_18bits_M2={}\n"
+                          .format(512,512,512,self.d["Motor Config"]["EI_FD_bank3_18bits_M2"].get()))
 
+                    self.SendCommandJoint3(self.d["Motor Config"]["ref_M3"])
+                    print("PI_FD_bank0_12bits_M3={} \t PI_FD_bank1_14bits_M3={} \t PI_FD_bank2_16bits_M3={} \t PI_FD_bank3_18bits_M3={}\n"
+                          .format(512,512,512,self.d["Motor Config"]["PI_FD_bank3_18bits_M3"].get()) +
+                          "PD_FD_bank0_16bits_M3={} \t PD_FD_bank1_18bits_M3={} \t PD_FD_bank2_20bits_M3={} \t PD_FD_bank3_22bits_M3={}\n"
+                          .format(512,512,512,512) +
+                          "EI_FD_bank0_12bits_M3={} \t EI_FD_bank1_14bits_M3={} \t EI_FD_bank2_16bits_M3={} \t EI_FD_bank3_18bits_M3={}\n"
+                          .format(512,512,512,self.d["Motor Config"]["EI_FD_bank3_18bits_M3"].get()))
+                    
+                    self.SendCommandJoint4(self.d["Motor Config"]["ref_M4"])
+                    print("PI_FD_bank0_12bits_M4={} \t PI_FD_bank1_14bits_M4={} \t PI_FD_bank2_16bits_M4={} \t PI_FD_bank3_18bits_M4={}\n"
+                          .format(512,512,512,self.d["Motor Config"]["PI_FD_bank3_18bits_M4"].get()) +
+                          "PD_FD_bank0_16bits_M4={} \t PD_FD_bank1_18bits_M4={} \t PD_FD_bank2_20bits_M4={} \t PD_FD_bank3_22bits_M4={}\n"
+                          .format(512,512,512,512) +
+                          "EI_FD_bank0_12bits_M4={} \t EI_FD_bank1_14bits_M4={} \t EI_FD_bank2_16bits_M4={} \t EI_FD_bank3_18bits_M4={}\n"
+                          .format(512,512,512,self.d["Motor Config"]["EI_FD_bank3_18bits_M4"].get()))
+
+                    self.SendCommandJoint5(self.d["Motor Config"]["ref_M5"])
+                    print("PI_FD_bank0_12bits_M5={} \t PI_FD_bank1_14bits_M5={} \t PI_FD_bank2_16bits_M5={} \t PI_FD_bank3_18bits_M5={}\n"
+                          .format(512,512,512,self.d["Motor Config"]["PI_FD_bank3_18bits_M5"].get()) +
+                          "PD_FD_bank0_16bits_M5={} \t PD_FD_bank1_18bits_M5={} \t PD_FD_bank2_20bits_M5={} \t PD_FD_bank3_22bits_M5={}\n"
+                          .format(512,512,512,512) +
+                          "EI_FD_bank0_12bits_M5={} \t EI_FD_bank1_14bits_M5={} \t EI_FD_bank2_16bits_M5={} \t EI_FD_bank3_18bits_M5={}\n"
+                          .format(512,512,512,self.d["Motor Config"]["EI_FD_bank3_18bits_M5"].get()))
+                    
+                    self.SendCommandJoint6(self.d["Motor Config"]["ref_M6"])
+                    print("PI_FD_bank0_12bits_M6={} \t PI_FD_bank1_14bits_M6={} \t PI_FD_bank2_16bits_M6={} \t PI_FD_bank3_18bits_M6={}\n"
+                          .format(512,512,512,self.d["Motor Config"]["PI_FD_bank3_18bits_M6"].get()) +
+                          "PD_FD_bank0_16bits_M6={} \t PD_FD_bank1_18bits_M6={} \t PD_FD_bank2_20bits_M6={} \t PD_FD_bank3_22bits_M6={}\n"
+                          .format(512,512,512,512) +
+                          "EI_FD_bank0_12bits_M6={} \t EI_FD_bank1_14bits_M6={} \t EI_FD_bank2_16bits_M6={} \t EI_FD_bank3_18bits_M6={}\n"
+                          .format(512,512,512,self.d["Motor Config"]["EI_FD_bank3_18bits_M6"].get()))
+
+                    print("Sending USB SPI")
+                    print(i)
+        
     def sendCommand16(self, cmd, data1, data2, spiEnable):
         '''
         This function allows to send 2 bytes of data to 
@@ -683,8 +893,59 @@ class python_aer:
             self.alert("There is no opened device. Try opening one first")
             return
         else:
-            dataBuffer = bytearray(length=self.PACKET_LENGTH)
-            
+            if self.checked.get():
+                for i in range(0,2):
+                    self.sendCommand16( 0,  (0x00), (0x00), True) #LEDs M1
+                    self.sendCommand16( 0x03,  (0x00),  (0x0f), True) #I banks disabled M1
+                    self.sendCommand16( 0x08,  (0x00),  (0x0f), True) #d banks disabled M1
+                    self.sendCommand16( 0x12,  (0x00),  (0x0), True) #spike expansor M1
+                    self.sendCommand16( 0x13,  (0x00),  (0x0f), True) #d banks disabled M1
+
+                    self.sendCommand16( 0x20,  (0x00), (0x00), True) #LEDs M2
+                    self.sendCommand16( 0x23,  (0x00),  (0x0f), True) #I banks disabled M1
+                    self.sendCommand16( 0x28,  (0x00),  (0x0f), True) #d banks disabled M1
+                    self.sendCommand16( 0x32,  (0x00),  (0x0), True) #spike expansor M1
+                    self.sendCommand16( 0x33,  (0x00),  (0x0f), True) #d banks disabled M1
+
+                    self.sendCommand16( 0x40,  (0x00), (0x00), True) #LEDs M3
+                    self.sendCommand16( 0x43,  (0x00),  (0x0f), True) #I banks disabled M1
+                    self.sendCommand16( 0x48,  (0x00),  (0x0f), True) #d banks disabled M1
+                    self.sendCommand16( 0x52,  (0x00),  (0x0), True) #spike expansor M1
+                    self.sendCommand16( 0x53,  (0x00),  (0x0f), True) #d banks disabled M1
+
+                    self.sendCommand16( 0x60,  (0x00), (0x00), True) #LEDs M4
+                    self.sendCommand16( 0x63,  (0x00),  (0x0f), True) #I banks disabled M1
+                    self.sendCommand16( 0x68,  (0x00),  (0x0f), True) #d banks disabled M1
+                    self.sendCommand16( 0x72,  (0x00),  (0x0), True) #spike expansor M1
+                    self.sendCommand16( 0x73,  (0x00),  (0x0f), True) #d banks disabled M1
+
+                    self.sendCommand16( 0x80,  (0x00), (0x00), True) #LEDs M5
+                    self.sendCommand16( 0x83,  (0x00),  (0x0f), True) #I banks disabled M1
+                    self.sendCommand16( 0x88,  (0x00),  (0x0f), True) #d banks disabled M1
+                    self.sendCommand16( 0x92,  (0x00),  (0x0), True) #spike expansor M1
+                    self.sendCommand16( 0x93,  (0x00),  (0x0f), True) #d banks disabled M1
+
+                    self.sendCommand16( 0xA0,  (0x00), (0x00), True) #LEDs M6
+                    self.sendCommand16( 0xA3,  (0x00),  (0x0f), True) #I banks disabled M1
+                    self.sendCommand16( 0xA8,  (0x00),  (0x0f), True) #d banks disabled M1
+                    self.sendCommand16( 0xB2,  (0x00),  (0x0), True) #spike expansor M1
+                    self.sendCommand16( 0xB3,  (0x00),  (0x0f), True) #d banks disabled M1
+
+                    for i in range(0,2):
+                        self.sendCommand16( 0,  (0x00), (0xFF), True) #LEDs M1
+                        self.sendCommand16( 0xff,  (0xFF),  (0xFF), True) #FPGA reset
+                        self.sendCommand16( 0xfe,  (0xFF),  (0xFF), True) #FPGA reset
+                        self.sendCommand16( 0xff,  (0x00),  (0x00), True) #FPGA reset
+                        self.sendCommand16( 0xfe,  (0x00),  (0x00), True) #FPGA reset
+                    
+                    for i in range(0,2):
+                        self.SendCommandJoint1(0)
+                        self.SendCommandJoint2(0)
+                        self.SendCommandJoint3(0)
+                        self.SendCommandJoint4(0)
+                        self.SendCommandJoint5(0)
+                        self.SendCommandJoint6(0)
+
     def resetUSB(self):
         '''
         This function resets USB connection by closing
