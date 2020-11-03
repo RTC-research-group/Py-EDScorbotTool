@@ -1,4 +1,5 @@
 from datetime import time
+from os import read
 import tkinter as tk
 from tkinter import ttk,messagebox
 import usb.core
@@ -6,6 +7,7 @@ import usb.util
 import json
 from tkinter import filedialog
 import datetime
+import time
 import logging
 import math
 
@@ -52,9 +54,12 @@ class python_aer:
 
 
         return
-    def now(self):
-
-        return datetime.datetime.now()/1000
+    def millis_now(self):
+        '''
+        This function returns the time at the moment of the call in milliseconds
+        
+        '''
+        return (time.time()*1000) #time.time() returns seconds, so mult. by 1000 to get ms
 
 
     def alert(self,text):
@@ -927,14 +932,14 @@ class python_aer:
 
             logging.info("Time\tM1 Ref\tJ1 Pos\tM2 Ref\tJ2 Pos\tM3 Ref\tJ3 Pos\tM4 Ref\tJ4 Pos\tM5 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
 
-            start = self.now()
-            now = self.now()
+            start = self.millis_now()
+            now = self.millis_now()
             while (abs(now-start) < 1500):
-                lap = self.now()
+                lap = self.millis_now()
                 while(abs(now-lap) < 100):
-                    now = self.now()
-                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.now()-start),scanInitValue,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
-                now = self.now()
+                    now = self.millis_now()
+                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),scanInitValue,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                now = self.millis_now()
 
 
             for j in range(0,5):
@@ -942,15 +947,15 @@ class python_aer:
                 while(i <= scanFinalValue):
                     self.sendCommand16( 0x02,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True); #Ref M1 0
 
-                    start2 = self.now()
-                    now = self.now()
+                    start2 = self.millis_now()
+                    now = self.millis_now()
 
                     while (abs(now-start2) < scanWaitTime):
-                        lap = self.now()
+                        lap = self.millis_now()
                         while((now-lap) < 100):
-                            now = self.now()
+                            now = self.millis_now()
                         logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
-                        now = self.now()
+                        now = self.millis_now()
                     i = i + scanStepValue
                 
                 i = scanFinalValue
@@ -958,14 +963,14 @@ class python_aer:
                     self.sendCommand16( 0x02,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True); #Ref M1 0
 
 
-                    start2 = self.now()
-                    now = self.now()
+                    start2 = self.millis_now()
+                    now = self.millis_now()
                     while (abs(now-start2) < scanWaitTime):
-                        lap = self.now()
+                        lap = self.millis_now()
                         while((now-lap) < 100):
-                            now = self.now()
+                            now = self.millis_now()
                         logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
-                        now = self.now()
+                        now = self.millis_now()
                     
                     i = i - scanStepValue
                     
@@ -1005,14 +1010,14 @@ class python_aer:
 
             logging.info("Time\tM2 Ref\tJ1 Pos\tM2 Ref\tJ2 Pos\tM3 Ref\tJ3 Pos\tM4 Ref\tJ4 Pos\tM5 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
 
-            start = self.now()
-            now = self.now()
+            start = self.millis_now()
+            now = self.millis_now()
             while (abs(now-start) < 1500):
-                lap = self.now()
+                lap = self.millis_now()
                 while(abs(now-lap) < 100):
-                    now = self.now()
-                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.now()-start),scanInitValue,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
-                now = self.now()
+                    now = self.millis_now()
+                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),scanInitValue,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                now = self.millis_now()
 
 
             for j in range(0,5):
@@ -1020,15 +1025,15 @@ class python_aer:
                 while(i <= scanFinalValue):
                     self.sendCommand16( 0x22,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True); #Ref M2 0
 
-                    start2 = self.now()
-                    now = self.now()
+                    start2 = self.millis_now()
+                    now = self.millis_now()
 
                     while (abs(now-start2) < scanWaitTime):
-                        lap = self.now()
+                        lap = self.millis_now()
                         while((now-lap) < 100):
-                            now = self.now()
+                            now = self.millis_now()
                         logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
-                        now = self.now()
+                        now = self.millis_now()
                     i = i + scanStepValue
                 
                 i = scanFinalValue
@@ -1036,14 +1041,14 @@ class python_aer:
                     self.sendCommand16( 0x22,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True); #Ref M2 0
 
 
-                    start2 = self.now()
-                    now = self.now()
+                    start2 = self.millis_now()
+                    now = self.millis_now()
                     while (abs(now-start2) < scanWaitTime):
-                        lap = self.now()
+                        lap = self.millis_now()
                         while((now-lap) < 100):
-                            now = self.now()
+                            now = self.millis_now()
                         logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
-                        now = self.now()
+                        now = self.millis_now()
                     
                     i = i - scanStepValue
                     
@@ -1083,14 +1088,14 @@ class python_aer:
 
             logging.info("Time\tM3 Ref\tJ1 Pos\tM3 Ref\tJ2 Pos\tM3 Ref\tJ3 Pos\tM4 Ref\tJ4 Pos\tM5 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
 
-            start = self.now()
-            now = self.now()
+            start = self.millis_now()
+            now = self.millis_now()
             while (abs(now-start) < 1500):
-                lap = self.now()
+                lap = self.millis_now()
                 while(abs(now-lap) < 100):
-                    now = self.now()
-                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.now()-start),scanInitValue,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
-                now = self.now()
+                    now = self.millis_now()
+                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),scanInitValue,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                now = self.millis_now()
 
 
             for j in range(0,5):
@@ -1098,15 +1103,15 @@ class python_aer:
                 while(i <= scanFinalValue):
                     self.sendCommand16( 0x42,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True); #Ref M3 0
 
-                    start2 = self.now()
-                    now = self.now()
+                    start2 = self.millis_now()
+                    now = self.millis_now()
 
                     while (abs(now-start2) < scanWaitTime):
-                        lap = self.now()
+                        lap = self.millis_now()
                         while((now-lap) < 100):
-                            now = self.now()
+                            now = self.millis_now()
                         logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
-                        now = self.now()
+                        now = self.millis_now()
                     i = i + scanStepValue
                 
                 i = scanFinalValue
@@ -1114,14 +1119,14 @@ class python_aer:
                     self.sendCommand16( 0x42,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True); #Ref M3 0
 
 
-                    start2 = self.now()
-                    now = self.now()
+                    start2 = self.millis_now()
+                    now = self.millis_now()
                     while (abs(now-start2) < scanWaitTime):
-                        lap = self.now()
+                        lap = self.millis_now()
                         while((now-lap) < 100):
-                            now = self.now()
+                            now = self.millis_now()
                         logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
-                        now = self.now()
+                        now = self.millis_now()
                     
                     i = i - scanStepValue
                     
@@ -1162,14 +1167,14 @@ class python_aer:
 
             logging.info("Time\tM4 Ref\tJ1 Pos\tM4 Ref\tJ2 Pos\tM4 Ref\tJ3 Pos\tM4 Ref\tJ4 Pos\tM5 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
 
-            start = self.now()
-            now = self.now()
+            start = self.millis_now()
+            now = self.millis_now()
             while (abs(now-start) < 1500):
-                lap = self.now()
+                lap = self.millis_now()
                 while(abs(now-lap) < 100):
-                    now = self.now()
-                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.now()-start),scanInitValue,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
-                now = self.now()
+                    now = self.millis_now()
+                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),scanInitValue,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                now = self.millis_now()
 
 
             for j in range(0,5):
@@ -1177,15 +1182,15 @@ class python_aer:
                 while(i <= scanFinalValue):
                     self.sendCommand16( 0x62,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True); #Ref M4 0
 
-                    start2 = self.now()
-                    now = self.now()
+                    start2 = self.millis_now()
+                    now = self.millis_now()
 
                     while (abs(now-start2) < scanWaitTime):
-                        lap = self.now()
+                        lap = self.millis_now()
                         while((now-lap) < 100):
-                            now = self.now()
+                            now = self.millis_now()
                         logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
-                        now = self.now()
+                        now = self.millis_now()
                     i = i + scanStepValue
                 
                 i = scanFinalValue
@@ -1193,14 +1198,14 @@ class python_aer:
                     self.sendCommand16( 0x62,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True); #Ref M4 0
 
 
-                    start2 = self.now()
-                    now = self.now()
+                    start2 = self.millis_now()
+                    now = self.millis_now()
                     while (abs(now-start2) < scanWaitTime):
-                        lap = self.now()
+                        lap = self.millis_now()
                         while((now-lap) < 100):
-                            now = self.now()
+                            now = self.millis_now()
                         logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
-                        now = self.now()
+                        now = self.millis_now()
                     
                     i = i - scanStepValue
                     
@@ -1240,14 +1245,14 @@ class python_aer:
 
             logging.info("Time\tM5 Ref\tJ1 Pos\tM5 Ref\tJ2 Pos\tM5 Ref\tJ3 Pos\tM5 Ref\tJ4 Pos\tM5 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
 
-            start = self.now()
-            now = self.now()
+            start = self.millis_now()
+            now = self.millis_now()
             while (abs(now-start) < 1500):
-                lap = self.now()
+                lap = self.millis_now()
                 while(abs(now-lap) < 100):
-                    now = self.now()
-                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.now()-start),scanInitValue,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
-                now = self.now()
+                    now = self.millis_now()
+                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),scanInitValue,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                now = self.millis_now()
 
 
             for j in range(0,5):
@@ -1255,15 +1260,15 @@ class python_aer:
                 while(i <= scanFinalValue):
                     self.sendCommand16( 0x82,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True); #Ref M5 0
 
-                    start2 = self.now()
-                    now = self.now()
+                    start2 = self.millis_now()
+                    now = self.millis_now()
 
                     while (abs(now-start2) < scanWaitTime):
-                        lap = self.now()
+                        lap = self.millis_now()
                         while((now-lap) < 100):
-                            now = self.now()
+                            now = self.millis_now()
                         logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
-                        now = self.now()
+                        now = self.millis_now()
                     i = i + scanStepValue
                 
                 i = scanFinalValue
@@ -1271,14 +1276,14 @@ class python_aer:
                     self.sendCommand16( 0x82,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True); #Ref M5 0
 
 
-                    start2 = self.now()
-                    now = self.now()
+                    start2 = self.millis_now()
+                    now = self.millis_now()
                     while (abs(now-start2) < scanWaitTime):
-                        lap = self.now()
+                        lap = self.millis_now()
                         while((now-lap) < 100):
-                            now = self.now()
+                            now = self.millis_now()
                         logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
-                        now = self.now()
+                        now = self.millis_now()
                     
                     i = i - scanStepValue
                     
@@ -1318,14 +1323,14 @@ class python_aer:
 
             logging.info("Time\tM6 Ref\tJ1 Pos\tM6 Ref\tJ2 Pos\tM6 Ref\tJ3 Pos\tM6 Ref\tJ4 Pos\tM6 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
 
-            start = self.now()
-            now = self.now()
+            start = self.millis_now()
+            now = self.millis_now()
             while (abs(now-start) < 1500):
-                lap = self.now()
+                lap = self.millis_now()
                 while(abs(now-lap) < 100):
-                    now = self.now()
-                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.now()-start),scanInitValue,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
-                now = self.now()
+                    now = self.millis_now()
+                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),scanInitValue,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                now = self.millis_now()
 
 
             for j in range(0,5):
@@ -1333,15 +1338,15 @@ class python_aer:
                 while(i <= scanFinalValue):
                     self.sendCommand16( 0xA2,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True); #Ref M6 0
 
-                    start2 = self.now()
-                    now = self.now()
+                    start2 = self.millis_now()
+                    now = self.millis_now()
 
                     while (abs(now-start2) < scanWaitTime):
-                        lap = self.now()
+                        lap = self.millis_now()
                         while((now-lap) < 100):
-                            now = self.now()
+                            now = self.millis_now()
                         logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
-                        now = self.now()
+                        now = self.millis_now()
                     i = i + scanStepValue
                 
                 i = scanFinalValue
@@ -1349,20 +1354,188 @@ class python_aer:
                     self.sendCommand16( 0xA2,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True); #Ref M6 0
 
 
-                    start2 = self.now()
-                    now = self.now()
+                    start2 = self.millis_now()
+                    now = self.millis_now()
                     while (abs(now-start2) < scanWaitTime):
-                        lap = self.now()
+                        lap = self.millis_now()
                         while((now-lap) < 100):
-                            now = self.now()
+                            now = self.millis_now()
                         logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
-                        now = self.now()
+                        now = self.millis_now()
                     
                     i = i - scanStepValue
                     
         pass
    
-    def SendFPGAReset(self,spiEnable):
+    def readSensor(self,sensor):
+        
+        if self.dev==None:
+            self.alert("There is no opened device. Try opening one first")
+            return -1
+
+        dataBuffer = bytearray(self.PACKET_LENGTH)
+
+        dataBuffer[0] = ord('A')
+        dataBuffer[1] = ord('T')
+        dataBuffer[2] = ord('C')
+        dataBuffer[3] = 0x02
+        dataBuffer[4] = 64
+
+        written = self.dev.write(self.ENDPOINT_OUT,dataBuffer)
+
+            #If the amount of bytes written is not the expected, raise a warning
+        if(written != self.PACKET_LENGTH): 
+            print("Failed to transfer whole packet")
+
+        buffer = bytearray(self.PACKET_LENGTH)
+
+        result = 0
+
+        self.dev.read(self.ENDPOINT_IN,buffer)
+
+        # if (result != LibUsb.SUCCESS) que es libusb.success es 0 pero no se si esta en pyusb el mismo resultado
+        # {
+        #     System.out.println("Failed to read-transfer data from LibUSB device.");
+        # }
+
+        sensor_data = 0
+
+        if(buffer[34]==sensor):
+            sensor_data = (0x0ff & buffer[35])*256 + buffer.get[36]
+        else:
+            sensor_data = -1
+        
+        return sensor_data
+
+
+    def Read_J1_pos(self):
+
+        j1_pos = -1
+        if self.dev==None:
+            self.alert("There is no opened device. Try opening one first")
+            return -1
+        
+        if self.checked.get():
+            sensor_j1 = -1
+            for i in range(0,10):
+                self.sendCommand16( 0xF1,  (0x00), (0x00), True); 
+                self.sendCommand16( 0xF1,  (0x00), (0x00), True); 
+                sensor_j1 = self.readSensor(0x01)
+
+                if sensor_j1 > 0:
+                    break
+            
+            j1_pos = sensor_j1
+
+            return j1_pos
+
+    def Read_J2_pos(self):
+
+        j2_pos = -1
+        if self.dev==None:
+            self.alert("There is no opened device. Try opening one first")
+            return -1
+        
+        if self.checked.get():
+            sensor_j2 = -1
+            for i in range(0,10):
+                self.sendCommand16( 0xF2,  (0x00), (0x00), True); 
+                self.sendCommand16( 0xF2,  (0x00), (0x00), True); 
+                sensor_j2 = self.readSensor(0x02)
+
+                if sensor_j2 > 0:
+                    break
+            
+            j2_pos = sensor_j2
+
+        return j2_pos
+        
+    def Read_J3_pos(self):
+
+        j3_pos = -1
+        if self.dev==None:
+            self.alert("There is no opened device. Try opening one first")
+            return -1
+        
+        if self.checked.get():
+            sensor_j3 = -1
+            for i in range(0,10):
+                self.sendCommand16( 0xF3,  (0x00), (0x00), True); 
+                self.sendCommand16( 0xF3,  (0x00), (0x00), True); 
+                sensor_j3 = self.readSensor(0x03)
+
+                if sensor_j3 > 0:
+                    break
+            
+            j3_pos = sensor_j3
+
+            return j3_pos
+
+    def Read_J4_pos(self):
+
+        j4_pos = -1
+        if self.dev==None:
+            self.alert("There is no opened device. Try opening one first")
+            return -1
+        
+        if self.checked.get():
+            sensor_j4 = -1
+            for i in range(0,10):
+                self.sendCommand16( 0xF4,  (0x00), (0x00), True); 
+                self.sendCommand16( 0xF4,  (0x00), (0x00), True); 
+                sensor_j4 = self.readSensor(0x04)
+
+                if sensor_j4 > 0:
+                    break
+            
+            j4_pos = sensor_j4
+
+            return j4_pos
+
+    def Read_J5_pos(self):
+
+        j5_pos = -1
+        if self.dev==None:
+            self.alert("There is no opened device. Try opening one first")
+            return -1
+        
+        if self.checked.get():
+            sensor_j5 = -1
+            for i in range(0,10):
+                self.sendCommand16( 0xF5,  (0x00), (0x00), True); 
+                self.sendCommand16( 0xF5,  (0x00), (0x00), True); 
+                sensor_j5 = self.readSensor(0x05)
+
+                if sensor_j5 > 0:
+                    break
+            
+            j5_pos = sensor_j5
+
+            return j5_pos
+    
+    def Read_J6_pos(self):
+
+        j6_pos = -1
+        if self.dev==None:
+            self.alert("There is no opened device. Try opening one first")
+            return -1
+        
+        if self.checked.get():
+            sensor_j6 = -1
+            for i in range(0,10):
+                self.sendCommand16( 0xF6,  (0x00), (0x00), True); 
+                self.sendCommand16( 0xF6,  (0x00), (0x00), True); 
+                sensor_j6 = self.readSensor(0x06)
+
+                if sensor_j6 > 0:
+                    break
+            
+            j6_pos = sensor_j6
+
+            return j6_pos
+
+
+    def SendFPGAReset(self):
 
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
@@ -1420,6 +1593,158 @@ class python_aer:
                         self.SendCommandJoint4(0)
                         self.SendCommandJoint5(0)
                         self.SendCommandJoint6(0)
+
+    def ScanAllMotor(self):
+        
+        if self.dev==None:
+            self.alert("There is no opened device. Try opening one first")
+            return
+        else:
+            scanInitValue = self.d["Scan Parameters"]["scanInitValue"].get()
+            scanFinalValue = self.d["Scan Parameters"]["scanFinalValue"].get()
+            scanStepValue = self.d["Scan Parameters"]["scanStepValue"].get()
+            scanWaitTime = self.d["Scan Parameters"]["scanWaitTime"].get()
+
+        if self.checked.get():
+            
+            #Fecha en str, formato: yyyy_MM_dd_HH_mm_ss
+
+            date = datetime.datetime.now()
+            timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
+            #Abrir archivo de log con el nombre de la fecha
+            logging.basicConfig(filename='./logs/ScanAllMotor_' + timeStamp + '.log',filemode='w')
+            logging.info("SMALL ED-Scorbot Scan All Motors Log file")
+
+            iSIV = scanInitValue
+            iSFV = scanFinalValue
+            iSSV = scanStepValue
+
+            if scanInitValue > 200:
+                iSIV = 200
+            elif scanInitValue < -200:
+                iSIV = -200
+            
+            if scanFinalValue > 200:
+                iSFV = 200
+            elif scanFinalValue < -200:
+                iSFV = -200
+
+            if scanStepValue > 200:
+                iSSV = 200
+            elif scanStepValue < -200:
+                iSSV = -200
+
+            self.sendCommand16( 0x03,  (0x00),  ((3)&0xFF), True) #I banks disabled M1 PI_bank_select_M1 = 3
+            self.sendCommand16( 0x07,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
+            self.sendCommand16( 0x08,  (0x00),  ((3)&0xFF), True) #D banks disabled M1 PD_bank_select_M1 = 3
+            self.sendCommand16( 0x0C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
+            self.sendCommand16( 0x12,  ((self.d["Motor Config"]["SpikeExpansor_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M1"].get()) & 0xFF), True) #spike expansor M1
+            self.sendCommand16( 0x13,  (0x00),  ((3)&0xFF), True) #EI bank enabled M1 EI_bank_select_M1 = 3
+            self.sendCommand16( 0x17,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
+            self.sendCommand16( 0x02,  ((iSIV >> 8) & 0xFF),  ((iSIV) & 0xFF), True) #Ref M1 0
+            
+            self.sendCommand16( 0x23,  (0x00),  ((3)&0xFF), True) #I banks disabled M1 PI_bank_select_M2 = 3
+            self.sendCommand16( 0x27,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M1
+            self.sendCommand16( 0x28,  (0x00),  ((3)&0xFF), True) #D banks disabled M1 PD_bank_select_M2 = 3
+            self.sendCommand16( 0x2C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M1
+            self.sendCommand16( 0x32,  ((self.d["Motor Config"]["SpikeExpansor_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M2"].get()) & 0xFF), True) #spike expansor M1
+            self.sendCommand16( 0x33,  (0x00),  ((3)&0xFF), True) #EI bank enabled M1 EI_bank_select_M2 = 3
+            self.sendCommand16( 0x37,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M1
+            self.sendCommand16( 0x22,  ((iSIV >> 8) & 0xFF),  ((iSIV) & 0xFF), True) #Ref M1 0
+            
+            self.sendCommand16( 0x43,  (0x00),  ((3)&0xFF), True) #I banks disabled M1 PI_bank_select_M3 = 3
+            self.sendCommand16( 0x47,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M1
+            self.sendCommand16( 0x48,  (0x00),  ((3)&0xFF), True) #D banks disabled M1 PD_bank_select_M3 = 3
+            self.sendCommand16( 0x4C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M1
+            self.sendCommand16( 0x52,  ((self.d["Motor Config"]["SpikeExpansor_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M3"].get()) & 0xFF), True) #spike expansor M1
+            self.sendCommand16( 0x53,  (0x00),  ((3)&0xFF), True) #EI bank enabled M1 EI_bank_select_M2 = 3
+            self.sendCommand16( 0x57,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M1
+            self.sendCommand16( 0x42,  ((iSIV >> 8) & 0xFF),  ((iSIV) & 0xFF), True) #Ref M1 0
+            
+            self.sendCommand16( 0x63,  (0x00),  ((3)&0xFF), True) #I banks disabled M4 PI_bank_select_M4 = 3
+            self.sendCommand16( 0x67,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
+            self.sendCommand16( 0x68,  (0x00),  ((3)&0xFF), True) #D banks disabled M4 PD_bank_select_M4 = 3
+            self.sendCommand16( 0x6C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
+            self.sendCommand16( 0x72,  ((self.d["Motor Config"]["SpikeExpansor_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M4"].get()) & 0xFF), True) #spike expansor M4
+            self.sendCommand16( 0x73,  (0x00),  ((3)&0xFF), True) #EI bank enabled M4 EI_bank_select_M4 = 3
+            self.sendCommand16( 0x77,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
+            self.sendCommand16( 0x62,  ((iSIV >> 8) & 0xFF),  ((iSIV) & 0xFF), True)
+            '''
+            self.sendCommand16( 0x83,  (0x00),  ((3)&0xFF), True) #I banks disabled M5 PI_bank_select_M5 = 3
+            self.sendCommand16( 0x87,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M5"].get()) & 0xFF), True) #FD I&G bank 3 M5
+            self.sendCommand16( 0x88,  (0x00),  ((3)&0xFF), True) #D banks disabled M5 PD_bank_select_M5 = 3
+            self.sendCommand16( 0x8C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M5"].get()) & 0xFF), True) #FD I&G bank 3 M5
+            self.sendCommand16( 0x92,  ((self.d["Motor Config"]["SpikeExpansor_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M5"].get()) & 0xFF), True) #spike expansor M5
+            self.sendCommand16( 0x93,  (0x00),  ((3)&0xFF), True) #EI bank enabled M5 EI_bank_select_M5 = 3
+            self.sendCommand16( 0x97,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M5"].get()) & 0xFF), True) #FD I&G bank 3 M5
+            self.sendCommand16( 0x82,  ((iSIV >> 8) & 0xFF),  ((iSIV) & 0xFF), True) #Ref M5 0
+            
+            self.sendCommand16( 0xA3,  (0x00),  ((3)&0xFF), True) #I banks disabled M6 PI_bank_select_M6 = 3
+            self.sendCommand16( 0xA7,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M6"].get()) & 0xFF), True) #FD I&G bank 3 M6
+            self.sendCommand16( 0xA8,  (0x00),  ((3)&0xFF), True) #D banks disabled M6 PD_bank_select_M6 = 3
+            self.sendCommand16( 0xAC,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M6"].get()) & 0xFF), True) #FD I&G bank 3 M6
+            self.sendCommand16( 0xB2,  ((self.d["Motor Config"]["SpikeExpansor_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M6"].get()) & 0xFF), True) #spike expansor M6
+            self.sendCommand16( 0xB3,  (0x00),  ((3)&0xFF), True) #EI bank enabled M6 EI_bank_select_M6 = 3
+            self.sendCommand16( 0xB7,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M6"].get()) & 0xFF), True) #FD I&G bank 3 M6
+            self.sendCommand16( 0xA2,  ((iSIV >> 8) & 0xFF),  ((iSIV) & 0xFF), True) #Ref M6 0
+            '''
+
+            logging.info("Time\tM1 Ref\tJ1 Pos\tM2 Ref\tJ2 Pos\tM3 Ref\tJ3 Pos\tM4 Ref\tJ4 Pos\tM5 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
+
+            start = self.millis_now()
+            now = self.millis_now()
+
+            while(abs(now-start) < 1500):
+                lap = self.millis_now()
+                while(abs(now-lap) < 100):
+                    now = self.millis_now()
+                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now() - start),scanInitValue,self.Read_J1_pos(),scanInitValue,self.Read_J2_pos(),scanInitValue,self.Read_J3_pos(),scanInitValue,self.Read_J4_pos(),scanInitValue,self.Read_J5_pos(),scanInitValue,self.Read_J6_pos()))
+                now = self.millis_now()
+
+            for j in range(0,5):
+                i = iSIV
+                while( i <= iSFV):
+                    
+                    #self.sendCommand16( 0xA2,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True) #Ref M6 I
+                    #self.sendCommand16( 0x82,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True) #Ref M5 I
+                    self.sendCommand16( 0x62,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True) #Ref M4 I
+                    self.sendCommand16( 0x42,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True) #Ref M3 I
+                    self.sendCommand16( 0x22,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True) #Ref M2 I
+                    self.sendCommand16( 0x02,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True) #Ref M1 I
+
+                    start2 = self.millis_now()
+                    now = self.millis_now()
+
+                    while(abs(now-start2) < scanWaitTime):
+                        lap = self.millis_now()
+                        while(abs(now-lap) < 100):
+                            now = self.millis_now()
+                        logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),i,self.Read_J2_pos(),i,self.Read_J3_pos(),i,self.Read_J4_pos(),i,self.Read_J5_pos(),i,self.Read_J6_pos()))
+
+                    i = i + iSSV
+
+                i = iSFV
+                while(i >= iSIV):
+                    
+                    #self.sendCommand16( 0xA2,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True) #Ref M6 I
+                    #self.sendCommand16( 0x82,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True) #Ref M5 I
+                    self.sendCommand16( 0x62,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True) #Ref M4 I
+                    self.sendCommand16( 0x42,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True) #Ref M3 I
+                    self.sendCommand16( 0x22,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True) #Ref M2 I
+                    self.sendCommand16( 0x02,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True) #Ref M1 I
+
+                    start2 = self.millis_now()
+                    now = self.millis_now()
+
+                    while(abs(now-start2) < scanWaitTime):
+                        lap = self.millis_now()
+                        while(abs(now-lap) < 100):
+                            now = self.millis_now()
+                        logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),i,self.Read_J2_pos(),i,self.Read_J3_pos(),i,self.Read_J4_pos(),i,self.Read_J5_pos(),i,self.Read_J6_pos()))
+                        now = self.millis_now()
+                    
+                    i = i - iSSV
+
 
     def resetUSB(self):
         '''
