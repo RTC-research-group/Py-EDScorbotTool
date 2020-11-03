@@ -1807,7 +1807,68 @@ class python_aer:
                 logging.basicConfig(filename='./logs/Print8xy_' + timeStamp + '.log',filemode='w')
                 logging.info("CITEC ED-BioRob Print 8 x,y Log file") #Se usa esta funcion??
 
+                self.sendCommand16( 0x03,  (0x00),  ((3)&0xFF), True) #I banks disabled M1
+                self.sendCommand16( 0x07,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
+                self.sendCommand16( 0x08,  (0x00),  ((3)&0xFF), True) #D banks disabled M1
+                self.sendCommand16( 0x0C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
+                self.sendCommand16( 0x12,  ((self.d["Motor Config"]["SpikeExpansor_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M1"].get()) & 0xFF), True) #spike expansor M1
+                self.sendCommand16( 0x13,  (0x00),  ((3)&0xFF), True) #EI bank enabled M1
+                self.sendCommand16( 0x17,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
+                self.sendCommand16( 0x02,  ((refsM1[0] >> 8) & 0xFF),  ((refsM1[0]) & 0xFF), True) #Ref M1 0
+                
+                self.sendCommand16( 0x23,  (0x00),  ((3)&0xFF), True) #I banks disabled M1
+                self.sendCommand16( 0x27,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M1
+                self.sendCommand16( 0x28,  (0x00),  ((3)&0xFF), True) #D banks disabled M1
+                self.sendCommand16( 0x2C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M1
+                self.sendCommand16( 0x32,  ((self.d["Motor Config"]["SpikeExpansor_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M2"].get()) & 0xFF), True) #spike expansor M1
+                self.sendCommand16( 0x33,  (0x00),  ((3)&0xFF), True) #EI bank enabled M1
+                self.sendCommand16( 0x37,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M1
+                self.sendCommand16( 0x22,  ((refsM2[0] >> 8) & 0xFF),  ((refsM2[0]) & 0xFF), True) #Ref M1 0
+                
+                self.sendCommand16( 0x43,  (0x00),  ((3)&0xFF), True) #I banks disabled M1
+                self.sendCommand16( 0x47,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M1
+                self.sendCommand16( 0x48,  (0x00),  ((3)&0xFF), True) #D banks disabled M1
+                self.sendCommand16( 0x4C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M1
+                self.sendCommand16( 0x52,  ((self.d["Motor Config"]["SpikeExpansor_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M3"].get()) & 0xFF), True) #spike expansor M1
+                self.sendCommand16( 0x53,  (0x00),  ((3)&0xFF), True) #EI bank enabled M1
+                self.sendCommand16( 0x57,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M1
+                self.sendCommand16( 0x42,  ((refsM3[0] >> 8) & 0xFF),  ((refsM3[0]) & 0xFF), True) #Ref M1 0
+                
+                self.sendCommand16( 0x63,  (0x00),  ((3)&0xFF), True) #I banks disabled M4
+                self.sendCommand16( 0x67,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
+                self.sendCommand16( 0x68,  (0x00),  ((3)&0xFF), True) #D banks disabled M4
+                self.sendCommand16( 0x6C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
+                self.sendCommand16( 0x72,  ((self.d["Motor Config"]["SpikeExpansor_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M4"].get()) & 0xFF), True) #spike expansor M4
+                self.sendCommand16( 0x73,  (0x00),  ((3)&0xFF), True) #EI bank enabled M4
+                self.sendCommand16( 0x77,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
+                self.sendCommand16( 0x62,  ((refsM4[0] >> 8) & 0xFF),  ((refsM4[0]) & 0xFF), True) #Ref M4 0
 
+                logging.info("Time\tM1 Ref\tJ1 Pos\tM2 Ref\tJ2 Pos\tM3 Ref\tJ3 Pos\tM4 Ref\tJ4 Pos\t")
+                start = self.millis_now()
+                now = self.millis_now()
+                
+                while(abs(now-start)< 3000):
+                    lap = self.millis_now()
+                    while(abs(now-lap)<100):
+                        now = self.millis_now()
+                    logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),refsM1[0],self.Read_J1_pos(),refsM2[0],self.Read_J2_pos(),refsM3[0],self.Read_J3_pos(),refsM4[0],self.Read_J4_pos()))
+                    now = self.millis_now()
+                
+                for j in range(0,2):
+                    for i in range(0,5):
+                        self.sendCommand16( 0x62,  ((refsM4[i] >> 8) & 0xFF),  ((refsM4[i]) & 0xFF), True) #Ref M4 0
+                        self.sendCommand16( 0x42,  ((refsM3[i] >> 8) & 0xFF),  ((refsM3[i]) & 0xFF), True) #Ref M4 0
+                        self.sendCommand16( 0x22,  ((refsM2[i] >> 8) & 0xFF),  ((refsM2[i]) & 0xFF), True) #Ref M4 0
+                        self.sendCommand16( 0x02,  ((refsM1[i] >> 8) & 0xFF),  ((refsM1[i]) & 0xFF), True) #Ref M4 0
+
+                        start2 = self.millis_now()
+                        now = self.millis_now()
+                        while(abs(now-start2) < scanWaitTime):
+                            lap = self.millis_now()
+                            while(abs(now-lap) < 100):
+                                now = self.millis_now()
+                            logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),refsM1[i],self.Read_J1_pos(),refsM2[i],self.Read_J2_pos(),refsM3[i],self.Read_J3_pos(),refsM4[i],self.Read_J4_pos()))
+                            now = self.millis_now()
 
 if __name__ == "__main__":
 
