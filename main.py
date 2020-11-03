@@ -51,13 +51,13 @@ class python_aer:
 
 
         return
+  
     def millis_now(self):
         '''
         This function returns the time at the moment of the call in milliseconds
         
         '''
         return (time.time()*1000) #time.time() returns seconds, so mult. by 1000 to get ms
-
 
     def alert(self,text):
         '''
@@ -180,23 +180,23 @@ class python_aer:
             tk.N, tk.W), padx=5, pady=5)
         
         ttk.Button(labelframe,text="ConfigureInit",command=self.ConfigureInit).grid(column=1,row=1,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="ConfigureLeds",command=self.ConfigureInit2).grid(column=2,row=1,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="ConfigureSPID",command=self.ConfigureInit2).grid(column=3,row=1,sticky=(tk.W,tk.E))
+        ttk.Button(labelframe,text="ConfigureLeds",command=self.ConfigureLeds).grid(column=2,row=1,sticky=(tk.W,tk.E))
+        ttk.Button(labelframe,text="ConfigureSPID",command=self.ConfigureSPID).grid(column=3,row=1,sticky=(tk.W,tk.E))
         ttk.Button(labelframe,text="Draw8xy",command=self.ConfigureInit2).grid(column=1,row=2,sticky=(tk.W,tk.E))
         ttk.Button(labelframe,text="Example",command=self.ConfigureInit2).grid(column=2,row=2,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="ScanAllMotor",command=self.ConfigureInit2).grid(column=3,row=2,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="ScanMotor1",command=self.ConfigureInit2).grid(column=1,row=3,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="ScanMotor2",command=self.ConfigureInit2).grid(column=2,row=3,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="ScanMotor3",command=self.ConfigureInit2).grid(column=3,row=3,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="ScanMotor4",command=self.ConfigureInit2).grid(column=1,row=4,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="ScanMotor5",command=self.ConfigureInit2).grid(column=2,row=4,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="ScanMotor6",command=self.ConfigureInit2).grid(column=3,row=4,sticky=(tk.W,tk.E))
+        ttk.Button(labelframe,text="ScanAllMotor",command=self.ScanAllMotor).grid(column=3,row=2,sticky=(tk.W,tk.E))
+        ttk.Button(labelframe,text="ScanMotor1",command=self.scanMotor1).grid(column=1,row=3,sticky=(tk.W,tk.E))
+        ttk.Button(labelframe,text="ScanMotor2",command=self.scanMotor2).grid(column=2,row=3,sticky=(tk.W,tk.E))
+        ttk.Button(labelframe,text="ScanMotor3",command=self.scanMotor3).grid(column=3,row=3,sticky=(tk.W,tk.E))
+        ttk.Button(labelframe,text="ScanMotor4",command=self.scanMotor4).grid(column=1,row=4,sticky=(tk.W,tk.E))
+        ttk.Button(labelframe,text="ScanMotor5",command=self.scanMotor5).grid(column=2,row=4,sticky=(tk.W,tk.E))
+        ttk.Button(labelframe,text="ScanMotor6",command=self.scanMotor6).grid(column=3,row=4,sticky=(tk.W,tk.E))
         ttk.Button(labelframe,text="Search_Home",command=self.ConfigureInit2).grid(column=1,row=5,sticky=(tk.W,tk.E))
         ttk.Button(labelframe,text="Send_Home",command=self.ConfigureInit2).grid(column=2,row=5,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="SendFPGAReset",command=self.ConfigureInit2).grid(column=3,row=5,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="SetAERIN_ref",command=self.ConfigureInit2).grid(column=1,row=6,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="SetUSBSPI_ref",command=self.ConfigureInit2).grid(column=2,row=6,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="SwitchOffLEDS",command=self.ConfigureInit2).grid(column=3,row=6,sticky=(tk.W,tk.E))
+        ttk.Button(labelframe,text="SendFPGAReset",command=self.SendFPGAReset).grid(column=3,row=5,sticky=(tk.W,tk.E))
+        ttk.Button(labelframe,text="SetAERIN_ref",command=self.SetAERIN_ref).grid(column=1,row=6,sticky=(tk.W,tk.E))
+        ttk.Button(labelframe,text="SetUSBSPI_ref",command=self.SetUSBSPI_ref).grid(column=2,row=6,sticky=(tk.W,tk.E))
+        ttk.Button(labelframe,text="SwitchOffLEDS",command=self.SwitchOffLEDS).grid(column=3,row=6,sticky=(tk.W,tk.E))
         ttk.Button(labelframe,text="DumpConfig",command=self.dumpConfig).grid(column=1,row=7,sticky=(tk.W,tk.E))
         ttk.Button(labelframe,text="LoadConfig",command=self.loadConfig).grid(column=2,row=7,sticky=(tk.W,tk.E))
         ttk.Button(labelframe,text="ResetUSB",command=self.resetUSB).grid(column=3,row=7,sticky=(tk.W,tk.E))
@@ -216,6 +216,7 @@ class python_aer:
 
         ttk.Checkbutton(labelframe,text="Open device",command=self.checkUSB,variable=checked,onvalue=True,offvalue=False).grid(column=1,row=3,sticky=(tk.W))
         self.checked = checked
+   
     def openUSB(self):
         '''
         This function tries to open a connection with
@@ -251,8 +252,7 @@ class python_aer:
             self.dev = None
 
         print("Device disconnected successfully")
-
-        
+     
     def checkUSB(self):
         '''
         This function checks wether USB usage has been enabled or not
@@ -272,7 +272,6 @@ class python_aer:
             #If USB is enabled, try to connect to AERNode board
             self.dev = self.openUSB()
             
-
     def dumpConfig(self):
         '''
         This function dumps current config (the one being
@@ -856,7 +855,6 @@ class python_aer:
             if(written != self.PACKET_LENGTH):
                 print("Failed to transfer whole packet")
 
-
     def readSensor(self,sensor):
 
         if(self.dev == None):
@@ -893,8 +891,7 @@ class python_aer:
                 sensor_data = -1
 
             return sensor_data
-
-            
+  
     def scanMotor1(self):
         
         if self.dev==None:
@@ -1128,8 +1125,7 @@ class python_aer:
                     i = i - scanStepValue
                     
         pass
-      
-            
+        
     def scanMotor4(self):
         
         if self.dev==None:
@@ -1404,7 +1400,6 @@ class python_aer:
         
         return sensor_data
 
-
     def Read_J1_pos(self):
 
         j1_pos = -1
@@ -1530,7 +1525,6 @@ class python_aer:
             j6_pos = sensor_j6
 
             return j6_pos
-
 
     def SendFPGAReset(self):
 
@@ -1794,6 +1788,25 @@ class python_aer:
                 self.sendCommand16( 0x60,  0,  0, False) #LEDs M4 off
                 self.sendCommand16( 0x80,  0,  0, False) #LEDs M5 off
                 self.sendCommand16( 0xA0,  0,  0, False) #LEDs M6 off
+
+    def Draw8xy(self):
+        if self.dev==None:
+            self.alert("There is no opened device. Try opening one first")
+            return -1
+        else:
+            if self.checked.get():
+                scanWaitTime = self.d["Scan Parameters"]["scan_Wait_Time"]
+                refsM1 = [0,-200,0,200,0]
+                refsM2 = [0,-50,0,-50,0]
+                refsM3 = [0, -200,    0, -200,    0]
+                refsM4 = [0, -200,    0, -200,    0]
+
+                date = datetime.datetime.now()
+                timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
+                #Abrir archivo de log con el nombre de la fecha
+                logging.basicConfig(filename='./logs/Print8xy_' + timeStamp + '.log',filemode='w')
+                logging.info("CITEC ED-BioRob Print 8 x,y Log file") #Se usa esta funcion??
+
 
 
 if __name__ == "__main__":
