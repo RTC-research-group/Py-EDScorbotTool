@@ -9,9 +9,6 @@ from tkinter import filedialog
 import datetime
 import time
 import logging
-import math
-
-
 
 class python_aer:
 
@@ -1745,6 +1742,23 @@ class python_aer:
                     
                     i = i - iSSV
 
+    def SetAERIN_ref(self):
+        if self.dev==None:
+            self.alert("There is no opened device. Try opening one first")
+            return -1
+        else:
+            if self.checked.get():
+                self.sendCommand16(0xF0,(0xFF),(0xFF), True)
+                self.sendCommand16(0xF0,(0xFF),(0xFF), True)
+    
+    def SetUSBSPI_ref(self):
+        if self.dev==None:
+            self.alert("There is no opened device. Try opening one first")
+            return -1
+        else:
+            if self.checked.get():
+                self.sendCommand16(0xF0,(0x00),(0x00), True);
+                self.sendCommand16(0xF0,(0x00),(0x00), True)
 
     def resetUSB(self):
         '''
@@ -1753,7 +1767,34 @@ class python_aer:
         '''
         self.closeUSB()
         self.dev = self.openUSB()
+        self.checked.set(True)
         
+    def ConfigureLeds(self):
+        if self.dev==None:
+            self.alert("There is no opened device. Try opening one first")
+            return -1
+        else:
+            if self.checked.get():
+                self.sendCommand16( 0,  (0x00), ((self.d["Motor Config"]["leds_M1"].get()) & 0xFF), True) #LEDs M1
+                self.sendCommand16( 0x20,  (0x00), ((self.d["Motor Config"]["leds_M2"].get()) & 0xFF), True) #LEDs M2
+                self.sendCommand16( 0x40,  (0x00), ((self.d["Motor Config"]["leds_M3"].get()) & 0xFF), True) #LEDs M3
+                self.sendCommand16( 0x60,  (0x00), ((self.d["Motor Config"]["leds_M4"].get()) & 0xFF), True) #LEDs M4
+                self.sendCommand16( 0x80,  (0x00), ((self.d["Motor Config"]["leds_M5"].get()) & 0xFF), True) #LEDs M5
+                self.sendCommand16( 0xA0,  (0x00), ((self.d["Motor Config"]["leds_M6"].get()) & 0xFF), True) #LEDs M6
+
+    def SwitchOffLEDS(self):
+        if self.dev==None:
+            self.alert("There is no opened device. Try opening one first")
+            return -1
+        else:
+            if self.checked.get():
+                self.sendCommand16( 0,  0,  0, False) #LEDs M1 off
+                self.sendCommand16( 0x20,  0,  0, False) #LEDs M2 off
+                self.sendCommand16( 0x40,  0,  0, False) #LEDs M3 off
+                self.sendCommand16( 0x60,  0,  0, False) #LEDs M4 off
+                self.sendCommand16( 0x80,  0,  0, False) #LEDs M5 off
+                self.sendCommand16( 0xA0,  0,  0, False) #LEDs M6 off
+
 
 if __name__ == "__main__":
 
