@@ -192,7 +192,7 @@ class python_aer:
         ttk.Button(labelframe,text="ScanMotor4",command=self.scanMotor4).grid(column=1,row=4,sticky=(tk.W,tk.E))
         ttk.Button(labelframe,text="ScanMotor5",command=self.scanMotor5).grid(column=2,row=4,sticky=(tk.W,tk.E))
         ttk.Button(labelframe,text="ScanMotor6",command=self.scanMotor6).grid(column=3,row=4,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="Search_Home",command=self.ConfigureInit2).grid(column=1,row=5,sticky=(tk.W,tk.E))
+        ttk.Button(labelframe,text="Search_Home",command=self.search_Home_all).grid(column=1,row=5,sticky=(tk.W,tk.E))
         ttk.Button(labelframe,text="Send_Home",command=self.send_Home_all).grid(column=2,row=5,sticky=(tk.W,tk.E))
         ttk.Button(labelframe,text="SendFPGAReset",command=self.SendFPGAReset).grid(column=3,row=5,sticky=(tk.W,tk.E))
         ttk.Button(labelframe,text="SetAERIN_ref",command=self.SetAERIN_ref).grid(column=1,row=6,sticky=(tk.W,tk.E))
