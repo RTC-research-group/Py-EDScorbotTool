@@ -100,6 +100,7 @@ class python_aer:
             ttk.Label(labelframe, text=labeltext).grid(
                 column=1, row=row_, sticky=(tk.W))
             self.d["Motor Config"][labeltext] = var
+
             # ttk.Scale(labelframe,from_=0,to=65535,orient=tk.HORIZONTAL,variable=var).grid(column=3,row=row,sticky=(tk.W))
 
         return labelframe
@@ -182,7 +183,7 @@ class python_aer:
         ttk.Button(labelframe,text="ConfigureInit",command=self.ConfigureInit).grid(column=1,row=1,sticky=(tk.W,tk.E))
         ttk.Button(labelframe,text="ConfigureLeds",command=self.ConfigureLeds).grid(column=2,row=1,sticky=(tk.W,tk.E))
         ttk.Button(labelframe,text="ConfigureSPID",command=self.ConfigureSPID).grid(column=3,row=1,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="Draw8xy",command=self.ConfigureInit2).grid(column=1,row=2,sticky=(tk.W,tk.E))
+        ttk.Button(labelframe,text="Draw8xy",command=self.Draw8xy).grid(column=1,row=2,sticky=(tk.W,tk.E))
         ttk.Button(labelframe,text="Example",command=self.ConfigureInit2).grid(column=2,row=2,sticky=(tk.W,tk.E))
         ttk.Button(labelframe,text="ScanAllMotor",command=self.ScanAllMotor).grid(column=3,row=2,sticky=(tk.W,tk.E))
         ttk.Button(labelframe,text="ScanMotor1",command=self.scanMotor1).grid(column=1,row=3,sticky=(tk.W,tk.E))
@@ -192,7 +193,7 @@ class python_aer:
         ttk.Button(labelframe,text="ScanMotor5",command=self.scanMotor5).grid(column=2,row=4,sticky=(tk.W,tk.E))
         ttk.Button(labelframe,text="ScanMotor6",command=self.scanMotor6).grid(column=3,row=4,sticky=(tk.W,tk.E))
         ttk.Button(labelframe,text="Search_Home",command=self.ConfigureInit2).grid(column=1,row=5,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="Send_Home",command=self.ConfigureInit2).grid(column=2,row=5,sticky=(tk.W,tk.E))
+        ttk.Button(labelframe,text="Send_Home",command=self.send_Home_all).grid(column=2,row=5,sticky=(tk.W,tk.E))
         ttk.Button(labelframe,text="SendFPGAReset",command=self.SendFPGAReset).grid(column=3,row=5,sticky=(tk.W,tk.E))
         ttk.Button(labelframe,text="SetAERIN_ref",command=self.SetAERIN_ref).grid(column=1,row=6,sticky=(tk.W,tk.E))
         ttk.Button(labelframe,text="SetUSBSPI_ref",command=self.SetUSBSPI_ref).grid(column=2,row=6,sticky=(tk.W,tk.E))
@@ -200,6 +201,18 @@ class python_aer:
         ttk.Button(labelframe,text="DumpConfig",command=self.dumpConfig).grid(column=1,row=7,sticky=(tk.W,tk.E))
         ttk.Button(labelframe,text="LoadConfig",command=self.loadConfig).grid(column=2,row=7,sticky=(tk.W,tk.E))
         ttk.Button(labelframe,text="ResetUSB",command=self.resetUSB).grid(column=3,row=7,sticky=(tk.W,tk.E))
+        ttk.Button(labelframe,text="Send J1 Home",command=self.send_Home_J1).grid(column=1,row=8,sticky=(tk.W,tk.E))
+        ttk.Button(labelframe,text="Send J2 Home",command=self.send_Home_J2).grid(column=2,row=8,sticky=(tk.W,tk.E))
+        ttk.Button(labelframe,text="Send J3 Home",command=self.send_Home_J3).grid(column=3,row=8,sticky=(tk.W,tk.E))
+        ttk.Button(labelframe,text="Send J4 Home",command=self.send_Home_J4).grid(column=1,row=9,sticky=(tk.W,tk.E))
+        ttk.Button(labelframe,text="Send J5 Home",command=self.send_Home_J5).grid(column=2,row=9,sticky=(tk.W,tk.E))
+        ttk.Button(labelframe,text="Send J6 Home",command=self.send_Home_J6).grid(column=3,row=9,sticky=(tk.W,tk.E))
+        ttk.Button(labelframe,text="Search J1 Home",command=self.search_Home_J1).grid(column=1,row=10,sticky=(tk.W,tk.E))
+        ttk.Button(labelframe,text="Search J2 Home",command=self.search_Home_J2).grid(column=2,row=10,sticky=(tk.W,tk.E))
+        ttk.Button(labelframe,text="Search J3 Home",command=self.search_Home_J3).grid(column=3,row=10,sticky=(tk.W,tk.E))
+        ttk.Button(labelframe,text="Search J4 Home",command=self.search_Home_J4).grid(column=1,row=11,sticky=(tk.W,tk.E))
+        ttk.Button(labelframe,text="Search J5 Home",command=self.search_Home_J5).grid(column=2,row=11,sticky=(tk.W,tk.E))
+        ttk.Button(labelframe,text="Search J6 Home",command=self.search_Home_J6).grid(column=3,row=11,sticky=(tk.W,tk.E))
 
     def render_usbEnable(self,row,col):
         '''
@@ -806,7 +819,24 @@ class python_aer:
 
                     print("Sending USB SPI")
                     print(i)
+    
+    def ConfigureSPID_allJoints(self):
+        #Check if USB device is initialized
+        if(self.dev == None):
+            self.alert("There is no opened device. Try opening one first")
+            return
         
+        if self.checked.get():
+            for i in range (0,2):
+                self.SendCommandJoint1(self.d["Motor Config"]["ref_M1"].get())
+                self.SendCommandJoint2(self.d["Motor Config"]["ref_M2"].get())
+                self.SendCommandJoint3(self.d["Motor Config"]["ref_M3"].get())
+                self.SendCommandJoint4(self.d["Motor Config"]["ref_M4"].get())
+                self.SendCommandJoint5(self.d["Motor Config"]["ref_M5"].get())
+                self.SendCommandJoint6(self.d["Motor Config"]["ref_M6"].get())
+                print("Sending USB SPI")
+                print(i)
+
     def sendCommand16(self, cmd, data1, data2, spiEnable):
         '''
         This function allows to send 2 bytes of data to 
@@ -1526,6 +1556,24 @@ class python_aer:
 
             return j6_pos
 
+    def Reset_J1_pos(self):
+        self.sendCommand16( 0xF1,  (0x00),  (0xF1), True)
+    
+    def Reset_J2_pos(self):
+        self.sendCommand16( 0xF2,  (0x00),  (0xF2), True)
+    
+    def Reset_J3_pos(self):
+        self.sendCommand16( 0xF3,  (0x00),  (0xF3), True)
+    
+    def Reset_J4_pos(self):
+        self.sendCommand16( 0xF4,  (0x00),  (0xF4), True)
+
+    def Reset_J5_pos(self):
+        self.sendCommand16( 0xF5,  (0x00),  (0xF5), True)
+    
+    def Reset_J6_pos(self):
+        self.sendCommand16( 0xF6,  (0x00),  (0xF6), True)
+
     def SendFPGAReset(self):
 
         if self.dev==None:
@@ -1777,6 +1825,7 @@ class python_aer:
                 self.sendCommand16( 0xA0,  (0x00), ((self.d["Motor Config"]["leds_M6"].get()) & 0xFF), True) #LEDs M6
 
     def SwitchOffLEDS(self):
+
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
             return -1
@@ -1869,6 +1918,426 @@ class python_aer:
                                 now = self.millis_now()
                             logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),refsM1[i],self.Read_J1_pos(),refsM2[i],self.Read_J2_pos(),refsM3[i],self.Read_J3_pos(),refsM4[i],self.Read_J4_pos()))
                             now = self.millis_now()
+    
+    def search_Joint_home(self,JOINTNUM,pol):
+        if self.dev==None:
+            self.alert("There is no opened device. Try opening one first")
+            return -1
+        
+        old_sj = 0x20000/4
+        sj = 0x20000/4
+        addr_j = 0x02
+        inc_j = -50*pol
+
+        if JOINTNUM == 1:
+            self.SendCommandJoint1(inc_j)
+        
+        elif JOINTNUM == 2:
+            self.SendCommandJoint2(inc_j)
+        
+        elif JOINTNUM == 3:
+            self.SendCommandJoint3(inc_j)
+
+        elif JOINTNUM == 4:
+            self.SendCommandJoint4(inc_j)
+
+        elif JOINTNUM == 5:
+            self.SendCommandJoint5(inc_j)
+        
+        elif JOINTNUM == 6:
+            self.SendCommandJoint6(inc_j)
+
+        time.sleep(2)
+
+        if JOINTNUM == 1:
+            sj = self.Read_J1_pos()
+        
+        elif JOINTNUM == 2:
+            sj = self.Read_J2_pos()
+        
+        elif JOINTNUM == 3:
+            sj = self.Read_J3_pos()
+
+        elif JOINTNUM == 4:
+            sj = self.Read_J4_pos()
+
+        elif JOINTNUM == 5:
+            sj = self.Read_J5_pos()
+        
+        elif JOINTNUM == 6:
+            sj = self.Read_J6_pos()
+
+        while( abs(sj - old_sj) != 0 ):
+            inc_j = inc_j - 50*pol
+
+            if JOINTNUM == 1:
+                self.SendCommandJoint1(inc_j)
+        
+            elif JOINTNUM == 2:
+                self.SendCommandJoint2(inc_j)
+            
+            elif JOINTNUM == 3:
+                self.SendCommandJoint3(inc_j)
+
+            elif JOINTNUM == 4:
+                self.SendCommandJoint4(inc_j)
+
+            elif JOINTNUM == 5:
+                self.SendCommandJoint5(inc_j)
+            
+            elif JOINTNUM == 6:
+                self.SendCommandJoint6(inc_j)
+
+            time.sleep(2)
+
+            old_sj = sj
+
+            if JOINTNUM == 1:
+                sj = self.Read_J1_pos()
+        
+            elif JOINTNUM == 2:
+                sj = self.Read_J2_pos()
+            
+            elif JOINTNUM == 3:
+                sj = self.Read_J3_pos()
+
+            elif JOINTNUM == 4:
+                sj = self.Read_J4_pos()
+
+            elif JOINTNUM == 5:
+                sj = self.Read_J5_pos()
+            
+            elif JOINTNUM == 6:
+                sj = self.Read_J6_pos()
+            
+            if( abs(sj - old_sj) < 0x5):
+                break
+            
+        self.SendFPGAReset()
+
+        if JOINTNUM == 1:
+            self.Reset_J1_pos()
+        
+        elif JOINTNUM == 2:
+            self.Reset_J2_pos()
+        
+        elif JOINTNUM == 3:
+            self.Reset_J3_pos()
+
+        elif JOINTNUM == 4:
+            self.Reset_J4_pos()
+
+        elif JOINTNUM == 5:
+            self.Reset_J5_pos()
+        
+        elif JOINTNUM == 6:
+            self.Reset_J6_pos()
+        
+        if JOINTNUM == 1:
+            inc_j = 350*pol
+            self.SendCommandJoint1(inc_j)
+        
+        elif JOINTNUM == 2:
+            inc_j = 400*pol
+            self.SendCommandJoint2(inc_j)
+        
+        elif JOINTNUM == 3:
+            inc_j = 200*pol
+            self.SendCommandJoint3(inc_j)
+
+        elif JOINTNUM == 4:
+            inc_j = 10*pol
+            self.SendCommandJoint4(inc_j)
+
+        elif JOINTNUM == 5:
+            self.SendCommandJoint5(inc_j)
+        
+        elif JOINTNUM == 6:
+            self.SendCommandJoint6(inc_j)
+
+        time.sleep(2)
+
+        if JOINTNUM == 1:
+            sj = self.Read_J1_pos()
+        
+        elif JOINTNUM == 2:
+            sj = self.Read_J2_pos()
+        
+        elif JOINTNUM == 3:
+            sj = self.Read_J3_pos()
+
+        elif JOINTNUM == 4:
+            sj = self.Read_J4_pos()
+
+        elif JOINTNUM == 5:
+            sj = self.Read_J5_pos()
+        
+        elif JOINTNUM == 6:
+            sj = self.Read_J6_pos()
+
+        old_sj = sj + 1000
+
+        while( abs(old_sj - sj) > 200):
+            old_sj = sj
+            if JOINTNUM == 1:
+                sj = self.Read_J1_pos()
+        
+            elif JOINTNUM == 2:
+                sj = self.Read_J2_pos()
+            
+            elif JOINTNUM == 3:
+                sj = self.Read_J3_pos()
+
+            elif JOINTNUM == 4:
+                sj = self.Read_J4_pos()
+
+            elif JOINTNUM == 5:
+                sj = self.Read_J5_pos()
+            
+            elif JOINTNUM == 6:
+                sj = self.Read_J6_pos()
+
+        while(abs(sj - (0x20000/4)) > 0x400):
+            inc_j = inc_j + (10*pol)
+
+            if JOINTNUM == 1:
+                self.SendCommandJoint1(inc_j)
+            
+            elif JOINTNUM == 2:
+                self.SendCommandJoint2(inc_j)
+            
+            elif JOINTNUM == 3:
+                self.SendCommandJoint3(inc_j)
+
+            elif JOINTNUM == 4:
+                self.SendCommandJoint4(inc_j)
+
+            elif JOINTNUM == 5:
+                self.SendCommandJoint5(inc_j)
+            
+            elif JOINTNUM == 6:
+                self.SendCommandJoint6(inc_j)
+
+            time.sleep(1.5)
+
+            old_sj = sj
+
+            if JOINTNUM == 1:
+                sj = self.Read_J1_pos()
+            
+            elif JOINTNUM == 2:
+                sj = self.Read_J2_pos()
+            
+            elif JOINTNUM == 3:
+                sj = self.Read_J3_pos()
+
+            elif JOINTNUM == 4:
+                sj = self.Read_J4_pos()
+
+            elif JOINTNUM == 5:
+                sj = self.Read_J5_pos()
+            
+            elif JOINTNUM == 6:
+                sj = self.Read_J6_pos()
+
+            if (abs(sj - (0x20000/4)) < 0x400 and abs(old_sj - sj) > 0x300):
+                self.SendFPGAReset()
+                self.ConfigureSPID_allJoints()
+
+    def search_Home_J1(self):
+        
+        if self.dev==None:
+            self.alert("There is no opened device. Try opening one first")
+            return -1
+    
+        self.search_Joint_home(1,1)
+    
+    def search_Home_J2(self):
+        
+        if self.dev==None:
+            self.alert("There is no opened device. Try opening one first")
+            return -1
+    
+        self.search_Joint_home(2,-1)
+
+    def search_Home_J3(self):
+        
+        if self.dev==None:
+            self.alert("There is no opened device. Try opening one first")
+            return -1
+    
+        self.search_Joint_home(3,-1)
+
+    def search_Home_J4(self):
+        
+        if self.dev==None:
+            self.alert("There is no opened device. Try opening one first")
+            return -1
+    
+        self.search_Joint_home(4,-1)
+
+    def search_Home_J5(self):
+        
+        if self.dev==None:
+            self.alert("There is no opened device. Try opening one first")
+            return -1
+    
+        self.search_Joint_home(5,-1)
+
+    def search_Home_J6(self):
+        
+        if self.dev==None:
+            self.alert("There is no opened device. Try opening one first")
+            return -1
+    
+        self.search_Joint_home(6,-1)
+    
+    def search_Home_all(self):
+
+        if self.dev==None:
+            self.alert("There is no opened device. Try opening one first")
+            return -1
+        self.search_Joint_home(1,1)
+        self.search_Joint_home(2,-1)
+        self.search_Joint_home(3,-1)
+        self.search_Joint_home(4,-1)
+        self.search_Joint_home(5,-1)
+        self.search_Joint_home(6,-1)
+
+    #doGo_Home separado en 6
+    def send_Home_J1(self):
+
+        if self.dev==None:
+            self.alert("There is no opened device. Try opening one first")
+            return -1
+        
+        self.sendCommand16( 0x03,  (0x00),  ((3)&0xFF), True) #I banks disabled M1 PI_bank_select_M1 = 3
+        self.sendCommand16( 0x07,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
+        self.sendCommand16( 0x08,  (0x00),  ((3)&0xFF), True) #D banks disabled M1 PD_bank_select_M1 = 3
+        self.sendCommand16( 0x0C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
+        self.sendCommand16( 0x12,  ((self.d["Motor Config"]["SpikeExpansor_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M1"].get()) & 0xFF), True) #spike expansor M1
+        self.sendCommand16( 0x13,  (0x00),  ((3)&0xFF), True) #EI bank enabled M1 EI_bank_select_M1 = 3
+        self.sendCommand16( 0x17,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
+        self.sendCommand16( 0x02,  (0),  (0), True) #Ref M1 0
+
+        #Go to home position
+        self.sendCommand16( 0x02, (( 0 >> 8) & 0xFF),((0) & 0xFF), True) # Ref M1 0
+
+
+        pass
+
+    def send_Home_J2(self):
+         
+        if self.dev==None:
+            self.alert("There is no opened device. Try opening one first")
+            return -1
+        
+        self.sendCommand16( 0x23,  (0x00),  ((3)&0xFF), True) #I banks disabled M2 PI_bank_select_M2 = 3
+        self.sendCommand16( 0x27,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M2
+        self.sendCommand16( 0x28,  (0x00),  ((3)&0xFF), True) #D banks disabled M2 PD_bank_select_M2 = 3
+        self.sendCommand16( 0x2C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M2
+        self.sendCommand16( 0x32,  ((self.d["Motor Config"]["SpikeExpansor_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M2"].get()) & 0xFF), True) #spike expansor M2
+        self.sendCommand16( 0x33,  (0x00),  ((3)&0xFF), True) #EI bank enabled M2 EI_bank_select_M2 = 3
+        self.sendCommand16( 0x37,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M2
+        self.sendCommand16( 0x22,  (0),  (0), True) #Ref M2 0
+
+        #Go to home position
+        self.sendCommand16( 0x22, (( 0 >> 8) & 0xFF),((0) & 0xFF), True) # Ref M2 0
+
+        pass
+
+    def send_Home_J3(self):
+        
+        if self.dev==None:
+            self.alert("There is no opened device. Try opening one first")
+            return -1
+        
+        self.sendCommand16( 0x43,  (0x00),  ((3)&0xFF), True) #I banks disabled M3 PI_bank_select_M3 = 3
+        self.sendCommand16( 0x47,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M3
+        self.sendCommand16( 0x48,  (0x00),  ((3)&0xFF), True) #D banks disabled M3 PD_bank_select_M3 = 3
+        self.sendCommand16( 0x4C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M3
+        self.sendCommand16( 0x52,  ((self.d["Motor Config"]["SpikeExpansor_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M3"].get()) & 0xFF), True) #spike expansor M3
+        self.sendCommand16( 0x53,  (0x00),  ((3)&0xFF), True) #EI bank enabled M3 EI_bank_select_M3 = 3
+        self.sendCommand16( 0x57,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M3
+        self.sendCommand16( 0x42,  (0),  (0), True) #Ref M3 0
+
+        #Go to home position
+        self.sendCommand16( 0x42, (( 0 >> 8) & 0xFF),((0) & 0xFF), True) # Ref M3 0
+
+        pass
+
+    def send_Home_J4(self):
+        
+        if self.dev==None:
+            self.alert("There is no opened device. Try opening one first")
+            return -1
+        
+        self.sendCommand16( 0x63,  (0x00),  ((3)&0xFF), True) #I banks disabled M4 PI_bank_select_M4 = 3
+        self.sendCommand16( 0x67,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
+        self.sendCommand16( 0x68,  (0x00),  ((3)&0xFF), True) #D banks disabled M4 PD_bank_select_M4 = 3
+        self.sendCommand16( 0x6C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
+        self.sendCommand16( 0x72,  ((self.d["Motor Config"]["SpikeExpansor_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M4"].get()) & 0xFF), True) #spike expansor M4
+        self.sendCommand16( 0x73,  (0x00),  ((3)&0xFF), True) #EI bank enabled M4 EI_bank_select_M4 = 3
+        self.sendCommand16( 0x77,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
+        self.sendCommand16( 0x62,  (0),  (0), True) #Ref M4 0
+
+        #Go to home position
+        self.sendCommand16( 0x62, (( 0 >> 8) & 0xFF),((0) & 0xFF), True) # Ref M4 0
+        
+        pass
+
+    def send_Home_J5(self):
+        
+        if self.dev==None:
+            self.alert("There is no opened device. Try opening one first")
+            return -1
+        
+        self.sendCommand16( 0x83,  (0x00),  ((3)&0xFF), True) #I banks disabled M5 PI_bank_select_M5 = 3
+        self.sendCommand16( 0x87,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M5"].get()) & 0xFF), True) #FD I&G bank 3 M5
+        self.sendCommand16( 0x88,  (0x00),  ((3)&0xFF), True) #D banks disabled M5 PD_bank_select_M5 = 3
+        self.sendCommand16( 0x8C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M5"].get()) & 0xFF), True) #FD I&G bank 3 M5
+        self.sendCommand16( 0x92,  ((self.d["Motor Config"]["SpikeExpansor_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M5"].get()) & 0xFF), True) #spike expansor M5
+        self.sendCommand16( 0x93,  (0x00),  ((3)&0xFF), True) #EI bank enabled M5 EI_bank_select_M5 = 3
+        self.sendCommand16( 0x97,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M5"].get()) & 0xFF), True) #FD I&G bank 3 M5
+        self.sendCommand16( 0x82,  (0),  (0), True) #Ref M5 0
+
+        #Go to home position
+        self.sendCommand16( 0x82, (( 0 >> 8) & 0xFF),((0) & 0xFF), True) # Ref M5 0
+
+        pass
+
+    def send_Home_J6(self):
+        
+        if self.dev==None:
+            self.alert("There is no opened device. Try opening one first")
+            return -1
+        
+        self.sendCommand16( 0xA3,  (0x00),  ((3)&0xFF), True) #I banks disabled M6 PI_bank_select_M6 = 3
+        self.sendCommand16( 0xA7,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M6"].get()) & 0xFF), True) #FD I&G bank 3 M6
+        self.sendCommand16( 0xA8,  (0x00),  ((3)&0xFF), True) #D banks disabled M6 PD_bank_select_M6 = 3
+        self.sendCommand16( 0xAC,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M6"].get()) & 0xFF), True) #FD I&G bank 3 M6
+        self.sendCommand16( 0xB2,  ((self.d["Motor Config"]["SpikeExpansor_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M6"].get()) & 0xFF), True) #spike expansor M6
+        self.sendCommand16( 0xB3,  (0x00),  ((3)&0xFF), True) #EI bank enabled M6 EI_bank_select_M6 = 3
+        self.sendCommand16( 0xB7,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M6"].get()) & 0xFF), True) #FD I&G bank 3 M6
+        self.sendCommand16( 0xA2,  (0),  (0), True) #Ref M6 0
+
+        #Go to home position
+        self.sendCommand16( 0xA2, (( 0 >> 8) & 0xFF),((0) & 0xFF), True) # Ref M6 0
+
+        pass
+    
+    #doGo_Home y con todo junto
+    def send_Home_all(self):
+        if self.dev==None:
+            self.alert("There is no opened device. Try opening one first")
+            return -1
+        
+        self.send_Home_J1()
+        self.send_Home_J2()
+        self.send_Home_J3()
+        self.send_Home_J4()
+        self.send_Home_J5()
+        self.send_Home_J6()
 
 if __name__ == "__main__":
 
