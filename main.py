@@ -846,7 +846,7 @@ class python_aer:
         
         else:
             #Allocate data buffer as a byte array
-            dataBuffer = bytearray(length=self.PACKET_LENGTH)
+            dataBuffer = bytearray(self.PACKET_LENGTH)
             
             #Then fill it for the first transfer
             dataBuffer[0] = ord('A')
