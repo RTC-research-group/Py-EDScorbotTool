@@ -372,6 +372,7 @@ class python_aer:
         self.render_buttons(3, 3)
         self.render_usbEnable(4,1)
 
+        self.init_config()
         #And call mainloop to display GUI
         self.root.mainloop()
 
@@ -2333,7 +2334,25 @@ class python_aer:
         self.send_Home_J5()
         self.send_Home_J6()
 
-        
+    def init_config(self):
+        try:
+            f = open('./initial_config.json')
+            j = json.loads(f.read())
+
+        except FileNotFoundError:
+            self.alert("Initial config file missing. Please download initial_config.json from the repository if you want the default configuration")
+        try:
+            for key in self.d["Motor Config"].keys():
+                self.d["Motor Config"][key].set(j["Motor Config"][key])
+            
+            for key in self.d["Scan Parameters"].keys():
+                self.d["Scan Parameters"][key].set(j["Scan Parameters"][key])
+            
+            return
+        #If we cacth a KeyError, the config is invalid, so alert the user and end execution
+        except KeyError:
+            self.alert("Invalid config file")
+            return
         
 if __name__ == "__main__":
 
