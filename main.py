@@ -397,7 +397,7 @@ class python_aer:
                     self.sendCommand16(0x09, ((512 >> 8) & 0xFF),((512) & 0xFF), True) #FD I&G bank 0 M1
                     self.sendCommand16(0x0A, ((512 >> 8) & 0xFF), ((512) & 0xFF), True) #FD I&G bank 1 M1
                     self.sendCommand16(0x0B, ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M1
-                    self.sendCommand16(0x0C, ((self.d["Motor Config"]["PD_FD_bank3_18bits_M1"].get() >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 3 M1
+                    self.sendCommand16(0x0C, ((self.d["Motor Config"]["PD_FD_bank3_22bits_M1"].get() >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 3 M1
                     self.sendCommand16(0x12, (0x00),  (0x0), True); #spike expansor M1
                     self.sendCommand16(0x13, (0x00),  (0x0f), True); #d banks disabled M1
                     self.sendCommand16(0x14, ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M1
@@ -425,7 +425,7 @@ class python_aer:
                     self.sendCommand16( 0x29,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M2
                     self.sendCommand16( 0x2A,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 1 M2
                     self.sendCommand16( 0x2B,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 2 M2
-                    self.sendCommand16( 0x2C,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 3 M2
+                    self.sendCommand16( 0x2C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M2"].get()) & 0xFF), True); #FD I&G bank 3 M2
                     self.sendCommand16( 0x32,  (0x00),  (0x0), True); #spike expansor M2
                     self.sendCommand16( 0x33,  (0x00),  (0x0f), True); #d banks disabled M1
                     self.sendCommand16( 0x34,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M1
@@ -452,7 +452,7 @@ class python_aer:
                     self.sendCommand16( 0x49,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M3
                     self.sendCommand16( 0x4A,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 1 M3
                     self.sendCommand16( 0x4B,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 2 M3
-                    self.sendCommand16( 0x4C,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 3 M3
+                    self.sendCommand16( 0x4C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M3"].get()) & 0xFF), True); #FD I&G bank 3 M3
                     self.sendCommand16( 0x52,  (0x00),  (0x0), True); #spike expansor M3
                     self.sendCommand16( 0x53,  (0x00),  (0x0f), True); #d banks disabled M1
                     self.sendCommand16( 0x54,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M1
@@ -480,7 +480,7 @@ class python_aer:
                     self.sendCommand16( 0x69,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M4
                     self.sendCommand16( 0x6A,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 1 M4
                     self.sendCommand16( 0x6B,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 2 M4
-                    self.sendCommand16( 0x6C,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 3 M4
+                    self.sendCommand16( 0x6C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M4"].get()) & 0xFF), True); #FD I&G bank 3 M4
                     self.sendCommand16( 0x72,  (0x00),  (0x0), True); #spike expansor M4
                     self.sendCommand16( 0x73,  (0x00),  (0x0f), True); #d banks disabled M1
                     self.sendCommand16( 0x74,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M1
@@ -508,7 +508,7 @@ class python_aer:
                     self.sendCommand16( 0x89,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M5
                     self.sendCommand16( 0x8A,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 1 M5
                     self.sendCommand16( 0x8B,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 2 M5
-                    self.sendCommand16( 0x8C,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 3 M5
+                    self.sendCommand16( 0x8C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M5"].get()) & 0xFF), True); #FD I&G bank 3 M5
                     self.sendCommand16( 0x92,  (0x00),  (0x0), True); #spike expansor M5
                     self.sendCommand16( 0x93,  (0x00),  (0x0f), True); #d banks disabled M1
                     self.sendCommand16( 0x94,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M1
@@ -536,7 +536,7 @@ class python_aer:
                     self.sendCommand16( 0xA9,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M6
                     self.sendCommand16( 0xAA,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 1 M6
                     self.sendCommand16( 0xAB,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 2 M6
-                    self.sendCommand16( 0xAC,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 3 M6
+                    self.sendCommand16( 0xAC,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M5"].get()) & 0xFF), True); #FD I&G bank 3 M6
                     self.sendCommand16( 0xB2,  (0x00),  (0x0), True); #spike expansor M6
                     self.sendCommand16( 0xB3,  (0x00),  (0x0f), True); #d banks disabled M1
                     self.sendCommand16( 0xB4,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M1
@@ -588,8 +588,8 @@ class python_aer:
         self.sendCommand16( 0x09,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M1
         self.sendCommand16( 0x0A,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M1
         self.sendCommand16( 0x0B,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M1
-        self.sendCommand16( 0x0C,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 3 M1
-        self.sendCommand16( 0x12,  ((self.d["Motor Config"]["SpikeExpansor_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M1"].get()) & 0xFF), True) #spike expansor M1
+        self.sendCommand16( 0x0C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
+        self.sendCommand16( 0x12,  ((self.d["Motor Config"]["spike_expansor_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M1"].get()) & 0xFF), True) #spike expansor M1
         self.sendCommand16( 0x13,  (0x00),  ((3)&0xFF), True) #EI bank enabled M1 EI_bank_select_M1 = 3
         self.sendCommand16( 0x14,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M1
         self.sendCommand16( 0x15,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M1
@@ -619,8 +619,8 @@ class python_aer:
         self.sendCommand16( 0x29,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M2
         self.sendCommand16( 0x2A,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M2
         self.sendCommand16( 0x2B,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M2
-        self.sendCommand16( 0x2C,  ((self.d["Motor Config"]["PD_FD_bank3_18bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_18bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M2
-        self.sendCommand16( 0x32,  ((self.d["Motor Config"]["SpikeExpansor_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M2"].get()) & 0xFF), True) #spike expansor M2
+        self.sendCommand16( 0x2C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M2
+        self.sendCommand16( 0x32,  ((self.d["Motor Config"]["spike_expansor_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M2"].get()) & 0xFF), True) #spike expansor M2
         self.sendCommand16( 0x33,  (0x00),  ((3)&0xFF), True) #EI bank enabled M2 EI_bank_select_M2 = 3
         self.sendCommand16( 0x34,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M2
         self.sendCommand16( 0x35,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M2
@@ -650,8 +650,8 @@ class python_aer:
         self.sendCommand16( 0x49,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M3
         self.sendCommand16( 0x4A,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M3
         self.sendCommand16( 0x4B,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M3
-        self.sendCommand16( 0x4C,  ((self.d["Motor Config"]["PD_FD_bank3_18bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_18bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M3
-        self.sendCommand16( 0x52,  ((self.d["Motor Config"]["SpikeExpansor_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M3"].get()) & 0xFF), True) #spike expansor M3
+        self.sendCommand16( 0x4C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M3
+        self.sendCommand16( 0x52,  ((self.d["Motor Config"]["spike_expansor_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M3"].get()) & 0xFF), True) #spike expansor M3
         self.sendCommand16( 0x53,  (0x00),  ((3)&0xFF), True) #EI bank enabled M3 EI_bank_select_M3 = 3
         self.sendCommand16( 0x54,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M3
         self.sendCommand16( 0x55,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M3
@@ -682,7 +682,7 @@ class python_aer:
         self.sendCommand16( 0x6A,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M4
         self.sendCommand16( 0x6B,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M4
         self.sendCommand16( 0x6C,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 3 M4
-        self.sendCommand16( 0x72,  ((self.d["Motor Config"]["SpikeExpansor_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M4"].get()) & 0xFF), True) #spike expansor M4
+        self.sendCommand16( 0x72,  ((self.d["Motor Config"]["spike_expansor_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M4"].get()) & 0xFF), True) #spike expansor M4
         self.sendCommand16( 0x73,  (0x00),  ((3)&0xFF), True) #EI bank enabled M4 EI_bank_select_M4 = 3
         self.sendCommand16( 0x74,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M4
         self.sendCommand16( 0x75,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M4
@@ -712,8 +712,8 @@ class python_aer:
         self.sendCommand16( 0x89,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M5
         self.sendCommand16( 0x8A,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M5
         self.sendCommand16( 0x8B,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M5
-        self.sendCommand16( 0x8C,  ((self.d["Motor Config"]["PD_FD_bank3_18bits_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_18bits_M5"].get()) & 0xFF), True) #FD I&G bank 3 M5
-        self.sendCommand16( 0x92,  ((self.d["Motor Config"]["SpikeExpansor_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M5"].get()) & 0xFF), True) #spike expansor M5
+        self.sendCommand16( 0x8C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M5"].get()) & 0xFF), True) #FD I&G bank 3 M5
+        self.sendCommand16( 0x92,  ((self.d["Motor Config"]["spike_expansor_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M5"].get()) & 0xFF), True) #spike expansor M5
         self.sendCommand16( 0x93,  (0x00),  ((3)&0xFF), True) #EI bank enabled M5 EI_bank_select_M5 = 3
         self.sendCommand16( 0x94,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M5
         self.sendCommand16( 0x95,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M5
@@ -743,8 +743,8 @@ class python_aer:
         self.sendCommand16( 0xA9,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M6
         self.sendCommand16( 0xAA,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M6
         self.sendCommand16( 0xAB,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M6
-        self.sendCommand16( 0xAC,  ((self.d["Motor Config"]["PD_FD_bank3_18bits_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_18bits_M6"].get()) & 0xFF), True) #FD I&G bank 3 M6
-        self.sendCommand16( 0xB2,  ((self.d["Motor Config"]["SpikeExpansor_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M6"].get()) & 0xFF), True) #spike expansor M6
+        self.sendCommand16( 0xAC,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M6"].get()) & 0xFF), True) #FD I&G bank 3 M6
+        self.sendCommand16( 0xB2,  ((self.d["Motor Config"]["spike_expansor_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M6"].get()) & 0xFF), True) #spike expansor M6
         self.sendCommand16( 0xB3,  (0x00),  ((3)&0xFF), True) #EI bank enabled M6 EI_bank_select_M6 = 3
         self.sendCommand16( 0xB4,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M6
         self.sendCommand16( 0xB5,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M6
@@ -918,7 +918,7 @@ class python_aer:
             return sensor_data
   
     def scanMotor1(self):
-        
+    
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
             return
