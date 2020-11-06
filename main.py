@@ -306,9 +306,6 @@ class python_aer:
         for key in self.d["Motor Config"].keys():
             d["Motor Config"][key] =  self.d["Motor Config"][key].get()
         
-        for key in self.d["Joints"].keys():
-            d["Joints"][key] = self.d["Joints"][key].get()
-        
         for key in self.d["Scan Parameters"].keys():
             d["Scan Parameters"][key] = self.d["Scan Parameters"][key].get()
 
@@ -336,9 +333,6 @@ class python_aer:
         try:
             for key in self.d["Motor Config"].keys():
                 self.d["Motor Config"][key].set(j["Motor Config"][key])
-            
-            for key in self.d["Joints"].keys():
-                self.d["Joints"][key].set(j["Joints"][key])
             
             for key in self.d["Scan Parameters"].keys():
                 self.d["Scan Parameters"][key].set(j["Scan Parameters"][key])
@@ -2339,6 +2333,8 @@ class python_aer:
         self.send_Home_J5()
         self.send_Home_J6()
 
+        
+        
 if __name__ == "__main__":
 
     config = python_aer()
