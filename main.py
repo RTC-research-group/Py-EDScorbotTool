@@ -769,7 +769,7 @@ class python_aer:
             if self.checked.get():
                 for i in range(0,6):
 
-                    self.SendCommandJoint1(self.d["Motor Config"]["ref_M1"])
+                    self.SendCommandJoint1(self.d["Motor Config"]["ref_M1"].get())
                     print("PI_FD_bank0_12bits_M1={} \t PI_FD_bank1_14bits_M1={} \t PI_FD_bank2_16bits_M1={} \t PI_FD_bank3_18bits_M1={}\n"
                           .format(512,512,512,self.d["Motor Config"]["PI_FD_bank3_18bits_M1"].get()) +
                           "PD_FD_bank0_16bits_M1={} \t PD_FD_bank1_18bits_M1={} \t PD_FD_bank2_20bits_M1={} \t PD_FD_bank3_22bits_M1={}\n"
@@ -777,7 +777,7 @@ class python_aer:
                           "EI_FD_bank0_12bits_M1={} \t EI_FD_bank1_14bits_M1={} \t EI_FD_bank2_16bits_M1={} \t EI_FD_bank3_18bits_M1={}\n"
                           .format(512,512,512,self.d["Motor Config"]["EI_FD_bank3_18bits_M1"].get()))
                     
-                    self.SendCommandJoint2(self.d["Motor Config"]["ref_M2"])
+                    self.SendCommandJoint2(self.d["Motor Config"]["ref_M2"].get())
                     print("PI_FD_bank0_12bits_M2={} \t PI_FD_bank1_14bits_M2={} \t PI_FD_bank2_16bits_M2={} \t PI_FD_bank3_18bits_M2={}\n"
                           .format(512,512,512,self.d["Motor Config"]["PI_FD_bank3_18bits_M2"].get()) +
                           "PD_FD_bank0_16bits_M2={} \t PD_FD_bank1_18bits_M2={} \t PD_FD_bank2_20bits_M2={} \t PD_FD_bank3_22bits_M2={}\n"
@@ -785,7 +785,7 @@ class python_aer:
                           "EI_FD_bank0_12bits_M2={} \t EI_FD_bank1_14bits_M2={} \t EI_FD_bank2_16bits_M2={} \t EI_FD_bank3_18bits_M2={}\n"
                           .format(512,512,512,self.d["Motor Config"]["EI_FD_bank3_18bits_M2"].get()))
 
-                    self.SendCommandJoint3(self.d["Motor Config"]["ref_M3"])
+                    self.SendCommandJoint3(self.d["Motor Config"]["ref_M3"].get())
                     print("PI_FD_bank0_12bits_M3={} \t PI_FD_bank1_14bits_M3={} \t PI_FD_bank2_16bits_M3={} \t PI_FD_bank3_18bits_M3={}\n"
                           .format(512,512,512,self.d["Motor Config"]["PI_FD_bank3_18bits_M3"].get()) +
                           "PD_FD_bank0_16bits_M3={} \t PD_FD_bank1_18bits_M3={} \t PD_FD_bank2_20bits_M3={} \t PD_FD_bank3_22bits_M3={}\n"
@@ -793,7 +793,7 @@ class python_aer:
                           "EI_FD_bank0_12bits_M3={} \t EI_FD_bank1_14bits_M3={} \t EI_FD_bank2_16bits_M3={} \t EI_FD_bank3_18bits_M3={}\n"
                           .format(512,512,512,self.d["Motor Config"]["EI_FD_bank3_18bits_M3"].get()))
                     
-                    self.SendCommandJoint4(self.d["Motor Config"]["ref_M4"])
+                    self.SendCommandJoint4(self.d["Motor Config"]["ref_M4"].get())
                     print("PI_FD_bank0_12bits_M4={} \t PI_FD_bank1_14bits_M4={} \t PI_FD_bank2_16bits_M4={} \t PI_FD_bank3_18bits_M4={}\n"
                           .format(512,512,512,self.d["Motor Config"]["PI_FD_bank3_18bits_M4"].get()) +
                           "PD_FD_bank0_16bits_M4={} \t PD_FD_bank1_18bits_M4={} \t PD_FD_bank2_20bits_M4={} \t PD_FD_bank3_22bits_M4={}\n"
@@ -801,7 +801,7 @@ class python_aer:
                           "EI_FD_bank0_12bits_M4={} \t EI_FD_bank1_14bits_M4={} \t EI_FD_bank2_16bits_M4={} \t EI_FD_bank3_18bits_M4={}\n"
                           .format(512,512,512,self.d["Motor Config"]["EI_FD_bank3_18bits_M4"].get()))
 
-                    self.SendCommandJoint5(self.d["Motor Config"]["ref_M5"])
+                    self.SendCommandJoint5(self.d["Motor Config"]["ref_M5"].get())
                     print("PI_FD_bank0_12bits_M5={} \t PI_FD_bank1_14bits_M5={} \t PI_FD_bank2_16bits_M5={} \t PI_FD_bank3_18bits_M5={}\n"
                           .format(512,512,512,self.d["Motor Config"]["PI_FD_bank3_18bits_M5"].get()) +
                           "PD_FD_bank0_16bits_M5={} \t PD_FD_bank1_18bits_M5={} \t PD_FD_bank2_20bits_M5={} \t PD_FD_bank3_22bits_M5={}\n"
@@ -809,7 +809,7 @@ class python_aer:
                           "EI_FD_bank0_12bits_M5={} \t EI_FD_bank1_14bits_M5={} \t EI_FD_bank2_16bits_M5={} \t EI_FD_bank3_18bits_M5={}\n"
                           .format(512,512,512,self.d["Motor Config"]["EI_FD_bank3_18bits_M5"].get()))
                     
-                    self.SendCommandJoint6(self.d["Motor Config"]["ref_M6"])
+                    self.SendCommandJoint6(self.d["Motor Config"]["ref_M6"].get())
                     print("PI_FD_bank0_12bits_M6={} \t PI_FD_bank1_14bits_M6={} \t PI_FD_bank2_16bits_M6={} \t PI_FD_bank3_18bits_M6={}\n"
                           .format(512,512,512,self.d["Motor Config"]["PI_FD_bank3_18bits_M6"].get()) +
                           "PD_FD_bank0_16bits_M6={} \t PD_FD_bank1_18bits_M6={} \t PD_FD_bank2_20bits_M6={} \t PD_FD_bank3_22bits_M6={}\n"
