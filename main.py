@@ -923,10 +923,10 @@ class python_aer:
             self.alert("There is no opened device. Try opening one first")
             return
         # Convert ms time into clock cycles.
-        scanInitValue = self.d["Scan Parameters"]["scanInitValue"].get()
-        scanFinalValue = self.d["Scan Parameters"]["scanFinalValue"].get()
-        scanStepValue = self.d["Scan Parameters"]["scanStepValue"].get()
-        scanWaitTime = self.d["Scan Parameters"]["scanWaitTime"].get()
+        scan_Init_Value = self.d["Scan Parameters"]["scan_Init_Value"].get()
+        scan_Final_Value = self.d["Scan Parameters"]["scan_Final_Value"].get()
+        scan_Step_Value = self.d["Scan Parameters"]["scan_Step_Value"].get()
+        scan_Wait_Time = self.d["Scan Parameters"]["scan_Wait_Time"].get()
 
         if self.checked.get():
             
@@ -943,10 +943,10 @@ class python_aer:
             self.sendCommand16( 0x07,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
             self.sendCommand16( 0x08,  (0x00),  ((3)&0xFF), True) #D banks disabled M1 PD_bank_select_M1 = 3
             self.sendCommand16( 0x0C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
-            self.sendCommand16( 0x12,  ((self.d["Motor Config"]["SpikeExpansor_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M1"].get()) & 0xFF), True) #spike expansor M1
+            self.sendCommand16( 0x12,  ((self.d["Motor Config"]["spike_expansor_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M1"].get()) & 0xFF), True) #spike expansor M1
             self.sendCommand16( 0x13,  (0x00),  ((3)&0xFF), True) #EI bank enabled M1 EI_bank_select_M1 = 3
             self.sendCommand16( 0x17,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
-            self.sendCommand16( 0x02,  ((scanInitValue >> 8) & 0xFF),  ((scanInitValue) & 0xFF), True) #Ref M1 0
+            self.sendCommand16( 0x02,  ((scan_Init_Value >> 8) & 0xFF),  ((scan_Init_Value) & 0xFF), True) #Ref M1 0
 
 
             logging.info("Time\tM1 Ref\tJ1 Pos\tM2 Ref\tJ2 Pos\tM3 Ref\tJ3 Pos\tM4 Ref\tJ4 Pos\tM5 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
@@ -957,41 +957,41 @@ class python_aer:
                 lap = self.millis_now()
                 while(abs(now-lap) < 100):
                     now = self.millis_now()
-                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),scanInitValue,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),scan_Init_Value,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                 now = self.millis_now()
 
 
             for j in range(0,5):
-                i = scanInitValue
-                while(i <= scanFinalValue):
+                i = scan_Init_Value
+                while(i <= scan_Final_Value):
                     self.sendCommand16( 0x02,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True); #Ref M1 0
 
                     start2 = self.millis_now()
                     now = self.millis_now()
 
-                    while (abs(now-start2) < scanWaitTime):
+                    while (abs(now-start2) < scan_Wait_Time):
                         lap = self.millis_now()
                         while((now-lap) < 100):
                             now = self.millis_now()
                         logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                         now = self.millis_now()
-                    i = i + scanStepValue
+                    i = i + scan_Step_Value
                 
-                i = scanFinalValue
-                while(i>=scanInitValue):
+                i = scan_Final_Value
+                while(i>=scan_Init_Value):
                     self.sendCommand16( 0x02,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True); #Ref M1 0
 
 
                     start2 = self.millis_now()
                     now = self.millis_now()
-                    while (abs(now-start2) < scanWaitTime):
+                    while (abs(now-start2) < scan_Wait_Time):
                         lap = self.millis_now()
                         while((now-lap) < 100):
                             now = self.millis_now()
                         logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                         now = self.millis_now()
                     
-                    i = i - scanStepValue
+                    i = i - scan_Step_Value
                     
         pass
                       
@@ -1001,10 +1001,10 @@ class python_aer:
             self.alert("There is no opened device. Try opening one first")
             return
         # Convert ms time into clock cycles.
-        scanInitValue = self.d["Scan Parameters"]["scanInitValue"].get()
-        scanFinalValue = self.d["Scan Parameters"]["scanFinalValue"].get()
-        scanStepValue = self.d["Scan Parameters"]["scanStepValue"].get()
-        scanWaitTime = self.d["Scan Parameters"]["scanWaitTime"].get()
+        scan_Init_Value = self.d["Scan Parameters"]["scan_Init_Value"].get()
+        scan_Final_Value = self.d["Scan Parameters"]["scan_Final_Value"].get()
+        scan_Step_Value = self.d["Scan Parameters"]["scan_Step_Value"].get()
+        scan_Wait_Time = self.d["Scan Parameters"]["scan_Wait_Time"].get()
 
         if self.checked.get():
             
@@ -1021,10 +1021,10 @@ class python_aer:
             self.sendCommand16( 0x27,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M2
             self.sendCommand16( 0x28,  (0x00),  ((3)&0xFF), True) #D banks disabled M2 PD_bank_select_M2 = 3
             self.sendCommand16( 0x2C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M2
-            self.sendCommand16( 0x32,  ((self.d["Motor Config"]["SpikeExpansor_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M2"].get()) & 0xFF), True) #spike expansor M2
+            self.sendCommand16( 0x32,  ((self.d["Motor Config"]["spike_expansor_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M2"].get()) & 0xFF), True) #spike expansor M2
             self.sendCommand16( 0x33,  (0x00),  ((3)&0xFF), True) #EI bank enabled M2 EI_bank_select_M2 = 3
             self.sendCommand16( 0x37,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M2
-            self.sendCommand16( 0x22,  ((scanInitValue >> 8) & 0xFF),  ((scanInitValue) & 0xFF), True) #Ref M2 0
+            self.sendCommand16( 0x22,  ((scan_Init_Value >> 8) & 0xFF),  ((scan_Init_Value) & 0xFF), True) #Ref M2 0
 
 
             logging.info("Time\tM2 Ref\tJ1 Pos\tM2 Ref\tJ2 Pos\tM3 Ref\tJ3 Pos\tM4 Ref\tJ4 Pos\tM5 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
@@ -1035,41 +1035,41 @@ class python_aer:
                 lap = self.millis_now()
                 while(abs(now-lap) < 100):
                     now = self.millis_now()
-                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),scanInitValue,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),scan_Init_Value,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                 now = self.millis_now()
 
 
             for j in range(0,5):
-                i = scanInitValue
-                while(i <= scanFinalValue):
+                i = scan_Init_Value
+                while(i <= scan_Final_Value):
                     self.sendCommand16( 0x22,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True); #Ref M2 0
 
                     start2 = self.millis_now()
                     now = self.millis_now()
 
-                    while (abs(now-start2) < scanWaitTime):
+                    while (abs(now-start2) < scan_Wait_Time):
                         lap = self.millis_now()
                         while((now-lap) < 100):
                             now = self.millis_now()
                         logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                         now = self.millis_now()
-                    i = i + scanStepValue
+                    i = i + scan_Step_Value
                 
-                i = scanFinalValue
-                while(i>=scanInitValue):
+                i = scan_Final_Value
+                while(i>=scan_Init_Value):
                     self.sendCommand16( 0x22,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True); #Ref M2 0
 
 
                     start2 = self.millis_now()
                     now = self.millis_now()
-                    while (abs(now-start2) < scanWaitTime):
+                    while (abs(now-start2) < scan_Wait_Time):
                         lap = self.millis_now()
                         while((now-lap) < 100):
                             now = self.millis_now()
                         logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                         now = self.millis_now()
                     
-                    i = i - scanStepValue
+                    i = i - scan_Step_Value
                     
         pass
               
@@ -1079,10 +1079,10 @@ class python_aer:
             self.alert("There is no opened device. Try opening one first")
             return
         # Convert ms time into clock cycles.
-        scanInitValue = self.d["Scan Parameters"]["scanInitValue"].get()
-        scanFinalValue = self.d["Scan Parameters"]["scanFinalValue"].get()
-        scanStepValue = self.d["Scan Parameters"]["scanStepValue"].get()
-        scanWaitTime = self.d["Scan Parameters"]["scanWaitTime"].get()
+        scan_Init_Value = self.d["Scan Parameters"]["scan_Init_Value"].get()
+        scan_Final_Value = self.d["Scan Parameters"]["scan_Final_Value"].get()
+        scan_Step_Value = self.d["Scan Parameters"]["scan_Step_Value"].get()
+        scan_Wait_Time = self.d["Scan Parameters"]["scan_Wait_Time"].get()
 
         if self.checked.get():
             
@@ -1099,10 +1099,10 @@ class python_aer:
             self.sendCommand16( 0x47,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M3
             self.sendCommand16( 0x48,  (0x00),  ((3)&0xFF), True) #D banks disabled M3 PD_bank_select_M3 = 3
             self.sendCommand16( 0x4C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M3
-            self.sendCommand16( 0x52,  ((self.d["Motor Config"]["SpikeExpansor_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M3"].get()) & 0xFF), True) #spike expansor M3
+            self.sendCommand16( 0x52,  ((self.d["Motor Config"]["spike_expansor_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M3"].get()) & 0xFF), True) #spike expansor M3
             self.sendCommand16( 0x53,  (0x00),  ((3)&0xFF), True) #EI bank enabled M3 EI_bank_select_M3 = 3
             self.sendCommand16( 0x57,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M3
-            self.sendCommand16( 0x42,  ((scanInitValue >> 8) & 0xFF),  ((scanInitValue) & 0xFF), True) #Ref M3 0
+            self.sendCommand16( 0x42,  ((scan_Init_Value >> 8) & 0xFF),  ((scan_Init_Value) & 0xFF), True) #Ref M3 0
 
 
             logging.info("Time\tM3 Ref\tJ1 Pos\tM3 Ref\tJ2 Pos\tM3 Ref\tJ3 Pos\tM4 Ref\tJ4 Pos\tM5 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
@@ -1113,41 +1113,41 @@ class python_aer:
                 lap = self.millis_now()
                 while(abs(now-lap) < 100):
                     now = self.millis_now()
-                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),scanInitValue,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),scan_Init_Value,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                 now = self.millis_now()
 
 
             for j in range(0,5):
-                i = scanInitValue
-                while(i <= scanFinalValue):
+                i = scan_Init_Value
+                while(i <= scan_Final_Value):
                     self.sendCommand16( 0x42,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True); #Ref M3 0
 
                     start2 = self.millis_now()
                     now = self.millis_now()
 
-                    while (abs(now-start2) < scanWaitTime):
+                    while (abs(now-start2) < scan_Wait_Time):
                         lap = self.millis_now()
                         while((now-lap) < 100):
                             now = self.millis_now()
                         logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                         now = self.millis_now()
-                    i = i + scanStepValue
+                    i = i + scan_Step_Value
                 
-                i = scanFinalValue
-                while(i>=scanInitValue):
+                i = scan_Final_Value
+                while(i>=scan_Init_Value):
                     self.sendCommand16( 0x42,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True); #Ref M3 0
 
 
                     start2 = self.millis_now()
                     now = self.millis_now()
-                    while (abs(now-start2) < scanWaitTime):
+                    while (abs(now-start2) < scan_Wait_Time):
                         lap = self.millis_now()
                         while((now-lap) < 100):
                             now = self.millis_now()
                         logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                         now = self.millis_now()
                     
-                    i = i - scanStepValue
+                    i = i - scan_Step_Value
                     
         pass
         
@@ -1157,10 +1157,10 @@ class python_aer:
             self.alert("There is no opened device. Try opening one first")
             return
         # Convert ms time into clock cycles.
-        scanInitValue = self.d["Scan Parameters"]["scanInitValue"].get()
-        scanFinalValue = self.d["Scan Parameters"]["scanFinalValue"].get()
-        scanStepValue = self.d["Scan Parameters"]["scanStepValue"].get()
-        scanWaitTime = self.d["Scan Parameters"]["scanWaitTime"].get()
+        scan_Init_Value = self.d["Scan Parameters"]["scan_Init_Value"].get()
+        scan_Final_Value = self.d["Scan Parameters"]["scan_Final_Value"].get()
+        scan_Step_Value = self.d["Scan Parameters"]["scan_Step_Value"].get()
+        scan_Wait_Time = self.d["Scan Parameters"]["scan_Wait_Time"].get()
 
         if self.checked.get():
             
@@ -1177,10 +1177,10 @@ class python_aer:
             self.sendCommand16( 0x67,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
             self.sendCommand16( 0x68,  (0x00),  ((3)&0xFF), True) #D banks disabled M4 PD_bank_select_M4 = 3
             self.sendCommand16( 0x6C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
-            self.sendCommand16( 0x72,  ((self.d["Motor Config"]["SpikeExpansor_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M4"].get()) & 0xFF), True) #spike expansor M4
+            self.sendCommand16( 0x72,  ((self.d["Motor Config"]["spike_expansor_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M4"].get()) & 0xFF), True) #spike expansor M4
             self.sendCommand16( 0x73,  (0x00),  ((3)&0xFF), True) #EI bank enabled M4 EI_bank_select_M4 = 3
             self.sendCommand16( 0x77,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
-            self.sendCommand16( 0x62,  ((scanInitValue >> 8) & 0xFF),  ((scanInitValue) & 0xFF), True) #Ref M4 0
+            self.sendCommand16( 0x62,  ((scan_Init_Value >> 8) & 0xFF),  ((scan_Init_Value) & 0xFF), True) #Ref M4 0
 
 
             logging.info("Time\tM4 Ref\tJ1 Pos\tM4 Ref\tJ2 Pos\tM4 Ref\tJ3 Pos\tM4 Ref\tJ4 Pos\tM5 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
@@ -1191,41 +1191,41 @@ class python_aer:
                 lap = self.millis_now()
                 while(abs(now-lap) < 100):
                     now = self.millis_now()
-                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),scanInitValue,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),scan_Init_Value,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                 now = self.millis_now()
 
 
             for j in range(0,5):
-                i = scanInitValue
-                while(i <= scanFinalValue):
+                i = scan_Init_Value
+                while(i <= scan_Final_Value):
                     self.sendCommand16( 0x62,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True); #Ref M4 0
 
                     start2 = self.millis_now()
                     now = self.millis_now()
 
-                    while (abs(now-start2) < scanWaitTime):
+                    while (abs(now-start2) < scan_Wait_Time):
                         lap = self.millis_now()
                         while((now-lap) < 100):
                             now = self.millis_now()
                         logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                         now = self.millis_now()
-                    i = i + scanStepValue
+                    i = i + scan_Step_Value
                 
-                i = scanFinalValue
-                while(i>=scanInitValue):
+                i = scan_Final_Value
+                while(i>=scan_Init_Value):
                     self.sendCommand16( 0x62,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True); #Ref M4 0
 
 
                     start2 = self.millis_now()
                     now = self.millis_now()
-                    while (abs(now-start2) < scanWaitTime):
+                    while (abs(now-start2) < scan_Wait_Time):
                         lap = self.millis_now()
                         while((now-lap) < 100):
                             now = self.millis_now()
                         logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                         now = self.millis_now()
                     
-                    i = i - scanStepValue
+                    i = i - scan_Step_Value
                     
         pass
       
@@ -1235,10 +1235,10 @@ class python_aer:
             self.alert("There is no opened device. Try opening one first")
             return
         # Convert ms time into clock cycles.
-        scanInitValue = self.d["Scan Parameters"]["scanInitValue"].get()
-        scanFinalValue = self.d["Scan Parameters"]["scanFinalValue"].get()
-        scanStepValue = self.d["Scan Parameters"]["scanStepValue"].get()
-        scanWaitTime = self.d["Scan Parameters"]["scanWaitTime"].get()
+        scan_Init_Value = self.d["Scan Parameters"]["scan_Init_Value"].get()
+        scan_Final_Value = self.d["Scan Parameters"]["scan_Final_Value"].get()
+        scan_Step_Value = self.d["Scan Parameters"]["scan_Step_Value"].get()
+        scan_Wait_Time = self.d["Scan Parameters"]["scan_Wait_Time"].get()
 
         if self.checked.get():
             
@@ -1255,10 +1255,10 @@ class python_aer:
             self.sendCommand16( 0x87,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M5"].get()) & 0xFF), True) #FD I&G bank 3 M5
             self.sendCommand16( 0x88,  (0x00),  ((3)&0xFF), True) #D banks disabled M5 PD_bank_select_M5 = 3
             self.sendCommand16( 0x8C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M5"].get()) & 0xFF), True) #FD I&G bank 3 M5
-            self.sendCommand16( 0x92,  ((self.d["Motor Config"]["SpikeExpansor_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M5"].get()) & 0xFF), True) #spike expansor M5
+            self.sendCommand16( 0x92,  ((self.d["Motor Config"]["spike_expansor_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M5"].get()) & 0xFF), True) #spike expansor M5
             self.sendCommand16( 0x93,  (0x00),  ((3)&0xFF), True) #EI bank enabled M5 EI_bank_select_M5 = 3
             self.sendCommand16( 0x97,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M5"].get()) & 0xFF), True) #FD I&G bank 3 M5
-            self.sendCommand16( 0x82,  ((scanInitValue >> 8) & 0xFF),  ((scanInitValue) & 0xFF), True) #Ref M5 0
+            self.sendCommand16( 0x82,  ((scan_Init_Value >> 8) & 0xFF),  ((scan_Init_Value) & 0xFF), True) #Ref M5 0
 
 
             logging.info("Time\tM5 Ref\tJ1 Pos\tM5 Ref\tJ2 Pos\tM5 Ref\tJ3 Pos\tM5 Ref\tJ4 Pos\tM5 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
@@ -1269,41 +1269,41 @@ class python_aer:
                 lap = self.millis_now()
                 while(abs(now-lap) < 100):
                     now = self.millis_now()
-                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),scanInitValue,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),scan_Init_Value,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                 now = self.millis_now()
 
 
             for j in range(0,5):
-                i = scanInitValue
-                while(i <= scanFinalValue):
+                i = scan_Init_Value
+                while(i <= scan_Final_Value):
                     self.sendCommand16( 0x82,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True); #Ref M5 0
 
                     start2 = self.millis_now()
                     now = self.millis_now()
 
-                    while (abs(now-start2) < scanWaitTime):
+                    while (abs(now-start2) < scan_Wait_Time):
                         lap = self.millis_now()
                         while((now-lap) < 100):
                             now = self.millis_now()
                         logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                         now = self.millis_now()
-                    i = i + scanStepValue
+                    i = i + scan_Step_Value
                 
-                i = scanFinalValue
-                while(i>=scanInitValue):
+                i = scan_Final_Value
+                while(i>=scan_Init_Value):
                     self.sendCommand16( 0x82,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True); #Ref M5 0
 
 
                     start2 = self.millis_now()
                     now = self.millis_now()
-                    while (abs(now-start2) < scanWaitTime):
+                    while (abs(now-start2) < scan_Wait_Time):
                         lap = self.millis_now()
                         while((now-lap) < 100):
                             now = self.millis_now()
                         logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                         now = self.millis_now()
                     
-                    i = i - scanStepValue
+                    i = i - scan_Step_Value
                     
         pass
    
@@ -1313,10 +1313,10 @@ class python_aer:
             self.alert("There is no opened device. Try opening one first")
             return
         # Convert ms time into clock cycles.
-        scanInitValue = self.d["Scan Parameters"]["scanInitValue"].get()
-        scanFinalValue = self.d["Scan Parameters"]["scanFinalValue"].get()
-        scanStepValue = self.d["Scan Parameters"]["scanStepValue"].get()
-        scanWaitTime = self.d["Scan Parameters"]["scanWaitTime"].get()
+        scan_Init_Value = self.d["Scan Parameters"]["scan_Init_Value"].get()
+        scan_Final_Value = self.d["Scan Parameters"]["scan_Final_Value"].get()
+        scan_Step_Value = self.d["Scan Parameters"]["scan_Step_Value"].get()
+        scan_Wait_Time = self.d["Scan Parameters"]["scan_Wait_Time"].get()
 
         if self.checked.get():
             
@@ -1333,10 +1333,10 @@ class python_aer:
             self.sendCommand16( 0xA7,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M6"].get()) & 0xFF), True) #FD I&G bank 3 M6
             self.sendCommand16( 0xA8,  (0x00),  ((3)&0xFF), True) #D banks disabled M6 PD_bank_select_M6 = 3
             self.sendCommand16( 0xAC,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M6"].get()) & 0xFF), True) #FD I&G bank 3 M6
-            self.sendCommand16( 0xB2,  ((self.d["Motor Config"]["SpikeExpansor_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M6"].get()) & 0xFF), True) #spike expansor M6
+            self.sendCommand16( 0xB2,  ((self.d["Motor Config"]["spike_expansor_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M6"].get()) & 0xFF), True) #spike expansor M6
             self.sendCommand16( 0xB3,  (0x00),  ((3)&0xFF), True) #EI bank enabled M6 EI_bank_select_M6 = 3
             self.sendCommand16( 0xB7,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M6"].get()) & 0xFF), True) #FD I&G bank 3 M6
-            self.sendCommand16( 0xA2,  ((scanInitValue >> 8) & 0xFF),  ((scanInitValue) & 0xFF), True) #Ref M6 0
+            self.sendCommand16( 0xA2,  ((scan_Init_Value >> 8) & 0xFF),  ((scan_Init_Value) & 0xFF), True) #Ref M6 0
 
 
             logging.info("Time\tM6 Ref\tJ1 Pos\tM6 Ref\tJ2 Pos\tM6 Ref\tJ3 Pos\tM6 Ref\tJ4 Pos\tM6 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
@@ -1347,41 +1347,41 @@ class python_aer:
                 lap = self.millis_now()
                 while(abs(now-lap) < 100):
                     now = self.millis_now()
-                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),scanInitValue,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),scan_Init_Value,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                 now = self.millis_now()
 
 
             for j in range(0,5):
-                i = scanInitValue
-                while(i <= scanFinalValue):
+                i = scan_Init_Value
+                while(i <= scan_Final_Value):
                     self.sendCommand16( 0xA2,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True); #Ref M6 0
 
                     start2 = self.millis_now()
                     now = self.millis_now()
 
-                    while (abs(now-start2) < scanWaitTime):
+                    while (abs(now-start2) < scan_Wait_Time):
                         lap = self.millis_now()
                         while((now-lap) < 100):
                             now = self.millis_now()
                         logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                         now = self.millis_now()
-                    i = i + scanStepValue
+                    i = i + scan_Step_Value
                 
-                i = scanFinalValue
-                while(i>=scanInitValue):
+                i = scan_Final_Value
+                while(i>=scan_Init_Value):
                     self.sendCommand16( 0xA2,  ((i >> 8) & 0xFF),  ((i) & 0xFF), True); #Ref M6 0
 
 
                     start2 = self.millis_now()
                     now = self.millis_now()
-                    while (abs(now-start2) < scanWaitTime):
+                    while (abs(now-start2) < scan_Wait_Time):
                         lap = self.millis_now()
                         while((now-lap) < 100):
                             now = self.millis_now()
                         logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                         now = self.millis_now()
                     
-                    i = i - scanStepValue
+                    i = i - scan_Step_Value
                     
         pass
    
@@ -1634,10 +1634,10 @@ class python_aer:
             self.alert("There is no opened device. Try opening one first")
             return
         else:
-            scanInitValue = self.d["Scan Parameters"]["scanInitValue"].get()
-            scanFinalValue = self.d["Scan Parameters"]["scanFinalValue"].get()
-            scanStepValue = self.d["Scan Parameters"]["scanStepValue"].get()
-            scanWaitTime = self.d["Scan Parameters"]["scanWaitTime"].get()
+            scan_Init_Value = self.d["Scan Parameters"]["scan_Init_Value"].get()
+            scan_Final_Value = self.d["Scan Parameters"]["scan_Final_Value"].get()
+            scan_Step_Value = self.d["Scan Parameters"]["scan_Step_Value"].get()
+            scan_Wait_Time = self.d["Scan Parameters"]["scan_Wait_Time"].get()
 
         if self.checked.get():
             
@@ -1649,30 +1649,30 @@ class python_aer:
             logging.basicConfig(filename='./logs/ScanAllMotor_' + timeStamp + '.log',filemode='w')
             logging.info("SMALL ED-Scorbot Scan All Motors Log file")
 
-            iSIV = scanInitValue
-            iSFV = scanFinalValue
-            iSSV = scanStepValue
+            iSIV = scan_Init_Value
+            iSFV = scan_Final_Value
+            iSSV = scan_Step_Value
 
-            if scanInitValue > 200:
+            if scan_Init_Value > 200:
                 iSIV = 200
-            elif scanInitValue < -200:
+            elif scan_Init_Value < -200:
                 iSIV = -200
             
-            if scanFinalValue > 200:
+            if scan_Final_Value > 200:
                 iSFV = 200
-            elif scanFinalValue < -200:
+            elif scan_Final_Value < -200:
                 iSFV = -200
 
-            if scanStepValue > 200:
+            if scan_Step_Value > 200:
                 iSSV = 200
-            elif scanStepValue < -200:
+            elif scan_Step_Value < -200:
                 iSSV = -200
 
             self.sendCommand16( 0x03,  (0x00),  ((3)&0xFF), True) #I banks disabled M1 PI_bank_select_M1 = 3
             self.sendCommand16( 0x07,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
             self.sendCommand16( 0x08,  (0x00),  ((3)&0xFF), True) #D banks disabled M1 PD_bank_select_M1 = 3
             self.sendCommand16( 0x0C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
-            self.sendCommand16( 0x12,  ((self.d["Motor Config"]["SpikeExpansor_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M1"].get()) & 0xFF), True) #spike expansor M1
+            self.sendCommand16( 0x12,  ((self.d["Motor Config"]["spike_expansor_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M1"].get()) & 0xFF), True) #spike expansor M1
             self.sendCommand16( 0x13,  (0x00),  ((3)&0xFF), True) #EI bank enabled M1 EI_bank_select_M1 = 3
             self.sendCommand16( 0x17,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
             self.sendCommand16( 0x02,  ((iSIV >> 8) & 0xFF),  ((iSIV) & 0xFF), True) #Ref M1 0
@@ -1681,7 +1681,7 @@ class python_aer:
             self.sendCommand16( 0x27,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M1
             self.sendCommand16( 0x28,  (0x00),  ((3)&0xFF), True) #D banks disabled M1 PD_bank_select_M2 = 3
             self.sendCommand16( 0x2C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M1
-            self.sendCommand16( 0x32,  ((self.d["Motor Config"]["SpikeExpansor_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M2"].get()) & 0xFF), True) #spike expansor M1
+            self.sendCommand16( 0x32,  ((self.d["Motor Config"]["spike_expansor_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M2"].get()) & 0xFF), True) #spike expansor M1
             self.sendCommand16( 0x33,  (0x00),  ((3)&0xFF), True) #EI bank enabled M1 EI_bank_select_M2 = 3
             self.sendCommand16( 0x37,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M1
             self.sendCommand16( 0x22,  ((iSIV >> 8) & 0xFF),  ((iSIV) & 0xFF), True) #Ref M1 0
@@ -1690,7 +1690,7 @@ class python_aer:
             self.sendCommand16( 0x47,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M1
             self.sendCommand16( 0x48,  (0x00),  ((3)&0xFF), True) #D banks disabled M1 PD_bank_select_M3 = 3
             self.sendCommand16( 0x4C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M1
-            self.sendCommand16( 0x52,  ((self.d["Motor Config"]["SpikeExpansor_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M3"].get()) & 0xFF), True) #spike expansor M1
+            self.sendCommand16( 0x52,  ((self.d["Motor Config"]["spike_expansor_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M3"].get()) & 0xFF), True) #spike expansor M1
             self.sendCommand16( 0x53,  (0x00),  ((3)&0xFF), True) #EI bank enabled M1 EI_bank_select_M2 = 3
             self.sendCommand16( 0x57,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M1
             self.sendCommand16( 0x42,  ((iSIV >> 8) & 0xFF),  ((iSIV) & 0xFF), True) #Ref M1 0
@@ -1699,7 +1699,7 @@ class python_aer:
             self.sendCommand16( 0x67,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
             self.sendCommand16( 0x68,  (0x00),  ((3)&0xFF), True) #D banks disabled M4 PD_bank_select_M4 = 3
             self.sendCommand16( 0x6C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
-            self.sendCommand16( 0x72,  ((self.d["Motor Config"]["SpikeExpansor_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M4"].get()) & 0xFF), True) #spike expansor M4
+            self.sendCommand16( 0x72,  ((self.d["Motor Config"]["spike_expansor_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M4"].get()) & 0xFF), True) #spike expansor M4
             self.sendCommand16( 0x73,  (0x00),  ((3)&0xFF), True) #EI bank enabled M4 EI_bank_select_M4 = 3
             self.sendCommand16( 0x77,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
             self.sendCommand16( 0x62,  ((iSIV >> 8) & 0xFF),  ((iSIV) & 0xFF), True)
@@ -1708,7 +1708,7 @@ class python_aer:
             self.sendCommand16( 0x87,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M5"].get()) & 0xFF), True) #FD I&G bank 3 M5
             self.sendCommand16( 0x88,  (0x00),  ((3)&0xFF), True) #D banks disabled M5 PD_bank_select_M5 = 3
             self.sendCommand16( 0x8C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M5"].get()) & 0xFF), True) #FD I&G bank 3 M5
-            self.sendCommand16( 0x92,  ((self.d["Motor Config"]["SpikeExpansor_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M5"].get()) & 0xFF), True) #spike expansor M5
+            self.sendCommand16( 0x92,  ((self.d["Motor Config"]["spike_expansor_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M5"].get()) & 0xFF), True) #spike expansor M5
             self.sendCommand16( 0x93,  (0x00),  ((3)&0xFF), True) #EI bank enabled M5 EI_bank_select_M5 = 3
             self.sendCommand16( 0x97,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M5"].get()) & 0xFF), True) #FD I&G bank 3 M5
             self.sendCommand16( 0x82,  ((iSIV >> 8) & 0xFF),  ((iSIV) & 0xFF), True) #Ref M5 0
@@ -1717,7 +1717,7 @@ class python_aer:
             self.sendCommand16( 0xA7,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M6"].get()) & 0xFF), True) #FD I&G bank 3 M6
             self.sendCommand16( 0xA8,  (0x00),  ((3)&0xFF), True) #D banks disabled M6 PD_bank_select_M6 = 3
             self.sendCommand16( 0xAC,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M6"].get()) & 0xFF), True) #FD I&G bank 3 M6
-            self.sendCommand16( 0xB2,  ((self.d["Motor Config"]["SpikeExpansor_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M6"].get()) & 0xFF), True) #spike expansor M6
+            self.sendCommand16( 0xB2,  ((self.d["Motor Config"]["spike_expansor_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M6"].get()) & 0xFF), True) #spike expansor M6
             self.sendCommand16( 0xB3,  (0x00),  ((3)&0xFF), True) #EI bank enabled M6 EI_bank_select_M6 = 3
             self.sendCommand16( 0xB7,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M6"].get()) & 0xFF), True) #FD I&G bank 3 M6
             self.sendCommand16( 0xA2,  ((iSIV >> 8) & 0xFF),  ((iSIV) & 0xFF), True) #Ref M6 0
@@ -1732,7 +1732,7 @@ class python_aer:
                 lap = self.millis_now()
                 while(abs(now-lap) < 100):
                     now = self.millis_now()
-                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now() - start),scanInitValue,self.Read_J1_pos(),scanInitValue,self.Read_J2_pos(),scanInitValue,self.Read_J3_pos(),scanInitValue,self.Read_J4_pos(),scanInitValue,self.Read_J5_pos(),scanInitValue,self.Read_J6_pos()))
+                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now() - start),scan_Init_Value,self.Read_J1_pos(),scan_Init_Value,self.Read_J2_pos(),scan_Init_Value,self.Read_J3_pos(),scan_Init_Value,self.Read_J4_pos(),scan_Init_Value,self.Read_J5_pos(),scan_Init_Value,self.Read_J6_pos()))
                 now = self.millis_now()
 
             for j in range(0,5):
@@ -1749,7 +1749,7 @@ class python_aer:
                     start2 = self.millis_now()
                     now = self.millis_now()
 
-                    while(abs(now-start2) < scanWaitTime):
+                    while(abs(now-start2) < scan_Wait_Time):
                         lap = self.millis_now()
                         while(abs(now-lap) < 100):
                             now = self.millis_now()
@@ -1770,7 +1770,7 @@ class python_aer:
                     start2 = self.millis_now()
                     now = self.millis_now()
 
-                    while(abs(now-start2) < scanWaitTime):
+                    while(abs(now-start2) < scan_Wait_Time):
                         lap = self.millis_now()
                         while(abs(now-lap) < 100):
                             now = self.millis_now()
@@ -1839,7 +1839,7 @@ class python_aer:
             return -1
         else:
             if self.checked.get():
-                scanWaitTime = self.d["Scan Parameters"]["scan_Wait_Time"]
+                scan_Wait_Time = self.d["Scan Parameters"]["scan_Wait_Time"]
                 refsM1 = [0,-200,0,200,0]
                 refsM2 = [0,-50,0,-50,0]
                 refsM3 = [0, -200,    0, -200,    0]
@@ -1855,7 +1855,7 @@ class python_aer:
                 self.sendCommand16( 0x07,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
                 self.sendCommand16( 0x08,  (0x00),  ((3)&0xFF), True) #D banks disabled M1
                 self.sendCommand16( 0x0C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
-                self.sendCommand16( 0x12,  ((self.d["Motor Config"]["SpikeExpansor_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M1"].get()) & 0xFF), True) #spike expansor M1
+                self.sendCommand16( 0x12,  ((self.d["Motor Config"]["spike_expansor_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M1"].get()) & 0xFF), True) #spike expansor M1
                 self.sendCommand16( 0x13,  (0x00),  ((3)&0xFF), True) #EI bank enabled M1
                 self.sendCommand16( 0x17,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
                 self.sendCommand16( 0x02,  ((refsM1[0] >> 8) & 0xFF),  ((refsM1[0]) & 0xFF), True) #Ref M1 0
@@ -1864,7 +1864,7 @@ class python_aer:
                 self.sendCommand16( 0x27,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M1
                 self.sendCommand16( 0x28,  (0x00),  ((3)&0xFF), True) #D banks disabled M1
                 self.sendCommand16( 0x2C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M1
-                self.sendCommand16( 0x32,  ((self.d["Motor Config"]["SpikeExpansor_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M2"].get()) & 0xFF), True) #spike expansor M1
+                self.sendCommand16( 0x32,  ((self.d["Motor Config"]["spike_expansor_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M2"].get()) & 0xFF), True) #spike expansor M1
                 self.sendCommand16( 0x33,  (0x00),  ((3)&0xFF), True) #EI bank enabled M1
                 self.sendCommand16( 0x37,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M1
                 self.sendCommand16( 0x22,  ((refsM2[0] >> 8) & 0xFF),  ((refsM2[0]) & 0xFF), True) #Ref M1 0
@@ -1873,7 +1873,7 @@ class python_aer:
                 self.sendCommand16( 0x47,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M1
                 self.sendCommand16( 0x48,  (0x00),  ((3)&0xFF), True) #D banks disabled M1
                 self.sendCommand16( 0x4C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M1
-                self.sendCommand16( 0x52,  ((self.d["Motor Config"]["SpikeExpansor_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M3"].get()) & 0xFF), True) #spike expansor M1
+                self.sendCommand16( 0x52,  ((self.d["Motor Config"]["spike_expansor_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M3"].get()) & 0xFF), True) #spike expansor M1
                 self.sendCommand16( 0x53,  (0x00),  ((3)&0xFF), True) #EI bank enabled M1
                 self.sendCommand16( 0x57,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M1
                 self.sendCommand16( 0x42,  ((refsM3[0] >> 8) & 0xFF),  ((refsM3[0]) & 0xFF), True) #Ref M1 0
@@ -1882,7 +1882,7 @@ class python_aer:
                 self.sendCommand16( 0x67,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
                 self.sendCommand16( 0x68,  (0x00),  ((3)&0xFF), True) #D banks disabled M4
                 self.sendCommand16( 0x6C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
-                self.sendCommand16( 0x72,  ((self.d["Motor Config"]["SpikeExpansor_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M4"].get()) & 0xFF), True) #spike expansor M4
+                self.sendCommand16( 0x72,  ((self.d["Motor Config"]["spike_expansor_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M4"].get()) & 0xFF), True) #spike expansor M4
                 self.sendCommand16( 0x73,  (0x00),  ((3)&0xFF), True) #EI bank enabled M4
                 self.sendCommand16( 0x77,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
                 self.sendCommand16( 0x62,  ((refsM4[0] >> 8) & 0xFF),  ((refsM4[0]) & 0xFF), True) #Ref M4 0
@@ -1907,7 +1907,7 @@ class python_aer:
 
                         start2 = self.millis_now()
                         now = self.millis_now()
-                        while(abs(now-start2) < scanWaitTime):
+                        while(abs(now-start2) < scan_Wait_Time):
                             lap = self.millis_now()
                             while(abs(now-lap) < 100):
                                 now = self.millis_now()
@@ -2210,7 +2210,7 @@ class python_aer:
         self.sendCommand16( 0x07,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
         self.sendCommand16( 0x08,  (0x00),  ((3)&0xFF), True) #D banks disabled M1 PD_bank_select_M1 = 3
         self.sendCommand16( 0x0C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
-        self.sendCommand16( 0x12,  ((self.d["Motor Config"]["SpikeExpansor_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M1"].get()) & 0xFF), True) #spike expansor M1
+        self.sendCommand16( 0x12,  ((self.d["Motor Config"]["spike_expansor_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M1"].get()) & 0xFF), True) #spike expansor M1
         self.sendCommand16( 0x13,  (0x00),  ((3)&0xFF), True) #EI bank enabled M1 EI_bank_select_M1 = 3
         self.sendCommand16( 0x17,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
         self.sendCommand16( 0x02,  (0),  (0), True) #Ref M1 0
@@ -2231,7 +2231,7 @@ class python_aer:
         self.sendCommand16( 0x27,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M2
         self.sendCommand16( 0x28,  (0x00),  ((3)&0xFF), True) #D banks disabled M2 PD_bank_select_M2 = 3
         self.sendCommand16( 0x2C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M2
-        self.sendCommand16( 0x32,  ((self.d["Motor Config"]["SpikeExpansor_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M2"].get()) & 0xFF), True) #spike expansor M2
+        self.sendCommand16( 0x32,  ((self.d["Motor Config"]["spike_expansor_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M2"].get()) & 0xFF), True) #spike expansor M2
         self.sendCommand16( 0x33,  (0x00),  ((3)&0xFF), True) #EI bank enabled M2 EI_bank_select_M2 = 3
         self.sendCommand16( 0x37,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M2
         self.sendCommand16( 0x22,  (0),  (0), True) #Ref M2 0
@@ -2251,7 +2251,7 @@ class python_aer:
         self.sendCommand16( 0x47,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M3
         self.sendCommand16( 0x48,  (0x00),  ((3)&0xFF), True) #D banks disabled M3 PD_bank_select_M3 = 3
         self.sendCommand16( 0x4C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M3
-        self.sendCommand16( 0x52,  ((self.d["Motor Config"]["SpikeExpansor_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M3"].get()) & 0xFF), True) #spike expansor M3
+        self.sendCommand16( 0x52,  ((self.d["Motor Config"]["spike_expansor_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M3"].get()) & 0xFF), True) #spike expansor M3
         self.sendCommand16( 0x53,  (0x00),  ((3)&0xFF), True) #EI bank enabled M3 EI_bank_select_M3 = 3
         self.sendCommand16( 0x57,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M3
         self.sendCommand16( 0x42,  (0),  (0), True) #Ref M3 0
@@ -2271,7 +2271,7 @@ class python_aer:
         self.sendCommand16( 0x67,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
         self.sendCommand16( 0x68,  (0x00),  ((3)&0xFF), True) #D banks disabled M4 PD_bank_select_M4 = 3
         self.sendCommand16( 0x6C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
-        self.sendCommand16( 0x72,  ((self.d["Motor Config"]["SpikeExpansor_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M4"].get()) & 0xFF), True) #spike expansor M4
+        self.sendCommand16( 0x72,  ((self.d["Motor Config"]["spike_expansor_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M4"].get()) & 0xFF), True) #spike expansor M4
         self.sendCommand16( 0x73,  (0x00),  ((3)&0xFF), True) #EI bank enabled M4 EI_bank_select_M4 = 3
         self.sendCommand16( 0x77,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
         self.sendCommand16( 0x62,  (0),  (0), True) #Ref M4 0
@@ -2291,7 +2291,7 @@ class python_aer:
         self.sendCommand16( 0x87,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M5"].get()) & 0xFF), True) #FD I&G bank 3 M5
         self.sendCommand16( 0x88,  (0x00),  ((3)&0xFF), True) #D banks disabled M5 PD_bank_select_M5 = 3
         self.sendCommand16( 0x8C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M5"].get()) & 0xFF), True) #FD I&G bank 3 M5
-        self.sendCommand16( 0x92,  ((self.d["Motor Config"]["SpikeExpansor_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M5"].get()) & 0xFF), True) #spike expansor M5
+        self.sendCommand16( 0x92,  ((self.d["Motor Config"]["spike_expansor_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M5"].get()) & 0xFF), True) #spike expansor M5
         self.sendCommand16( 0x93,  (0x00),  ((3)&0xFF), True) #EI bank enabled M5 EI_bank_select_M5 = 3
         self.sendCommand16( 0x97,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M5"].get()) & 0xFF), True) #FD I&G bank 3 M5
         self.sendCommand16( 0x82,  (0),  (0), True) #Ref M5 0
@@ -2311,7 +2311,7 @@ class python_aer:
         self.sendCommand16( 0xA7,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M6"].get()) & 0xFF), True) #FD I&G bank 3 M6
         self.sendCommand16( 0xA8,  (0x00),  ((3)&0xFF), True) #D banks disabled M6 PD_bank_select_M6 = 3
         self.sendCommand16( 0xAC,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M6"].get()) & 0xFF), True) #FD I&G bank 3 M6
-        self.sendCommand16( 0xB2,  ((self.d["Motor Config"]["SpikeExpansor_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["SpikeExpansor_M6"].get()) & 0xFF), True) #spike expansor M6
+        self.sendCommand16( 0xB2,  ((self.d["Motor Config"]["spike_expansor_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M6"].get()) & 0xFF), True) #spike expansor M6
         self.sendCommand16( 0xB3,  (0x00),  ((3)&0xFF), True) #EI bank enabled M6 EI_bank_select_M6 = 3
         self.sendCommand16( 0xB7,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M6"].get()) & 0xFF), True) #FD I&G bank 3 M6
         self.sendCommand16( 0xA2,  (0),  (0), True) #Ref M6 0
