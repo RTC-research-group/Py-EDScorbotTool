@@ -4,6 +4,7 @@ import tkinter as tk
 from tkinter import ttk,messagebox
 import usb.core
 import usb.util
+import usb.backend.libusb1
 import json
 from tkinter import filedialog
 import datetime
@@ -237,22 +238,31 @@ class python_aer:
         to initiate communication and returns the connection
         to the device found
         '''
-        dev = usb.core.find(idVendor=self.VID,idProduct=self.PID)
-            
-        #If the device can't be found, tell the user and end execution
-        if dev is None:
-            self.alert("Device not found, try again or check the connection")
-            
-        #If the device was found, set configuration to default, claim the 
-        #default interface and attach the handler to dev
-        else:
-            
-            dev.set_configuration()
-            usb.util.claim_interface(dev,0)
-            
-            print("Device found and initialized successfully")
 
-            return dev
+        try:
+            dev = usb.core.find(idVendor=self.VID,idProduct=self.PID)
+        except usb.core.NoBackendError:
+            
+            be = usb.backend.libusb1.get_backend(find_library = lambda x:"/lib/x86_64-linux-gnu/libusb-1.0.so.0")
+            dev = usb.core.find(idVendor=self.VID,idProduct=self.PID,backend=be)
+        finally:
+            #If the device can't be found, tell the user and end execution
+            if dev is None:
+                self.alert("Device not found, try again or check the connection")
+                return None
+                
+            #If the device was found, set configuration to default, claim the 
+            #default interface and attach the handler to dev
+            else:
+                
+                dev.set_configuration()
+                usb.util.claim_interface(dev,0)
+                
+                print("Device found and initialized successfully")
+
+                return dev
+
+        
 
     def closeUSB(self):
         '''
