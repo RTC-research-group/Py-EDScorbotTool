@@ -775,6 +775,7 @@ class python_aer:
                 for i in range(0,6):
 
                     self.SendCommandJoint1(self.d["Motor Config"]["ref_M1"].get())
+                    print("ref_M1:",self.d["Motor Config"]["ref_M1"].get())
                     print("PI_FD_bank0_12bits_M1={} \t PI_FD_bank1_14bits_M1={} \t PI_FD_bank2_16bits_M1={} \t PI_FD_bank3_18bits_M1={}\n"
                           .format(512,512,512,self.d["Motor Config"]["PI_FD_bank3_18bits_M1"].get()) +
                           "PD_FD_bank0_16bits_M1={} \t PD_FD_bank1_18bits_M1={} \t PD_FD_bank2_20bits_M1={} \t PD_FD_bank3_22bits_M1={}\n"
@@ -783,6 +784,7 @@ class python_aer:
                           .format(512,512,512,self.d["Motor Config"]["EI_FD_bank3_18bits_M1"].get()))
                     
                     self.SendCommandJoint2(self.d["Motor Config"]["ref_M2"].get())
+                    print("ref_M2:",self.d["Motor Config"]["ref_M2"].get())
                     print("PI_FD_bank0_12bits_M2={} \t PI_FD_bank1_14bits_M2={} \t PI_FD_bank2_16bits_M2={} \t PI_FD_bank3_18bits_M2={}\n"
                           .format(512,512,512,self.d["Motor Config"]["PI_FD_bank3_18bits_M2"].get()) +
                           "PD_FD_bank0_16bits_M2={} \t PD_FD_bank1_18bits_M2={} \t PD_FD_bank2_20bits_M2={} \t PD_FD_bank3_22bits_M2={}\n"
@@ -791,6 +793,7 @@ class python_aer:
                           .format(512,512,512,self.d["Motor Config"]["EI_FD_bank3_18bits_M2"].get()))
 
                     self.SendCommandJoint3(self.d["Motor Config"]["ref_M3"].get())
+                    print("ref_M3:",self.d["Motor Config"]["ref_M3"].get())
                     print("PI_FD_bank0_12bits_M3={} \t PI_FD_bank1_14bits_M3={} \t PI_FD_bank2_16bits_M3={} \t PI_FD_bank3_18bits_M3={}\n"
                           .format(512,512,512,self.d["Motor Config"]["PI_FD_bank3_18bits_M3"].get()) +
                           "PD_FD_bank0_16bits_M3={} \t PD_FD_bank1_18bits_M3={} \t PD_FD_bank2_20bits_M3={} \t PD_FD_bank3_22bits_M3={}\n"
@@ -799,6 +802,7 @@ class python_aer:
                           .format(512,512,512,self.d["Motor Config"]["EI_FD_bank3_18bits_M3"].get()))
                     
                     self.SendCommandJoint4(self.d["Motor Config"]["ref_M4"].get())
+                    print("ref_M4:",self.d["Motor Config"]["ref_M4"].get())
                     print("PI_FD_bank0_12bits_M4={} \t PI_FD_bank1_14bits_M4={} \t PI_FD_bank2_16bits_M4={} \t PI_FD_bank3_18bits_M4={}\n"
                           .format(512,512,512,self.d["Motor Config"]["PI_FD_bank3_18bits_M4"].get()) +
                           "PD_FD_bank0_16bits_M4={} \t PD_FD_bank1_18bits_M4={} \t PD_FD_bank2_20bits_M4={} \t PD_FD_bank3_22bits_M4={}\n"
@@ -807,6 +811,7 @@ class python_aer:
                           .format(512,512,512,self.d["Motor Config"]["EI_FD_bank3_18bits_M4"].get()))
 
                     self.SendCommandJoint5(self.d["Motor Config"]["ref_M5"].get())
+                    print("ref_M5:",self.d["Motor Config"]["ref_M5"].get())
                     print("PI_FD_bank0_12bits_M5={} \t PI_FD_bank1_14bits_M5={} \t PI_FD_bank2_16bits_M5={} \t PI_FD_bank3_18bits_M5={}\n"
                           .format(512,512,512,self.d["Motor Config"]["PI_FD_bank3_18bits_M5"].get()) +
                           "PD_FD_bank0_16bits_M5={} \t PD_FD_bank1_18bits_M5={} \t PD_FD_bank2_20bits_M5={} \t PD_FD_bank3_22bits_M5={}\n"
@@ -815,6 +820,7 @@ class python_aer:
                           .format(512,512,512,self.d["Motor Config"]["EI_FD_bank3_18bits_M5"].get()))
                     
                     self.SendCommandJoint6(self.d["Motor Config"]["ref_M6"].get())
+                    print("ref_M6:",self.d["Motor Config"]["ref_M6"].get())
                     print("PI_FD_bank0_12bits_M6={} \t PI_FD_bank1_14bits_M6={} \t PI_FD_bank2_16bits_M6={} \t PI_FD_bank3_18bits_M6={}\n"
                           .format(512,512,512,self.d["Motor Config"]["PI_FD_bank3_18bits_M6"].get()) +
                           "PD_FD_bank0_16bits_M6={} \t PD_FD_bank1_18bits_M6={} \t PD_FD_bank2_20bits_M6={} \t PD_FD_bank3_22bits_M6={}\n"
@@ -1394,47 +1400,7 @@ class python_aer:
                     i = i - scan_Step_Value
                     
         pass
-   
-    def readSensor(self,sensor):
-        
-        if self.dev==None:
-            self.alert("There is no opened device. Try opening one first")
-            return -1
-
-        dataBuffer = bytearray(self.PACKET_LENGTH)
-
-        dataBuffer[0] = ord('A')
-        dataBuffer[1] = ord('T')
-        dataBuffer[2] = ord('C')
-        dataBuffer[3] = 0x02
-        dataBuffer[4] = 64
-
-        written = self.dev.write(self.ENDPOINT_OUT,dataBuffer)
-
-            #If the amount of bytes written is not the expected, raise a warning
-        if(written != self.PACKET_LENGTH): 
-            print("Failed to transfer whole packet")
-
-        buffer = bytearray(self.PACKET_LENGTH)
-
-        result = 0
-
-        self.dev.read(self.ENDPOINT_IN,buffer)
-
-        # if (result != LibUsb.SUCCESS) que es libusb.success es 0 pero no se si esta en pyusb el mismo resultado
-        # {
-        #     System.out.println("Failed to read-transfer data from LibUSB device.");
-        # }
-
-        sensor_data = 0
-
-        if(buffer[34]==sensor):
-            sensor_data = (0x0ff & buffer[35])*256 + buffer.get[36]
-        else:
-            sensor_data = -1
-        
-        return sensor_data
-
+ 
     def Read_J1_pos(self):
 
         j1_pos = -1
@@ -1475,7 +1441,7 @@ class python_aer:
             
             j2_pos = sensor_j2
 
-        return j2_pos
+            return j2_pos
         
     def Read_J3_pos(self):
 
