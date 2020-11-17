@@ -922,7 +922,7 @@ class python_aer:
                 print("Failed to transfer whole packet")
 
 
-            read = self.dev.read(self.ENDPOINT_IN,readBuffer)
+            readBuffer = self.dev.read(self.ENDPOINT_IN,self.PACKET_LENGTH,10000)
             if read==0:
                  print("Failed to receive whole packet")
             
