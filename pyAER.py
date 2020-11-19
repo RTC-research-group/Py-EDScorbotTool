@@ -262,8 +262,6 @@ class pyAER:
 
                 return dev
 
-        
-
     def closeUSB(self):
         '''
         This function releases the interface claimed
@@ -564,19 +562,6 @@ class pyAER:
                     
                     print("Sending USB SPI")
                     print(i)
-
-        return
-    
-    def ConfigureInit2(self):
-        
-        for key in self.d["Motor Config"].keys():
-            self.d["Motor Config"][key].set(45)
-        
-        for key in self.d["Joints"].keys():
-            self.d["Joints"][key].set(45)
-        
-        for key in self.d["Scan Parameters"].keys():
-            self.d["Scan Parameters"][key].set(45)
 
         return
 
@@ -2332,7 +2317,7 @@ class pyAER:
         
 if __name__ == "__main__":
 
-    config = python_aer()
+    config = pyAER()
     config.render_gui()
     
     
