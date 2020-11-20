@@ -12,18 +12,20 @@ import time
 import logging
 
 class pyAER:
+    '''
+    pyAER software, replacement of jAER
 
+    This class is used for establishing a communication with ED-Scorbot 
+    Robot in order to be able to control it via neuromorphic control, also called SPID
+    '''
     def __init__(self):
         '''
-        Constructor function
+        Constructor
 
-        Initializes GUI by creatin the root Tk object
-
-        Sets icon of the app
-
-        Initializes data structures to hold the value of all variables that are displayed
-
-        Sets constants and handles needed for USB connection
+        Initializes GUI by creating the root Tk object, sets icon of the app,
+        initializes data structures to hold the value of all variables that 
+        are displayed, creating a dictionary (self.d) to access their values
+        and sets constants and handles needed for USB connection
         '''
         #Initialize GUI: create root Tk object
         self.root = tk.Tk()
@@ -65,19 +67,29 @@ class pyAER:
         This function creates a messagebox with the text parameter as data
 
         Useful to alert the user that something has gone wrong
-
         To indicate successful procedures, please just print to console using print()
+
+        Args:
+            text (str): Text to be displayed in the box
+
         '''
         messagebox.showinfo(message=text)
 
     def render_motor(self, motor_number, row, col):
         '''
-        Function to create the inputs for all 6 motors
+        Create the inputs for 1 motor
 
         Each variable created is stored in the "Motor Config" dictionary 
         and can be accessed directly using the name that appears on the graphical interface 
 
-        Returns the labelframe in which the inputs are rendered
+        Args:
+            motor_number (int): Number of the motor to be rendered
+            row (int): Row of the grid in which the inputs will be displayed
+            col (int): Column of the grid in which the inputs will be displayed
+        
+        Returns:
+            Labelframe in which the inputs are rendered
+
         '''
         labels = ["EI_FD_bank3_18bits", "PD_FD_bank3_22bits",
                   "PI_FD_bank3_18bits", "leds", "ref", "spike_expansor"]
@@ -108,14 +120,19 @@ class pyAER:
 
     def render_joints(self, row, col):
         '''
-        Function to create joints text entries
+        Create joints text entries
         
         These entries are read-only, as they will contain the joints measures read from the encoders
         
         Each variable created is stored in the "Joints" dictionary 
         and can be accessed directly using the name that appears on the graphical interface
 
-        Returns the LabelFrame in which the entries are rendered
+        Args:
+            row (int): Row of the grid in which the inputs will be displayed
+            col (int): Column of the grid in which the inputs will be displayed
+
+        Returns:
+            LabelFrame in which the entries are rendered
         '''
 
         labelframe = ttk.LabelFrame(self.root, text="Joint Sensors")
@@ -144,12 +161,17 @@ class pyAER:
 
     def render_scan_parameters(self, row, col):
         '''
-        This function creates the Scan Parameters inputs
+        Create the Scan Parameters inputs
 
         Each variable created is stored in the "Scan Parameters" dictionary 
         and can be accessed directly using the name that appears on the graphical interface
 
-        Returns the labelframe in which the inputs are rendered
+        Args:
+            row (int): Row of the grid in which the inputs will be displayed
+            col (int): Column of the grid in which the inputs will be displayed
+
+        Returns:
+            Labelframe in which the inputs are rendered
         '''
         labels = ["Final_Value", "Init_Value", "Step_Value", "Wait_Time"]
         labelframe = ttk.LabelFrame(self.root, text="Scan Parameters")
@@ -173,7 +195,11 @@ class pyAER:
 
     def render_buttons(self, row, col):
         '''
-        This function creates the buttons that will implement all different usable actions
+        Create the buttons that will be bounded to  all different usable actions
+        
+        Args:
+            row (int): Row of the grid in which the buttons will be displayed
+            col (int): Column of the grid in which the buttons will be displayed
         '''
         labels = ["ConfigureInit", "ConfigureLeds", "ConfigureSPID", "Draw8xy", "Example", "ScanAllMotor", "ScanMotor1", "ScanMotor2", "ScanMotor3", "ScanMotor4",
                   "ScanMotor5", "ScanMotor6", "Search_Home", "Send_Home", "SendFPGAReset", "SetAERIN_ref", "SetUSBSPI_ref", "SwitchOffLEDS"]
@@ -217,9 +243,14 @@ class pyAER:
 
     def render_usbEnable(self,row,col):
         '''
-        This function creates the checkbox that enables opening USB devices
+        Create the checkbox that enables opening USB devices
 
-        The value of the box is stored in the checked variable available in the class
+        The value of the box is stored in the checked
+        variable available in the class (self.checked)
+
+        Args:
+            row (int): Row of the grid in which the checkbox will be displayed
+            col (int): Column of the grid in which the checkbox will be displayed
         '''
         labelframe = ttk.LabelFrame(self.root, text="USB")
         labelframe.grid(column=col, row=row, sticky=(
@@ -233,10 +264,16 @@ class pyAER:
    
     def openUSB(self):
         '''
+        Try to open USB connection with robot infrastructure
+
         This function tries to open a connection with
         the AERNode USB board and claim its interface 
         to initiate communication and returns the connection
         to the device found
+
+        Returns:
+            Device handler if connection was successful
+            None if the connection couldn't be established
         '''
 
         try:
@@ -249,6 +286,7 @@ class pyAER:
             #If the device can't be found, tell the user and end execution
             if dev is None:
                 self.alert("Device not found, try again or check the connection")
+                self.checked.set(False)
                 return None
                 
             #If the device was found, set configuration to default, claim the 
@@ -264,6 +302,8 @@ class pyAER:
 
     def closeUSB(self):
         '''
+        Close USB connection
+
         This function releases the interface claimed
         and then detaches the handle to the device
         '''
@@ -276,10 +316,13 @@ class pyAER:
      
     def checkUSB(self):
         '''
-        This function checks wether USB usage has been enabled or not
-        by reading the checked variable
+        Check wether USB usage has been enabled or not
 
-        If it has, then tries to connect to AERNode board 
+        This function reads the checked self variable to determine 
+        whether USB connection has been enabled or not
+
+        If it has, then tries to connect to AERNode board and sets
+        self.dev to the device handler
         
         If it hasn't, it disconnects from the device
         '''
@@ -295,6 +338,8 @@ class pyAER:
             
     def dumpConfig(self):
         '''
+        Dump current configuration
+
         This function dumps current config (the one being
         displayed in the GUI) to a JSON file named "config.json"
 
@@ -326,6 +371,8 @@ class pyAER:
                 
     def loadConfig(self):
         '''
+        Load configuration in an extern .json file
+
         This function allows users to load a json file containing
         a valid configuration file, just as the ones generated with 
         the dumpConfig function
@@ -346,16 +393,18 @@ class pyAER:
                 self.d["Scan Parameters"][key].set(j["Scan Parameters"][key])
             
             return
-        #If we cacth a KeyError, the config is invalid, so alert the user and end execution
+        #If we catch a KeyError, the config is invalid, so alert the user and end execution
         except KeyError:
             self.alert("Invalid config file")
             return
   
     def render_gui(self):
         '''
+        Top level GUI routine 
+
         This function serves as a top routine for rendering all 
         GUI widgets. It calls each function that renders a component,
-        and assign them a place in the top window.
+        and assigns them a place in the top window.
 
         Layout changes may be made here: just change the column and row
         of the component to render in its call to adjust it to your own needs
@@ -386,6 +435,15 @@ class pyAER:
 
     def ConfigureInit(self):
         
+        '''
+        Set current position as initial
+
+        This function sets the current position of each joint
+        as the initial position. This means that, after this
+        function is called, the current position will match
+        the position with a reference of 0
+        '''
+
         if (((self.dev and self.checked.get()) == None) or (self.checked.get() == False)):
             self.alert("No device opened. Try checking USB option first")
             return
@@ -566,7 +624,13 @@ class pyAER:
         return
 
     def SendCommandJoint1(self,ref):
-        
+        '''
+        Send reference to 1st joint
+
+        This function allows to send a reference
+        to the 1st joint in order to move it
+        Reference to angle are mapped in this link: INSERT LINK
+        '''
         #EI_FD_bank0_12bits_M1 = 512
         #EI_FD_bank0_14bits_M1 = 512
         #EI_FD_bank0_16bits_M1 = 512
@@ -597,7 +661,13 @@ class pyAER:
         pass
 
     def SendCommandJoint2(self,ref):
-        
+        '''
+        Send reference to 2nd joint
+
+        This function allows to send a reference
+        to the 2nd joint in order to move it
+        Reference to angle are mapped in this link: INSERT LINK
+        '''
         #EI_FD_bank0_12bits_M2 = 512
         #EI_FD_bank0_14bits_M2 = 512
         #EI_FD_bank0_16bits_M2 = 512
@@ -628,7 +698,13 @@ class pyAER:
         pass
 
     def SendCommandJoint3(self,ref):
-        
+        '''
+        Send reference to 3rd joint
+
+        This function allows to send a reference
+        to the 3rd joint in order to move it
+        Reference to angle are mapped in this link: INSERT LINK
+        '''
         #EI_FD_bank0_12bits_M3 = 512
         #EI_FD_bank0_14bits_M3 = 512
         #EI_FD_bank0_16bits_M3 = 512
@@ -659,7 +735,13 @@ class pyAER:
         pass
         
     def SendCommandJoint4(self,ref):
-        
+        '''
+        Send reference to 4th joint
+
+        This function allows to send a reference
+        to the 4th joint in order to move it
+        Reference to angle are mapped in this link: INSERT LINK
+        '''
         #EI_FD_bank0_12bits_M4 = 512
         #EI_FD_bank0_14bits_M4 = 512
         #EI_FD_bank0_16bits_M4 = 512
@@ -690,7 +772,13 @@ class pyAER:
         pass
 
     def SendCommandJoint5(self,ref):
-        
+        '''
+        Send reference to 5th joint
+
+        This function allows to send a reference
+        to the 5th joint in order to move it
+        Reference to angle are mapped in this link: INSERT LINK
+        '''
         #EI_FD_bank0_12bits_M5 = 512
         #EI_FD_bank0_14bits_M5 = 512
         #EI_FD_bank0_16bits_M5 = 512
@@ -721,7 +809,13 @@ class pyAER:
         pass
 
     def SendCommandJoint6(self,ref):
-        
+        '''
+        Send reference to 6th joint
+
+        This function allows to send a reference
+        to the 6th joint in order to move it
+        Reference to angle are mapped in this link: INSERT LINK
+        '''
         #EI_FD_bank0_12bits_M6 = 512
         #EI_FD_bank0_14bits_M6 = 512
         #EI_FD_bank0_16bits_M6 = 512
@@ -752,6 +846,16 @@ class pyAER:
         pass
 
     def ConfigureSPID(self):
+        
+        '''
+        Command a movement to all the joints
+        
+        It calls sendCommandJoint1-6 and sends the 
+        reference that is specified in the
+        input boxes that the GUI offers.
+        
+        '''
+
         if (((self.dev and self.checked.get()) == None) or (self.checked.get() == False)):
             self.alert("No device opened. Try checking USB option first")
             return
@@ -817,6 +921,11 @@ class pyAER:
                     print(i)
     
     def ConfigureSPID_allJoints(self):
+
+        '''
+        Same as ConfigureSPID but it doesn't print the information in the console
+        '''
+
         #Check if USB device is initialized
         if(self.dev == None):
             self.alert("There is no opened device. Try opening one first")
@@ -835,8 +944,16 @@ class pyAER:
 
     def sendCommand16(self, cmd, data1, data2, spiEnable):
         '''
+        Send 2 bytes of data and an address via USB to robot's infrastructure
+
         This function allows to send 2 bytes of data to 
-        the AERNode board via USB
+        a specific address to the AERNode board via USB
+
+        Args:
+            cmd (int): Address to which data will be sent
+            data1 (byte): Byte 1 of data
+            data2 (byte): Byte 2 of data
+            spiEnable (bool): Legacy option not to break anything, always True in this program
         '''
 
         #Check if USB device is initialized
@@ -882,6 +999,20 @@ class pyAER:
                 print("Failed to transfer whole packet")
 
     def readSensor(self,sensor):
+        '''
+        Read a joint's position sensor
+
+        This function allows for a joint sensor
+        to be read, so that you are able to
+        know a joint's position in any given moment
+
+        Args:
+            sensor (int): The number of the sensor to be read, ranging from 1 to 6
+        
+        Returns:
+            int: Sensor position if everything went well
+            int: -1 if something went wrong
+        '''
 
         if(self.dev == None):
             self.alert("There is no opened device. Try opening one first")
@@ -919,7 +1050,16 @@ class pyAER:
             return sensor_data
   
     def scanMotor1(self):
-    
+        '''
+        Scan Motor 1
+
+        This function commands the robot to perform 
+        the scan procedure defined by the 4 Scan Parameters
+        (available in the dictionary as "Scan Parameters")
+
+        These functions (scanMotor1-6) can be used to obtain data
+        that can be later be displayed in different graphs
+        '''
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
             return
@@ -997,7 +1137,16 @@ class pyAER:
         pass
                       
     def scanMotor2(self):
-        
+        '''
+        Scan Motor 2
+
+        This function commands the robot to perform 
+        the scan procedure defined by the 4 Scan Parameters
+        (available in the dictionary as "Scan Parameters")
+
+        These functions (scanMotor1-6) can be used to obtain data
+        that can be later be displayed in different graphs
+        '''
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
             return
@@ -1075,7 +1224,16 @@ class pyAER:
         pass
               
     def scanMotor3(self):
-        
+        '''
+        Scan Motor 3
+
+        This function commands the robot to perform 
+        the scan procedure defined by the 4 Scan Parameters
+        (available in the dictionary as "Scan Parameters")
+
+        These functions (scanMotor1-6) can be used to obtain data
+        that can be later be displayed in different graphs
+        '''
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
             return
@@ -1153,7 +1311,16 @@ class pyAER:
         pass
         
     def scanMotor4(self):
-        
+        '''
+        Scan Motor 4
+
+        This function commands the robot to perform 
+        the scan procedure defined by the 4 Scan Parameters
+        (available in the dictionary as "Scan Parameters")
+
+        These functions (scanMotor1-6) can be used to obtain data
+        that can be later be displayed in different graphs
+        '''
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
             return
@@ -1231,7 +1398,16 @@ class pyAER:
         pass
       
     def scanMotor5(self):
-        
+        '''
+        Scan Motor 5
+
+        This function commands the robot to perform 
+        the scan procedure defined by the 4 Scan Parameters
+        (available in the dictionary as "Scan Parameters")
+
+        These functions (scanMotor1-6) can be used to obtain data
+        that can be later be displayed in different graphs
+        '''
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
             return
@@ -1309,7 +1485,16 @@ class pyAER:
         pass
    
     def scanMotor6(self):
-        
+        '''
+        Scan Motor 2
+
+        This function commands the robot to perform 
+        the scan procedure defined by the 4 Scan Parameters
+        (available in the dictionary as "Scan Parameters")
+
+        These functions (scanMotor1-6) can be used to obtain data
+        that can be later be displayed in different graphs
+        '''
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
             return
@@ -1387,11 +1572,20 @@ class pyAER:
         pass
  
     def Read_J1_pos(self):
+        '''
+        Read position of the first joint
 
+        This function makes combined use of sendCommand16 and
+        readSensor functions to retrieve J1 position
+
+        Returns:
+            int: Position of J1
+            int: -1 if something went wrong
+        '''
         j1_pos = -1
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
-            return -1
+            return
         
         if self.checked.get():
             sensor_j1 = -1
@@ -1408,11 +1602,20 @@ class pyAER:
             return j1_pos
 
     def Read_J2_pos(self):
+        '''
+        Read position of the second joint
 
+        This function makes combined use of sendCommand16 and
+        readSensor functions to retrieve J2 position
+
+        Returns:
+            int: Position of J2
+            int: -1 if something went wrong
+        '''
         j2_pos = -1
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
-            return -1
+            return
         
         if self.checked.get():
             sensor_j2 = -1
@@ -1429,11 +1632,20 @@ class pyAER:
             return j2_pos
         
     def Read_J3_pos(self):
+        '''
+        Read position of the third joint
 
+        This function makes combined use of sendCommand16 and
+        readSensor functions to retrieve J3 position
+
+        Returns:
+            int: Position of J3
+            int: -1 if something went wrong
+        '''
         j3_pos = -1
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
-            return -1
+            return
         
         if self.checked.get():
             sensor_j3 = -1
@@ -1450,11 +1662,20 @@ class pyAER:
             return j3_pos
 
     def Read_J4_pos(self):
+        '''
+        Read position of the fourth joint
 
+        This function makes combined use of sendCommand16 and
+        readSensor functions to retrieve J4 position
+
+        Returns:
+            int: Position of J4
+            int: -1 if something went wrong
+        '''
         j4_pos = -1
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
-            return -1
+            return
         
         if self.checked.get():
             sensor_j4 = -1
@@ -1471,11 +1692,20 @@ class pyAER:
             return j4_pos
 
     def Read_J5_pos(self):
+        '''
+        Read position of the fifth joint
 
+        This function makes combined use of sendCommand16 and
+        readSensor functions to retrieve J5 position
+
+        Returns:
+            int: Position of J5
+            int: -1 if something went wrong
+        '''
         j5_pos = -1
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
-            return -1
+            return
         
         if self.checked.get():
             sensor_j5 = -1
@@ -1492,11 +1722,20 @@ class pyAER:
             return j5_pos
     
     def Read_J6_pos(self):
+        '''
+        Read position of the sixth joint
 
+        This function makes combined use of sendCommand16 and
+        readSensor functions to retrieve J6 position
+
+        Returns:
+            int: Position of J6
+            int: -1 if something went wrong
+        '''
         j6_pos = -1
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
-            return -1
+            return
         
         if self.checked.get():
             sensor_j6 = -1
@@ -1531,7 +1770,15 @@ class pyAER:
         self.sendCommand16( 0xF6,  (0x00),  (0xF6), True)
 
     def SendFPGAReset(self):
+        '''
+        Command the FPGA to force an internal reset
 
+        This function tells the FPGA to reset, in order 
+        to restore its initial configuration in case
+        something is not working properly and we don't 
+        know what's going on
+
+        '''
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
             return
@@ -1590,7 +1837,13 @@ class pyAER:
                         self.SendCommandJoint6(0)
 
     def ScanAllMotor(self):
-        
+        '''
+        Perform scan procedure on all 6 joints
+
+        This function commands the robot to find 
+        its base position on all 6 joints at 
+        the same time
+        '''
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
             return
@@ -1741,18 +1994,24 @@ class pyAER:
                     i = i - iSSV
 
     def SetAERIN_ref(self):
+        '''
+        Not used
+        '''
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
-            return -1
+            return
         else:
             if self.checked.get():
                 self.sendCommand16(0xF0,(0xFF),(0xFF), True)
                 self.sendCommand16(0xF0,(0xFF),(0xFF), True)
     
     def SetUSBSPI_ref(self):
+        '''
+        Not used
+        '''
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
-            return -1
+            return
         else:
             if self.checked.get():
                 self.sendCommand16(0xF0,(0x00),(0x00), True);
@@ -1760,17 +2019,22 @@ class pyAER:
 
     def resetUSB(self):
         '''
+        Reset USB connection
+
         This function resets USB connection by closing
-        then reopening the device
+        and then reopening the device
         '''
         self.closeUSB()
         self.dev = self.openUSB()
         self.checked.set(True)
         
     def ConfigureLeds(self):
+        '''
+        Not used
+        '''
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
-            return -1
+            return
         else:
             if self.checked.get():
                 self.sendCommand16( 0,  (0x00), ((self.d["Motor Config"]["leds_M1"].get()) & 0xFF), True) #LEDs M1
@@ -1781,10 +2045,12 @@ class pyAER:
                 self.sendCommand16( 0xA0,  (0x00), ((self.d["Motor Config"]["leds_M6"].get()) & 0xFF), True) #LEDs M6
 
     def SwitchOffLEDS(self):
-
+        '''
+        Not used
+        '''
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
-            return -1
+            return
         else:
             if self.checked.get():
                 self.sendCommand16( 0,  0,  0, False) #LEDs M1 off
@@ -1795,9 +2061,12 @@ class pyAER:
                 self.sendCommand16( 0xA0,  0,  0, False) #LEDs M6 off
 
     def Draw8xy(self):
+        '''
+        Not used
+        '''
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
-            return -1
+            return
         else:
             if self.checked.get():
                 scan_Wait_Time = self.d["Scan Parameters"]["scan_Wait_Time"]
@@ -1876,9 +2145,22 @@ class pyAER:
                             now = self.millis_now()
     
     def search_Joint_home(self,JOINTNUM,pol):
+        '''
+        Implement the method of searching a joint's home. 
+        
+        First it moves the joint until it hits one
+        of its limits, then progressively moves the 
+        joint in the opposite direction until
+        the controller receives the home signal
+        from the joint
+
+        Args:
+            JOINTNUM (int): Number of the joint we want to find home position for
+            pol (int): 1 or -1, depending on the joint 
+        '''
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
-            return -1
+            return 
         
         old_sj = 0x20000/4
         sj = 0x20000/4
@@ -2101,58 +2383,98 @@ class pyAER:
                 self.ConfigureSPID_allJoints()
 
     def search_Home_J1(self):
+        '''
+        Search Home position for joint 1
+
+        This function uses search_Joint_home function to 
+        search the home position of joint 1
+        '''
         
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
-            return -1
+            return 
     
         self.search_Joint_home(1,1)
     
     def search_Home_J2(self):
-        
+        '''
+        Search Home position for joint 2
+
+        This function uses search_Joint_home function to 
+        search the home position of joint 2
+        '''
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
-            return -1
+            return 
     
         self.search_Joint_home(2,-1)
 
     def search_Home_J3(self):
-        
+        '''
+        Search Home position for joint 3
+
+        This function uses search_Joint_home function to 
+        search the home position of joint 3
+        '''
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
-            return -1
+            return
     
         self.search_Joint_home(3,-1)
 
     def search_Home_J4(self):
-        
+        '''
+        Search Home position for joint 4
+
+        This function uses search_Joint_home function to 
+        search the home position of joint 4
+        '''
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
-            return -1
+            return
     
         self.search_Joint_home(4,-1)
 
     def search_Home_J5(self):
-        
+        '''
+        Search Home position for joint 5
+
+        This function uses search_Joint_home function to 
+        search the home position of joint 5
+        '''
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
-            return -1
+            return 
     
         self.search_Joint_home(5,-1)
 
     def search_Home_J6(self):
-        
+        '''
+        Search Home position for joint 6
+
+        This function uses search_Joint_home function to 
+        search the home position of joint 6
+        '''
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
-            return -1
+            return 
     
         self.search_Joint_home(6,-1)
     
     def search_Home_all(self):
+        '''
+        Search Home position for all joints
 
+        This function uses search_Joint_home function to 
+        search the home position of all joints
+
+        Be careful: this function won't stop execution until 
+        it has completely finished rendering the graphical 
+        interface stuck in the process, so bear that in mind when using it
+        '''
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
-            return -1
+            return 
         self.search_Joint_home(1,1)
         self.search_Joint_home(2,-1)
         self.search_Joint_home(3,-1)
@@ -2162,10 +2484,16 @@ class pyAER:
 
     #doGo_Home separado en 6
     def send_Home_J1(self):
+        '''
+        Send Joint 1 to current home position
 
+        This function uses sendCommand16 to send 
+        the first joint to its current home position,
+        which is specified by passing '0' as reference
+        '''
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
-            return -1
+            return
         
         self.sendCommand16( 0x03,  (0x00),  ((3)&0xFF), True) #I banks disabled M1 PI_bank_select_M1 = 3
         self.sendCommand16( 0x07,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
@@ -2183,10 +2511,16 @@ class pyAER:
         pass
 
     def send_Home_J2(self):
-         
+        '''
+        Send Joint 2 to current home position
+
+        This function uses sendCommand16 to send 
+        the second joint to its current home position,
+        which is specified by passing '0' as reference
+        '''
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
-            return -1
+            return
         
         self.sendCommand16( 0x23,  (0x00),  ((3)&0xFF), True) #I banks disabled M2 PI_bank_select_M2 = 3
         self.sendCommand16( 0x27,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M2
@@ -2203,10 +2537,16 @@ class pyAER:
         pass
 
     def send_Home_J3(self):
-        
+        '''
+        Send Joint 3 to current home position
+
+        This function uses sendCommand16 to send 
+        the third joint to its current home position,
+        which is specified by passing '0' as reference
+        '''
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
-            return -1
+            return
         
         self.sendCommand16( 0x43,  (0x00),  ((3)&0xFF), True) #I banks disabled M3 PI_bank_select_M3 = 3
         self.sendCommand16( 0x47,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M3
@@ -2223,10 +2563,16 @@ class pyAER:
         pass
 
     def send_Home_J4(self):
-        
+        '''
+        Send Joint 4 to current home position
+
+        This function uses sendCommand16 to send 
+        the fourth joint to its current home position,
+        which is specified by passing '0' as reference
+        '''
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
-            return -1
+            return
         
         self.sendCommand16( 0x63,  (0x00),  ((3)&0xFF), True) #I banks disabled M4 PI_bank_select_M4 = 3
         self.sendCommand16( 0x67,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
@@ -2241,12 +2587,18 @@ class pyAER:
         self.sendCommand16( 0x62, (( 0 >> 8) & 0xFF),((0) & 0xFF), True) # Ref M4 0
         
         pass
-
-    def send_Home_J5(self):
         
+    def send_Home_J5(self):
+        '''
+        Send Joint 5 to current home position
+
+        This function uses sendCommand16 to send 
+        the fifth joint to its current home position,
+        which is specified by passing '0' as reference
+        '''
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
-            return -1
+            return
         
         self.sendCommand16( 0x83,  (0x00),  ((3)&0xFF), True) #I banks disabled M5 PI_bank_select_M5 = 3
         self.sendCommand16( 0x87,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M5"].get()) & 0xFF), True) #FD I&G bank 3 M5
@@ -2263,10 +2615,16 @@ class pyAER:
         pass
 
     def send_Home_J6(self):
-        
+        '''
+        Send Joint 6 to current home position
+
+        This function uses sendCommand16 to send 
+        the sixth joint to its current home position,
+        which is specified by passing '0' as reference
+        '''
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
-            return -1
+            return
         
         self.sendCommand16( 0xA3,  (0x00),  ((3)&0xFF), True) #I banks disabled M6 PI_bank_select_M6 = 3
         self.sendCommand16( 0xA7,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M6"].get()) & 0xFF), True) #FD I&G bank 3 M6
@@ -2284,9 +2642,17 @@ class pyAER:
     
     #doGo_Home y con todo junto
     def send_Home_all(self):
+        '''
+        Send Joint 1-6 to current home position
+
+        This function uses sendCommand16 to send 
+        all joints to its current home position,
+        using send_Home_JX functions, with X 
+        being the joint's number
+        '''
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
-            return -1
+            return
         
         self.send_Home_J1()
         self.send_Home_J2()
@@ -2296,6 +2662,16 @@ class pyAER:
         self.send_Home_J6()
 
     def init_config(self):
+        '''
+        Load initial config
+
+        This function tries to load the initial configuration
+        for the program containing all the necessary values
+        that make the SPID control work properly. There must be
+        an "initial_config.json" file for this to work properly
+        and, in case you are missing it, you can download the file
+        directly from the latest master branch of the repository 
+        '''
         try:
             f = open('./initial_config.json')
             j = json.loads(f.read())
@@ -2315,10 +2691,10 @@ class pyAER:
             self.alert("Invalid config file")
             return
         
-if __name__ == "__main__":
+# if __name__ == "__main__":
 
-    config = pyAER()
-    config.render_gui()
+#     config = pyAER()
+#     config.render_gui()
     
     
-    pass
+#     pass
