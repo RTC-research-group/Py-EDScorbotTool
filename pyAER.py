@@ -1699,8 +1699,7 @@ class pyAER:
         readSensor functions to retrieve J5 position
 
         Returns:
-            int: Position of J5
-            int: -1 if something went wrong
+            int: Position of J5 or -1 if something went wrong
         '''
         j5_pos = -1
         if self.dev==None:
@@ -2690,7 +2689,65 @@ class pyAER:
         except KeyError:
             self.alert("Invalid config file")
             return
+    
+    def ref_to_angle(self,motor,ref):
+        """
+        Convert reference of motor to angle
+
+        This function takes a motor and a reference and 
+        returns the corresponding angle to said reference
+        for that specific motor
+
+        Args:
+            motor (int): Number of the motor (1-4)
+            ref (int): reference to be converted
         
+        Returns:
+            int: Angle that corresponds to the reference given for the given motor
+        """
+        f = lambda x:x
+
+        if motor == 1:
+            f = lambda x: (-1/3)*x
+        elif motor == 2:
+            f = lambda x: (-3/8)*x
+        elif motor == 3:
+            #To be characterised
+            f = lambda x: x
+        elif motor == 4:
+            f = lambda x:(7/40)*x
+        
+        return f(ref)
+            
+    def angle_to_ref(self,motor,angle):
+        """
+        Convert angle of motor to reference
+
+        This function takes a motor and an angle and 
+        returns the corresponding reference to said angle
+        for that specific motor
+
+        Args:
+            motor (int): Number of the motor (1-4)
+            angle (int): angle to be converted
+        
+        Returns:
+            int: Reference that corresponds to the angle given for the given motor
+        """
+        f = lambda x:x
+
+        if motor == 1:
+            f = lambda x: (-3)*x
+        elif motor == 2:
+            f = lambda x: (-8/3)*x
+        elif motor == 3:
+            #To be characterised
+            f = lambda x: x
+        elif motor == 4:
+            f = lambda x:(40/7)*x
+        
+        return f(angle)    
+    
 # if __name__ == "__main__":
 
 #     config = pyAER()
