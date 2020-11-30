@@ -1,4 +1,49 @@
+# Establish connection
+
+## Linux 
+
+1. Create public/private keypair (for ssh connection)
+    * ssh-keygen -f <key_name>
+        * Enter password if desired
+    
+    You will get two different files named <key_name> and <key_name>.pub
+
+2. Send an e-mail to epinerof@us.es specifying the following information:
+    * Full name 
+    * Name of your organization
+    * Public key (<key_name>.pub file) attached
+    * Preferred username (optional)
+
+    Once you've done this step, you will have to wait to receive a confirmation e-mail from the server's administrator.
+
+3. Upon receiving the confirmation e-mail, you will already have your user created (you will receive a username in case you didn't specify one in the e-mail) and ready to go. So, in order to establish the connection execute the following command:
+    * ssh -X <username>@150.214.140.189
+
+    If everything went correctly, you should have access to a terminal like this in your screen:
+
+    ![terminal](./terminal.jpg)
+    
+
+4. Check everything runs fine by executing the GUI of the service:
+    * cd pyAER
+    * python3 main.py
+
+    A window like this should open in your PC:
+
+    ![gui](./gui.jpg)
+
+    Then, check the bottom left checkbox that says "Open device", then check the terminal where you have the active connection. If the message "*Device found and initialized successfully*" is displayed, you have successfully connected to the server and everything is ready for you to begin.
+
+## Windows
+
+1. INSTRUCCIONES PARA:
+    1. GENERAR CLAVES CON PUTTY
+    2. INSTALAR XMING
+    3. CONFIGURAR PUTTY PARA QUE UTILICE EL XMING
+
 # Scorbot use tutorial with Scorbot Server
+
+*NOTE: It is important to note that this access is quite limited, so that you only may perform certain activities. However, if you need to use any command or utility that isn't available out of the box, contact epinerof@us.es with your requests.*
 
 ## Prepare the session
 
@@ -15,3 +60,4 @@ NOTE: ```search_Home_JX``` functions should be used in case one of the joints is
 ## Understanding references
 
 In order to make this section a little bit more understandable, let's take a look at the graphical interface first:
+
