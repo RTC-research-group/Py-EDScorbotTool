@@ -65,8 +65,9 @@
         You can just use the default configuration for everything else.
 
 4. Run Xming
-    * Executing the software will make a small "X" icon in your tray bar:
-    ![xming_icon](./xming_icon.jpg)
+    * Executing the software will make a small "X" icon appear in your tray bar:
+
+        ![xming_icon](./xming_icon.jpg)
     
         This means Xming is being executed. 
 5. Configure PuTTY connection
