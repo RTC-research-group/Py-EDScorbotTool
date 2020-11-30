@@ -41,11 +41,11 @@
 
     * Run PuTTYgen utility (it is installed with PuTTY). A window like this should appear:
         
-        ![puttygen](./puttygen.jpg)
+        ![puttygen](./puttygen.JPG)
 
     * Now click on the button that says "Generate". The program will need you to move your mouse around the blank area, so just do as it says. Once that is out of the way, you will have generated your keypair and the window should look like this:
 
-        ![puttygen2](./puttygen2.jpg)
+        ![puttygen2](./puttygen2.JPG)
 
     * Now save both private and public keys by clicking on the buttons that say so. You may also enter a passphrase for your key, which is recommended but optional. You may now close PuTTYgen 
 
@@ -60,7 +60,7 @@
     Once you've done this step, you will have to wait to receive a confirmation e-mail from the server's administrator. Upon receiving the confirmation e-mail, you will already have your user created (you will receive a username in case you didn't specify one in the e-mail) and ready to go. However, you will need to install the Xming software as well as configure PuTTY in order for you to be able to use the X11 utilities (otherwise you can't use the graphical interface).  
 
 3. Install Xming software ([official website](https://sourceforge.net/projects/xming/))
-    * During the installation process, you may select the option "Don't install an SSH client", as you have already installed PuTTY: ![xming_install](./xming_install.jpg)
+    * During the installation process, you may select the option "Don't install an SSH client", as you have already installed PuTTY: ![xming_install](./xming_install.JPG)
 
         You can just use the default configuration for everything else.
 
@@ -125,6 +125,6 @@ In order to make this section a little bit more understandable, let's take a loo
 
 ## When I check the "Open device" checkbox a message box that says "Device not found, try again or check the connection" is displayed
 
-![faq1](./faq1.jpg)
+![faq1](./faq1.JPG)
 
 There is nothing wrong with this, it normally means that the robot is not powered. This shouldn't happen during a scheduled work session, so it should typically occur when you're trying to check whether the GUI works for you or not.
