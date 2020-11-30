@@ -6,7 +6,7 @@
     * ssh-keygen -f <key_name>
         * Enter password if desired
     
-    You will get two different files named <key_name> and <key_name>.pub
+    You will get two different files named <key_name> and <key_name>.pub in the directory you run the command in
 
 2. Send an e-mail to epinerof@us.es specifying the following information:
     * Full name 
@@ -17,7 +17,8 @@
     Once you've done this step, you will have to wait to receive a confirmation e-mail from the server's administrator.
 
 3. Upon receiving the confirmation e-mail, you will already have your user created (you will receive a username in case you didn't specify one in the e-mail) and ready to go. So, in order to establish the connection execute the following command:
-    * ssh -X <username>@150.214.140.189
+
+    * ssh -X -i /path/to/private/key/<key_name> <username>@150.214.140.189
 
     If everything went correctly, you should have access to a terminal like this in your screen:
 
@@ -35,6 +36,16 @@
     Then, check the bottom left checkbox that says "Open device", then check the terminal where you have the active connection. If the message "*Device found and initialized successfully*" is displayed, you have successfully connected to the server and everything is ready for you to begin.
 
 ## Windows
+1. Create public/private keypair (for ssh connection)
+2. Send an e-mail to epinerof@us.es specifying the following information:
+    * Full name 
+    * Name of your organization
+    * Public key (<key_name>.pub file) attached
+    * Preferred username (optional)
+
+    Once you've done this step, you will have to wait to receive a confirmation e-mail from the 
+    server's administrator.
+3. Upon receiving the confirmation e-mail, you will already have your user created (you will receive a username in case you didn't specify one in the e-mail) and ready to go. However, you will need to install Xming as well as configure puTTY in order for you to 
 
 1. INSTRUCCIONES PARA:
     1. GENERAR CLAVES CON PUTTY
