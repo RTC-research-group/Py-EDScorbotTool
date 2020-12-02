@@ -10,6 +10,8 @@ from tkinter import filedialog
 import datetime
 import time
 import logging
+import cv2
+
 
 class pyAER:
     '''
@@ -52,7 +54,8 @@ class pyAER:
         #Handle for USB connection
         self.dev = None
 
-
+        self.camera1 = None
+        self.camera2 = None
         return
   
     def millis_now(self):
@@ -397,7 +400,18 @@ class pyAER:
         except KeyError:
             self.alert("Invalid config file")
             return
-  
+    
+    def render_cameras(self,row,col):
+        labelframe = ttk.LabelFrame(self.root, text="Cameras")
+        labelframe.grid(column=col, row=row, sticky=(
+            tk.N, tk.W), padx=5, pady=5)
+        camera1_enabled = tk.BooleanVar()
+        camera2_enabled = tk.BooleanVar()
+        ttk.Checkbutton(labelframe,text="Camera 1 (Front)",command=self.openCamera1,variable=camera1_enabled,onvalue=True,offvalue=False).grid(column=1,row=1,sticky=(tk.W))
+        ttk.Checkbutton(labelframe,text="Camera 2 (Side)",command=self.openCamera2,variable=camera2_enabled,onvalue=True,offvalue=False).grid(column=1,row=2,sticky=(tk.W))
+        self.cam1_enable = camera1_enabled
+        self.cam2_enable = camera2_enabled
+
     def render_gui(self):
         '''
         Top level GUI routine 
@@ -428,10 +442,75 @@ class pyAER:
         self.frame_list.append(self.render_scan_parameters(3, 2))
         self.render_buttons(3, 3)
         self.render_usbEnable(4,1)
-
+        self.render_cameras(4,2)
         self.init_config()
+        self.update_cameras()
         #And call mainloop to display GUI
         self.root.mainloop()
+
+    def openCamera1(self):
+
+        if(self.cam1_enable.get()):
+
+            self.camera1 = cv2.VideoCapture('/dev/video0')
+                
+        else:
+            try:
+                self.camera1.release()
+                cv2.destroyWindow('front')
+            except:
+                pass
+
+        
+
+    def openCamera2(self):
+
+        if(self.cam2_enable.get()):
+
+            self.camera2 = cv2.VideoCapture('/dev/video2')
+                
+        else:
+            try:
+                self.camera2.release()
+                cv2.destroyWindow('side')
+            except:
+                pass
+
+    def update_cameras(self):
+
+        if self.cam1_enable.get():            
+
+            #Front camera
+            if(self.camera1.isOpened()):
+                r,img = self.camera1.read()
+                if r:
+                    cv2.imshow('front',img)
+                    cv2.waitKey(1)
+
+            else:
+                self.alert("Could not open camera 1")
+                return
+        else:
+    
+            pass
+
+        if self.cam2_enable.get():            
+
+            #Front camera
+            if(self.camera2.isOpened()):
+                r,img = self.camera2.read()
+                if r:
+                    cv2.imshow('side',img)
+                    cv2.waitKey(1)
+
+            else:
+                self.alert("Could not open camera 2")
+                return
+        else:
+    
+            pass
+        
+        self.root.after(1,self.update_cameras)
 
     def ConfigureInit(self):
         
