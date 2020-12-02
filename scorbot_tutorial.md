@@ -113,13 +113,38 @@ In order to do that, there is a function called ```Search_Home``` that implement
 
 The ```Search_Home``` function is an all-in-one button in the GUI as well as in the code itself; however, there are also separate functions, called ```search_Home_JX``` (where ```X``` is the joint number), that are callable from the code that implement this functionality but for just one joint. Each of these functions also has its corresponding button in the GUI for convenience. 
 
-So, to sum it all up, any time that anyone has to work with the robot, the first thing to do is to command it to search the home position for all of its joints, whether it is via the ```Search_Home``` button or function or via the ```search_Home_JX``` buttons or functions.
+So, to sum it all up, any time that anyone has to work with the robot, the first thing to do is to command it to search the home position for all of its joints, whether it is via the ```Search_Home``` button or function or via the ```search_Home_JX``` buttons or functions, and after that you have to use the ```Configure_Init``` button so that the home position is considered the initial one.
+
+### **TL;DR**
+
+Just click on the ```Search_Home``` button before anything else and let it finish, then push the ```Configure_Init``` button when initiating a new work session and you should be fine.
 
 NOTE: ```search_Home_JX``` functions should be used in case one of the joints is suspected to have lost its home reference, so that you don't have to wait for all joints to search their home in case just one of them has gone astray.
 
 ## Understanding references
 
 In order to make this section a little bit more understandable, let's take a look at the graphical interface first:
+
+![gui](./gui.jpg)
+
+As you can see, each motor has 6 different parameters and almost all of them are used to determine how it should move. However, if you're only interested in actually moving them and not in how they move you're lucky, because you're only going to need one of these parameters, and that would be the ```ref_MX``` one.
+
+So what does exactly this "reference" mean? You can think of it as a way of telling each motor the position it should be in. For example, the reference "0" would be the motor's initial position (which should be the home position if you followed the steps under the "Prepare the session" section), then any positive reference would send the motor in one direction and any negative reference would send it in the opposite one.
+
+And that's everything you need to know if you're only interested in moving the robot. As for how to map references to angles, we're providing you with some functions in the code to help you with that, as that kind of mapping is specific to each robot and to each motor within a given robot. That's right, a reference of say, 50, can put the first motor in an angle ```alpha``` but the second motor in another completely different angle ```beta```, so it's best if you just adhere to the mappings we offer you.
+
+## How to make the robot move
+
+So now that the concept of reference has been explained, we can move on to moving the robot. As it has been said, the only important parameter here would be the reference, so you can rest easy knowing that all of the other parameters won't have to be changed, at least from a user's point of view. 
+
+Therefore, in order to move the robot you have to first do the actions specified in the "Prepare the session section". Then, everything you need to do is change a joint's reference (via the graphical interface or via code) and hit the ```Configure_SPID``` button (or call the ```Configure_SPID``` function in the code). As long as you've specified some different references, you should see some movement going on. 
+
+
+IN PROGRESS
+
+## Coding
+
+In-progress section
 
 
 # FAQ 
@@ -129,3 +154,7 @@ In order to make this section a little bit more understandable, let's take a loo
 ![faq1](./faq1.JPG)
 
 There is nothing wrong with this, it normally means that the robot is not powered. This shouldn't happen during a scheduled work session, so it should typically occur when you're trying to check whether the GUI works for you or not.
+
+## What are the parameters that are not "ref_MX" for?
+
+These parameters are used to control the SPID (Spiking PID) of each joint, and they are already configured for this robot. You shouldn't be touching these unless you really know what you're doing. For more information, please refer to this paper: [A Neuro-Inspired Spike-Based PID Motor Controller for Multi-Motor Robots with Low Cost FPGAs](https://www.mdpi.com/1424-8220/12/4/3831/htm)
