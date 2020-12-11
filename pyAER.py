@@ -398,7 +398,7 @@ class pyAER:
             self.alert("Invalid config file")
             return
   
-    def render_gui(self):
+    def render_gui(self,visible=True):
         '''
         Top level GUI routine 
 
@@ -430,8 +430,9 @@ class pyAER:
         self.render_usbEnable(4,1)
 
         self.init_config()
+        if visible:
         #And call mainloop to display GUI
-        self.root.mainloop()
+            self.root.mainloop()
 
     def ConfigureInit(self):
         
