@@ -1,5 +1,6 @@
 from datetime import time
 from os import read
+from os import system
 import tkinter as tk
 from tkinter import ttk,messagebox
 import usb.core
@@ -10,6 +11,8 @@ from tkinter import filedialog
 import datetime
 import time
 import logging
+import cv2
+
 
 class pyAER:
     '''
@@ -18,7 +21,7 @@ class pyAER:
     This class is used for establishing a communication with ED-Scorbot 
     Robot in order to be able to control it via neuromorphic control, also called SPID
     '''
-    def __init__(self):
+    def __init__(self,visible=True):
         '''
         Constructor
 
@@ -28,10 +31,13 @@ class pyAER:
         and sets constants and handles needed for USB connection
         '''
         #Initialize GUI: create root Tk object
+        self.visible = visible
         self.root = tk.Tk()
+        if self.visible:
+        
 
-        #Set the icon
-        self.root.iconphoto(False,tk.PhotoImage(file="./atc.png"))
+                #Set the icon
+            self.root.iconphoto(False,tk.PhotoImage(file="./atc.png"))
 
         #Create dictionaries where the interface data will be stored
         self.d = {}
@@ -52,7 +58,8 @@ class pyAER:
         #Handle for USB connection
         self.dev = None
 
-
+        self.camera1 = None
+        self.camera2 = None
         return
   
     def millis_now(self):
@@ -93,28 +100,34 @@ class pyAER:
         '''
         labels = ["EI_FD_bank3_18bits", "PD_FD_bank3_22bits",
                   "PI_FD_bank3_18bits", "leds", "ref", "spike_expansor"]
-        labelframe = ttk.LabelFrame(
-            self.root, text="Motor " + str(motor_number))
-        labelframe.grid(
-            column=col, row=row, sticky=(tk.N, tk.W), padx=5, pady=5)
+        labelframe = None
+        if self.visible:
+            labelframe = ttk.LabelFrame(
+                self.root, text="Motor " + str(motor_number))
+            labelframe.grid(
+                column=col, row=row, sticky=(tk.N, tk.W), padx=5, pady=5)
         EI_FD_bank3_18bits = tk.IntVar()
         PF_FD_bank3_22bits = tk.IntVar()
         PI_FD_bank3_18bits = tk.IntVar()
         leds = tk.IntVar()
         ref = tk.IntVar()
         spike_expansor = tk.IntVar()
+        
         variables = [EI_FD_bank3_18bits, PF_FD_bank3_22bits,
-                     PI_FD_bank3_18bits, leds, ref, spike_expansor, labelframe]
+                        PI_FD_bank3_18bits, leds, ref, spike_expansor, labelframe]
 
         for var, row_, label in zip(variables, range(1, len(variables)), labels):
-            ttk.Entry(labelframe, width=7, textvariable=var).grid(
-                column=2, row=row_, sticky=(tk.W))
+
             labeltext = label + "_M" + str(motor_number)
-            ttk.Label(labelframe, text=labeltext).grid(
-                column=1, row=row_, sticky=(tk.W))
             self.d["Motor Config"][labeltext] = var
 
-            # ttk.Scale(labelframe,from_=0,to=65535,orient=tk.HORIZONTAL,variable=var).grid(column=3,row=row,sticky=(tk.W))
+            if self.visible:
+                ttk.Entry(labelframe, width=7, textvariable=var).grid(
+                    column=2, row=row_, sticky=(tk.W))
+                ttk.Label(labelframe, text=labeltext).grid(
+                    column=1, row=row_, sticky=(tk.W))
+            
+                # ttk.Scale(labelframe,from_=0,to=65535,orient=tk.HORIZONTAL,variable=var).grid(column=3,row=row,sticky=(tk.W))
 
         return labelframe
 
@@ -134,10 +147,11 @@ class pyAER:
         Returns:
             LabelFrame in which the entries are rendered
         '''
-
-        labelframe = ttk.LabelFrame(self.root, text="Joint Sensors")
-        labelframe.grid(column=col, row=row, sticky=(
-            tk.N, tk.W), padx=5, pady=5)
+        labelframe=None
+        if self.visible:
+            labelframe = ttk.LabelFrame(self.root, text="Joint Sensors")
+            labelframe.grid(column=col, row=row, sticky=(
+                tk.N, tk.W), padx=5, pady=5)
         j1 = tk.IntVar()
         j2 = tk.IntVar()
         j3 = tk.IntVar()
@@ -148,14 +162,16 @@ class pyAER:
         variables = [j1, j2, j3, j4, j5, j6]
         i = 1
         for var, row_ in zip(variables, range(1, len(variables)+1)):
-            text = ttk.Entry(labelframe, width=7, textvariable=var)
-            text.grid(column=2, row=row_, sticky=tk.W)
-            text.config(state="readonly")
             labeltext = "J" + str(i) + "_sensor_value"
-            ttk.Label(labelframe, text=labeltext).grid(
+            self.d["Joints"][labeltext] = var
+
+            if self.visible:
+                text = ttk.Entry(labelframe, width=7, textvariable=var)
+                text.grid(column=2, row=row_, sticky=tk.W)
+                text.config(state="readonly")
+                ttk.Label(labelframe, text=labeltext).grid(
                 column=1, row=row_, sticky=tk.W)
             i += 1
-            self.d["Joints"][labeltext] = var
 
         return labelframe
 
@@ -174,9 +190,11 @@ class pyAER:
             Labelframe in which the inputs are rendered
         '''
         labels = ["Final_Value", "Init_Value", "Step_Value", "Wait_Time"]
-        labelframe = ttk.LabelFrame(self.root, text="Scan Parameters")
-        labelframe.grid(column=col, row=row, sticky=(
-            tk.N, tk.W), padx=5, pady=5)
+        labelframe=None
+        if self.visible:
+            labelframe = ttk.LabelFrame(self.root, text="Scan Parameters")
+            labelframe.grid(column=col, row=row, sticky=(
+                tk.N, tk.W), padx=5, pady=5)
         final_value = tk.IntVar()
         init_value = tk.IntVar()
         step_value = tk.IntVar()
@@ -184,12 +202,15 @@ class pyAER:
 
         variables = [final_value, init_value, step_value, wait_time]
         for var, row_, label in zip(variables, range(1, len(variables)+1), labels):
-            ttk.Entry(labelframe, width=7, textvariable=var).grid(
-                column=2, row=row_, sticky=tk.W)
             labeltext = "scan_" + label
-            ttk.Label(labelframe, text=labeltext).grid(
-                column=1, row=row_, sticky=tk.W)
             self.d["Scan Parameters"][labeltext] = var
+            if self.visible:
+                ttk.Entry(labelframe, width=7, textvariable=var).grid(
+                    column=2, row=row_, sticky=tk.W)
+                
+                ttk.Label(labelframe, text=labeltext).grid(
+                    column=1, row=row_, sticky=tk.W)
+            
 
         return labelframe
 
@@ -201,45 +222,51 @@ class pyAER:
             row (int): Row of the grid in which the buttons will be displayed
             col (int): Column of the grid in which the buttons will be displayed
         '''
-        labels = ["ConfigureInit", "ConfigureLeds", "ConfigureSPID", "Draw8xy", "Example", "ScanAllMotor", "ScanMotor1", "ScanMotor2", "ScanMotor3", "ScanMotor4",
-                  "ScanMotor5", "ScanMotor6", "Search_Home", "Send_Home", "SendFPGAReset", "SetAERIN_ref", "SetUSBSPI_ref", "SwitchOffLEDS"]
-        labelframe = ttk.LabelFrame(self.root, text="Actions")
-        labelframe.grid(column=col, row=row, sticky=(
-            tk.N, tk.W), padx=5, pady=5)
-        
-        ttk.Button(labelframe,text="ConfigureInit",command=self.ConfigureInit).grid(column=1,row=1,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="ConfigureLeds",command=self.ConfigureLeds).grid(column=2,row=1,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="ConfigureSPID",command=self.ConfigureSPID).grid(column=3,row=1,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="Draw8xy",command=self.Draw8xy).grid(column=1,row=2,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="Example",command=lambda x: "").grid(column=2,row=2,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="ScanAllMotor",command=self.ScanAllMotor).grid(column=3,row=2,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="ScanMotor1",command=self.scanMotor1).grid(column=1,row=3,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="ScanMotor2",command=self.scanMotor2).grid(column=2,row=3,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="ScanMotor3",command=self.scanMotor3).grid(column=3,row=3,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="ScanMotor4",command=self.scanMotor4).grid(column=1,row=4,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="ScanMotor5",command=self.scanMotor5).grid(column=2,row=4,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="ScanMotor6",command=self.scanMotor6).grid(column=3,row=4,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="Search_Home",command=self.search_Home_all).grid(column=1,row=5,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="Send_Home",command=self.send_Home_all).grid(column=2,row=5,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="SendFPGAReset",command=self.SendFPGAReset).grid(column=3,row=5,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="SetAERIN_ref",command=self.SetAERIN_ref).grid(column=1,row=6,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="SetUSBSPI_ref",command=self.SetUSBSPI_ref).grid(column=2,row=6,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="SwitchOffLEDS",command=self.SwitchOffLEDS).grid(column=3,row=6,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="DumpConfig",command=self.dumpConfig).grid(column=1,row=7,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="LoadConfig",command=self.loadConfig).grid(column=2,row=7,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="ResetUSB",command=self.resetUSB).grid(column=3,row=7,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="Send J1 Home",command=self.send_Home_J1).grid(column=1,row=8,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="Send J2 Home",command=self.send_Home_J2).grid(column=2,row=8,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="Send J3 Home",command=self.send_Home_J3).grid(column=3,row=8,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="Send J4 Home",command=self.send_Home_J4).grid(column=1,row=9,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="Send J5 Home",command=self.send_Home_J5).grid(column=2,row=9,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="Send J6 Home",command=self.send_Home_J6).grid(column=3,row=9,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="Search J1 Home",command=self.search_Home_J1).grid(column=1,row=10,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="Search J2 Home",command=self.search_Home_J2).grid(column=2,row=10,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="Search J3 Home",command=self.search_Home_J3).grid(column=3,row=10,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="Search J4 Home",command=self.search_Home_J4).grid(column=1,row=11,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="Search J5 Home",command=self.search_Home_J5).grid(column=2,row=11,sticky=(tk.W,tk.E))
-        ttk.Button(labelframe,text="Search J6 Home",command=self.search_Home_J6).grid(column=3,row=11,sticky=(tk.W,tk.E))
+        if self.visible:
+            labelframe = ttk.LabelFrame(self.root, text="Actions")
+            labelframe.grid(column=col, row=row, sticky=(
+                tk.N, tk.W), padx=5, pady=5)
+            
+            ttk.Button(labelframe,text="ConfigureInit",command=self.ConfigureInit).grid(column=1,row=1,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="ConfigureLeds",command=self.ConfigureLeds).grid(column=2,row=1,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="ConfigureSPID",command=self.ConfigureSPID).grid(column=3,row=1,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Draw8xy",command=self.Draw8xy).grid(column=1,row=2,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Example",command=lambda x: "").grid(column=2,row=2,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="ScanAllMotor",command=self.ScanAllMotor).grid(column=3,row=2,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="ScanMotor1",command=self.scanMotor1).grid(column=1,row=3,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="ScanMotor2",command=self.scanMotor2).grid(column=2,row=3,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="ScanMotor3",command=self.scanMotor3).grid(column=3,row=3,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="ScanMotor4",command=self.scanMotor4).grid(column=1,row=4,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="ScanMotor5",command=self.scanMotor5).grid(column=2,row=4,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="ScanMotor6",command=self.scanMotor6).grid(column=3,row=4,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Search_Home",command=self.search_Home_all).grid(column=1,row=5,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Send_Home",command=self.send_Home_all).grid(column=2,row=5,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="SendFPGAReset",command=self.SendFPGAReset).grid(column=3,row=5,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="SetAERIN_ref",command=self.SetAERIN_ref).grid(column=1,row=6,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="SetUSBSPI_ref",command=self.SetUSBSPI_ref).grid(column=2,row=6,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="SwitchOffLEDS",command=self.SwitchOffLEDS).grid(column=3,row=6,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="DumpConfig",command=self.dumpConfig).grid(column=1,row=7,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="LoadConfig",command=self.loadConfig).grid(column=2,row=7,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="ResetUSB",command=self.resetUSB).grid(column=3,row=7,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Send J1 Home",command=self.send_Home_J1).grid(column=1,row=8,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Send J2 Home",command=self.send_Home_J2).grid(column=2,row=8,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Send J3 Home",command=self.send_Home_J3).grid(column=3,row=8,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Send J4 Home",command=self.send_Home_J4).grid(column=1,row=9,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Send J5 Home",command=self.send_Home_J5).grid(column=2,row=9,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Send J6 Home",command=self.send_Home_J6).grid(column=3,row=9,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Search J1 Home",command=self.search_Home_J1).grid(column=1,row=10,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Search J2 Home",command=self.search_Home_J2).grid(column=2,row=10,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Search J3 Home",command=self.search_Home_J3).grid(column=3,row=10,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Search J4 Home",command=self.search_Home_J4).grid(column=1,row=11,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Search J5 Home",command=self.search_Home_J5).grid(column=2,row=11,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Search J6 Home",command=self.search_Home_J6).grid(column=3,row=11,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Send J1 ref",command=self.SendCommandJoint1_lite).grid(column=1,row=12,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Send J2 ref",command=self.SendCommandJoint2_lite).grid(column=2,row=12,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Send J3 ref",command=self.SendCommandJoint3_lite).grid(column=3,row=12,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Send J4 ref",command=self.SendCommandJoint4_lite).grid(column=1,row=13,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Send J5 ref",command=self.SendCommandJoint5_lite).grid(column=2,row=13,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Send J6 ref",command=self.SendCommandJoint6_lite).grid(column=3,row=13,sticky=(tk.W,tk.E))
+
 
     def render_usbEnable(self,row,col):
         '''
@@ -252,14 +279,16 @@ class pyAER:
             row (int): Row of the grid in which the checkbox will be displayed
             col (int): Column of the grid in which the checkbox will be displayed
         '''
-        labelframe = ttk.LabelFrame(self.root, text="USB")
-        labelframe.grid(column=col, row=row, sticky=(
+        if self.visible:
+            labelframe = ttk.LabelFrame(self.root, text="USB")
+            labelframe.grid(column=col, row=row, sticky=(
             tk.N, tk.W), padx=5, pady=5)
 
         checked = tk.BooleanVar()
 
 
-        ttk.Checkbutton(labelframe,text="Open device",command=self.checkUSB,variable=checked,onvalue=True,offvalue=False).grid(column=1,row=3,sticky=(tk.W))
+        if self.visible:
+            ttk.Checkbutton(labelframe,text="Open device",command=self.checkUSB,variable=checked,onvalue=True,offvalue=False).grid(column=1,row=3,sticky=(tk.W))
         self.checked = checked
    
     def openUSB(self):
@@ -397,8 +426,22 @@ class pyAER:
         except KeyError:
             self.alert("Invalid config file")
             return
-  
-    def render_gui(self,visible=True):
+    
+    def render_cameras(self,row,col):
+        
+        if self.visible:
+            labelframe = ttk.LabelFrame(self.root, text="Cameras")
+            labelframe.grid(column=col, row=row, sticky=(
+            tk.N, tk.W), padx=5, pady=5)
+        camera1_enabled = tk.BooleanVar()
+        camera2_enabled = tk.BooleanVar()
+        if self.visible:
+            ttk.Checkbutton(labelframe,text="Camera 1 (Front)",command=self.openCamera1,variable=camera1_enabled,onvalue=True,offvalue=False).grid(column=1,row=1,sticky=(tk.W))
+            ttk.Checkbutton(labelframe,text="Camera 2 (Side)",command=self.openCamera2,variable=camera2_enabled,onvalue=True,offvalue=False).grid(column=1,row=2,sticky=(tk.W))
+        self.cam1_enable = camera1_enabled
+        self.cam2_enable = camera2_enabled
+
+    def render_gui(self):
         '''
         Top level GUI routine 
 
@@ -411,7 +454,8 @@ class pyAER:
         '''
 
         #Set window title
-        self.root.title("ATCEDScorbotConfig")
+        if self.visible:
+            self.root.title("ATCEDScorbotConfig")
         
         #Set list of rendered frames
         self.frame_list = []
@@ -428,11 +472,77 @@ class pyAER:
         self.frame_list.append(self.render_scan_parameters(3, 2))
         self.render_buttons(3, 3)
         self.render_usbEnable(4,1)
-
+        self.render_cameras(4,2)
         self.init_config()
-        if visible:
+        self.update_cameras()
         #And call mainloop to display GUI
+        if self.visible:
             self.root.mainloop()
+
+    def openCamera1(self):
+
+        if(self.cam1_enable.get()):
+
+            self.camera1 = cv2.VideoCapture('/dev/video0')
+                
+        else:
+            try:
+                self.camera1.release()
+                cv2.destroyWindow('front')
+            except:
+                pass
+
+        
+
+    def openCamera2(self):
+
+        if(self.cam2_enable.get()):
+
+            self.camera2 = cv2.VideoCapture('/dev/video2')
+                
+        else:
+            try:
+                self.camera2.release()
+                cv2.destroyWindow('side')
+            except:
+                pass
+
+    def update_cameras(self):
+
+        if self.cam1_enable.get():            
+
+            #Front camera
+            if(self.camera1.isOpened()):
+                r,img = self.camera1.read()
+                if r:
+                    cv2.imshow('front',img)
+                    cv2.waitKey(1)
+
+            else:
+                self.alert("Could not open camera 1")
+                return
+        else:
+    
+            pass
+
+        if self.cam2_enable.get():            
+
+            #Front camera
+            if(self.camera2.isOpened()):
+                r,img = self.camera2.read()
+                if r:
+                    cv2.imshow('side',img)
+                    cv2.waitKey(1)
+
+            else:
+                self.alert("Could not open camera 2")
+                return
+        else:
+    
+            pass
+        
+        if self.visible:
+            self.root.after(1,self.update_cameras)
 
     def ConfigureInit(self):
         
@@ -2747,8 +2857,107 @@ class pyAER:
         elif motor == 4:
             f = lambda x:(40/7)*x
         
-        return f(angle)    
-    
+        return f(angle)  
+
+
+    def SendCommandJoint1_lite(self):
+        '''
+        Send only reference to 1st joint
+
+        This function allows to send a reference
+        to the 1st joint in order to move it
+        Reference to angle are mapped in this link: INSERT LINK
+        '''
+        
+        self.sendCommand16( 0x02,  ((self.d["Motor Config"]["ref_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M1"].get()) & 0xFF), True) #Ref M1 0
+        print("Reference sent:",self.d["Motor Config"]["ref_M1"].get())
+        self.sendCommand16( 0x02,  ((self.d["Motor Config"]["ref_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M1"].get()) & 0xFF), True) #Ref M1 0
+        self.sendCommand16( 0x02,  ((self.d["Motor Config"]["ref_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M1"].get()) & 0xFF), True) #Ref M1 0
+        # pass
+
+    def SendCommandJoint2_lite(self):
+        '''
+        Send only reference to 2nd joint
+
+        This function allows to send a reference
+        to the 2nd joint in order to move it
+        Reference to angle are mapped in this link: INSERT LINK
+        '''
+        
+        self.sendCommand16( 0x22,  ((self.d["Motor Config"]["ref_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M2"].get()) & 0xFF), True) #Ref M2 0
+        print("Reference sent:",self.d["Motor Config"]["ref_M2"].get())
+
+        self.sendCommand16( 0x22,  ((self.d["Motor Config"]["ref_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M2"].get()) & 0xFF), True) #Ref M2 0
+        self.sendCommand16( 0x22,  ((self.d["Motor Config"]["ref_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M2"].get()) & 0xFF), True) #Ref M2 0
+        # pass
+
+    def SendCommandJoint3_lite(self):
+        '''
+        Send only reference to 3rd joint
+
+        This function allows to send a reference
+        to the 3rd joint in order to move it
+        Reference to angle are mapped in this link: INSERT LINK
+        '''
+        
+        self.sendCommand16( 0x42,  ((self.d["Motor Config"]["ref_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M3"].get()) & 0xFF), True) #Ref M3 0
+        print("Reference sent:",self.d["Motor Config"]["ref_M3"].get())
+        self.sendCommand16( 0x42,  ((self.d["Motor Config"]["ref_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M3"].get()) & 0xFF), True) #Ref M3 0
+        self.sendCommand16( 0x42,  ((self.d["Motor Config"]["ref_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M3"].get()) & 0xFF), True) #Ref M3 0
+        # pass
+        
+    def SendCommandJoint4_lite(self,ref):
+        '''
+        Send only reference to 4th joint
+
+        This function allows to send a reference
+        to the 4th joint in order to move it
+        Reference to angle are mapped in this link: INSERT LINK
+        '''
+        
+        self.sendCommand16( 0x62,  ((self.d["Motor Config"]["ref_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M4"].get()) & 0xFF), True) #Ref M4 0
+        print("Reference sent:",self.d["Motor Config"]["ref_M4"].get())
+        self.sendCommand16( 0x62,  ((self.d["Motor Config"]["ref_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M4"].get()) & 0xFF), True) #Ref M4 0
+        self.sendCommand16( 0x62,  ((self.d["Motor Config"]["ref_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M4"].get()) & 0xFF), True) #Ref M4 0
+        # pass
+
+    def SendCommandJoint5_lite(self,ref):
+        '''
+        Send only reference to 5th joint
+
+        This function allows to send a reference
+        to the 5th joint in order to move it
+        Reference to angle are mapped in this link: INSERT LINK
+        '''
+        
+        self.sendCommand16( 0x82,  ((self.d["Motor Config"]["ref_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M5"].get()) & 0xFF), True) #Ref M5 0
+        print("Reference sent:",self.d["Motor Config"]["ref_M5"].get())
+        self.sendCommand16( 0x82,  ((self.d["Motor Config"]["ref_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M5"].get()) & 0xFF), True) #Ref M5 0
+        self.sendCommand16( 0x82,  ((self.d["Motor Config"]["ref_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M5"].get()) & 0xFF), True) #Ref M5 0
+        pass
+
+    def SendCommandJoint6_lite(self,ref):
+        '''
+        Send only reference to 6th joint
+
+        This function allows to send a reference
+        to the 6th joint in order to move it
+        Reference to angle are mapped in this link: INSERT LINK
+        '''
+        
+        self.sendCommand16( 0xA2,  ((self.d["Motor Config"]["ref_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M6"].get()) & 0xFF), True) #Ref M6 0
+        self.sendCommand16( 0xA2,  ((self.d["Motor Config"]["ref_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M6"].get()) & 0xFF), True) #Ref M6 0
+        self.sendCommand16( 0xA2,  ((self.d["Motor Config"]["ref_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M6"].get()) & 0xFF), True) #Ref M6 0
+        # pass
+
+    def devmem(self,addr,length,data=None):
+        cmd = "devmem " + str(addr) + " " + str(length)
+        if data is not None:
+            cmd += " " + str(data)
+
+        print("Executing",cmd,"command")    
+        system(cmd)
+
 # if __name__ == "__main__":
 
 #     config = pyAER()
