@@ -1,4 +1,19 @@
 
+# Index
+
+1. [Establish connection](#Establish-connection)
+    1. [Linux](#Linux)
+    2. [Windows](#Windows)
+2. [Scorbot use tutorial with Scorbot Server](#Scorbot-use-tutorial-with-Scorbot-Server)
+    1. [Prepare the session](#Prepare-the-session)
+        * [TL;DR](#TL;DR-Too-long-didn't-read)
+    2. [Understanding references](#Understanding-references)
+    3. [How to make the robot move](#How-to-make-the-robot-move)
+    4. [Configure_SPID and cameras](#Configure_SPID-and-cameras)
+        1. [The real important part](#The-real-important-part)
+        2. [TL;DR](#TL;DR)
+    5. [Coding](#Coding)
+3. [Frequently Asked Questions](#FAQ)
 
 # Establish connection
 
@@ -169,9 +184,9 @@ If you don't do this and program the movement with the ```Configure_SPID``` func
 
 So, the graphical interface is nice and all, however, we understand that it is not suitable to be used when the robot is intended to be moved in a programatically way, for example, with a Spiking Neural Network, as we don't expect the network to handle the robot's movement the same way we do.
 
-Therefore, the same functions that are bound to the buttons in the graphical interface are also accessible within the code, what means that all you have to do in order to use them is import the main module and use it just like any other Python module.
+Therefore, the same functions and variables that are bound to the buttons in the graphical interface are also accessible within the code, what means that all you have to do in order to use them is import the main module and use it just like any other Python module.
 
-A small demo script is shown [here]()
+A small demo script can be found [here](). 
 
 # FAQ 
 
