@@ -1,3 +1,5 @@
+
+
 # Establish connection
 
 ## Linux 
@@ -33,7 +35,9 @@
 
     ![gui](./gui.jpg)
 
-    Check the bottom left checkbox that says "Open device", then look at the terminal where you have the active connection. If the message "*Device found and initialized successfully*" is displayed, you have successfully connected to the server and everything is ready for you to begin.
+    Check the bottom left checkbox that says "Open device", then look at the terminal where you have the active connection. If the message "*Device found and initialized successfully*" is displayed, you have successfully connected to the server and everything is ready for you to begin. 
+    
+    [Device not found troubleshooting](#FAQ)
 
 ## Windows
 1. Create public/private keypair (for ssh connection)
@@ -115,7 +119,7 @@ The ```Search_Home``` function is an all-in-one button in the GUI as well as in 
 
 So, to sum it all up, any time that anyone has to work with the robot, the first thing to do is to command it to search the home position for all of its joints, whether it is via the ```Search_Home``` button or function or via the ```search_Home_JX``` buttons or functions, and after that you have to use the ```Configure_Init``` button so that the home position is considered the initial one.
 
-### **TL;DR**
+### **TL;DR** (Too long, didn't read)
 
 Just click on the ```Search_Home``` button before anything else and let it finish, then push the ```Configure_Init``` button when initiating a new work session and you should be fine.
 
@@ -149,11 +153,12 @@ In-progress section
 
 # FAQ 
 
-## When I check the "Open device" checkbox a message box that says "Device not found, try again or check the connection" is displayed
 
-![faq1](./faq1.JPG)
+* **When I check the "Open device" checkbox a message box that says "Device not found, try again or check the connection" is displayed**
 
-There is nothing wrong with this, it normally means that the robot is not powered. This shouldn't happen during a scheduled work session, so it should typically occur when you're trying to check whether the GUI works for you or not.
+    ![faq1](./faq1.JPG)
+
+    There is nothing wrong with this, it normally means that the robot is not powered. This shouldn't happen during a scheduled work session, so it should typically occur when you're trying to check whether the GUI works for you or not. 
 
 ## What are the parameters that are not "ref_MX" for?
 
