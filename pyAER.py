@@ -1,5 +1,6 @@
 from datetime import time
 from os import read
+from os import system
 import tkinter as tk
 from tkinter import ttk,messagebox
 import usb.core
@@ -243,6 +244,13 @@ class pyAER:
         ttk.Button(labelframe,text="Search J4 Home",command=self.search_Home_J4).grid(column=1,row=11,sticky=(tk.W,tk.E))
         ttk.Button(labelframe,text="Search J5 Home",command=self.search_Home_J5).grid(column=2,row=11,sticky=(tk.W,tk.E))
         ttk.Button(labelframe,text="Search J6 Home",command=self.search_Home_J6).grid(column=3,row=11,sticky=(tk.W,tk.E))
+        ttk.Button(labelframe,text="Send J1 ref",command=self.SendCommandJoint1_lite).grid(column=1,row=12,sticky=(tk.W,tk.E))
+        ttk.Button(labelframe,text="Send J2 ref",command=self.SendCommandJoint2_lite).grid(column=2,row=12,sticky=(tk.W,tk.E))
+        ttk.Button(labelframe,text="Send J3 ref",command=self.SendCommandJoint3_lite).grid(column=3,row=12,sticky=(tk.W,tk.E))
+        ttk.Button(labelframe,text="Send J4 ref",command=self.SendCommandJoint4_lite).grid(column=1,row=13,sticky=(tk.W,tk.E))
+        ttk.Button(labelframe,text="Send J5 ref",command=self.SendCommandJoint5_lite).grid(column=2,row=13,sticky=(tk.W,tk.E))
+        ttk.Button(labelframe,text="Send J6 ref",command=self.SendCommandJoint6_lite).grid(column=3,row=13,sticky=(tk.W,tk.E))
+
 
     def render_usbEnable(self,row,col):
         '''
@@ -2825,8 +2833,107 @@ class pyAER:
         elif motor == 4:
             f = lambda x:(40/7)*x
         
-        return f(angle)    
-    
+        return f(angle)  
+
+
+    def SendCommandJoint1_lite(self):
+        '''
+        Send only reference to 1st joint
+
+        This function allows to send a reference
+        to the 1st joint in order to move it
+        Reference to angle are mapped in this link: INSERT LINK
+        '''
+        
+        self.sendCommand16( 0x02,  ((self.d["Motor Config"]["ref_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M1"].get()) & 0xFF), True) #Ref M1 0
+        print("Reference sent:",self.d["Motor Config"]["ref_M1"].get())
+        self.sendCommand16( 0x02,  ((self.d["Motor Config"]["ref_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M1"].get()) & 0xFF), True) #Ref M1 0
+        self.sendCommand16( 0x02,  ((self.d["Motor Config"]["ref_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M1"].get()) & 0xFF), True) #Ref M1 0
+        # pass
+
+    def SendCommandJoint2_lite(self):
+        '''
+        Send only reference to 2nd joint
+
+        This function allows to send a reference
+        to the 2nd joint in order to move it
+        Reference to angle are mapped in this link: INSERT LINK
+        '''
+        
+        self.sendCommand16( 0x22,  ((self.d["Motor Config"]["ref_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M2"].get()) & 0xFF), True) #Ref M2 0
+        print("Reference sent:",self.d["Motor Config"]["ref_M2"].get())
+
+        self.sendCommand16( 0x22,  ((self.d["Motor Config"]["ref_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M2"].get()) & 0xFF), True) #Ref M2 0
+        self.sendCommand16( 0x22,  ((self.d["Motor Config"]["ref_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M2"].get()) & 0xFF), True) #Ref M2 0
+        # pass
+
+    def SendCommandJoint3_lite(self):
+        '''
+        Send only reference to 3rd joint
+
+        This function allows to send a reference
+        to the 3rd joint in order to move it
+        Reference to angle are mapped in this link: INSERT LINK
+        '''
+        
+        self.sendCommand16( 0x42,  ((self.d["Motor Config"]["ref_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M3"].get()) & 0xFF), True) #Ref M3 0
+        print("Reference sent:",self.d["Motor Config"]["ref_M3"].get())
+        self.sendCommand16( 0x42,  ((self.d["Motor Config"]["ref_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M3"].get()) & 0xFF), True) #Ref M3 0
+        self.sendCommand16( 0x42,  ((self.d["Motor Config"]["ref_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M3"].get()) & 0xFF), True) #Ref M3 0
+        # pass
+        
+    def SendCommandJoint4_lite(self,ref):
+        '''
+        Send only reference to 4th joint
+
+        This function allows to send a reference
+        to the 4th joint in order to move it
+        Reference to angle are mapped in this link: INSERT LINK
+        '''
+        
+        self.sendCommand16( 0x62,  ((self.d["Motor Config"]["ref_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M4"].get()) & 0xFF), True) #Ref M4 0
+        print("Reference sent:",self.d["Motor Config"]["ref_M4"].get())
+        self.sendCommand16( 0x62,  ((self.d["Motor Config"]["ref_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M4"].get()) & 0xFF), True) #Ref M4 0
+        self.sendCommand16( 0x62,  ((self.d["Motor Config"]["ref_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M4"].get()) & 0xFF), True) #Ref M4 0
+        # pass
+
+    def SendCommandJoint5_lite(self,ref):
+        '''
+        Send only reference to 5th joint
+
+        This function allows to send a reference
+        to the 5th joint in order to move it
+        Reference to angle are mapped in this link: INSERT LINK
+        '''
+        
+        self.sendCommand16( 0x82,  ((self.d["Motor Config"]["ref_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M5"].get()) & 0xFF), True) #Ref M5 0
+        print("Reference sent:",self.d["Motor Config"]["ref_M5"].get())
+        self.sendCommand16( 0x82,  ((self.d["Motor Config"]["ref_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M5"].get()) & 0xFF), True) #Ref M5 0
+        self.sendCommand16( 0x82,  ((self.d["Motor Config"]["ref_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M5"].get()) & 0xFF), True) #Ref M5 0
+        pass
+
+    def SendCommandJoint6_lite(self,ref):
+        '''
+        Send only reference to 6th joint
+
+        This function allows to send a reference
+        to the 6th joint in order to move it
+        Reference to angle are mapped in this link: INSERT LINK
+        '''
+        
+        self.sendCommand16( 0xA2,  ((self.d["Motor Config"]["ref_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M6"].get()) & 0xFF), True) #Ref M6 0
+        self.sendCommand16( 0xA2,  ((self.d["Motor Config"]["ref_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M6"].get()) & 0xFF), True) #Ref M6 0
+        self.sendCommand16( 0xA2,  ((self.d["Motor Config"]["ref_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M6"].get()) & 0xFF), True) #Ref M6 0
+        # pass
+
+    def devmem(self,addr,length,data=None):
+        cmd = "devmem " + str(addr) + " " + str(length)
+        if data is not None:
+            cmd += " " + str(data)
+
+        print("Executing",cmd,"command")    
+        system(cmd)
+
 # if __name__ == "__main__":
 
 #     config = pyAER()
