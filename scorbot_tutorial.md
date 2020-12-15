@@ -186,7 +186,7 @@ So, the graphical interface is nice and all, however, we understand that it is n
 
 Therefore, the same functions and variables that are bound to the buttons in the graphical interface are also accessible within the code, what means that all you have to do in order to use them is import the main module and use it just like any other Python module.
 
-A small demo script can be found [here](). 
+A small demo script can be found [here](./demo.py). 
 
 # FAQ 
 
