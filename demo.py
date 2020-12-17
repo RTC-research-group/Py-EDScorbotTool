@@ -1,5 +1,7 @@
 import pyAER
 import datetime
+import time
+
 def log_position(j,handler,logfile=None):
     read = -1234567
     if j ==1:
@@ -18,9 +20,10 @@ def log_position(j,handler,logfile=None):
         handler.alert("Invalid number of joint")
     
     if(logfile is not None):
-        with open(logfile) as f:
+        with open(logfile,'a') as f:
             dt = datetime.datetime.now().isoformat()
-            f.write(dt,"Position of joint",j,":",read)
+            s = str(dt) + " Position of joint " + str(j) + ": " + str(read)
+            f.write(s)
 
     return read
 
@@ -28,31 +31,50 @@ if __name__ == "__main__":
     #Instance the class
     robot_handler = pyAER.pyAER(visible=False)
 
-    #Init configuration, although we called render_gui it won't render anything because
-    #we passed the "visible" parameter as False to constructor
+    # Init configuration, although we called render_gui it won't render anything because
+    # we passed the "visible" parameter as False to constructor
     robot_handler.render_gui()
+
+    # Check the open USB connection checkbox as we would do in GUI
     robot_handler.checked.set(True)
+    # Then open the USB
     robot_handler.checkUSB()
+    # We store the dictionary that contains the motors' variables
+    # to access them easily
     motors = robot_handler.d["Motor Config"]
 
     #Initialize the robot in order to work with it
-    robot_handler.search_Home_all()
-    #This is the same as calling robot_handler.search_Home_J1-J6() sequentially 
+    robot_handler.search_Home_J1()
+    time.sleep(2)
+    robot_handler.search_Home_J2()
+    time.sleep(2)
+    robot_handler.search_Home_J3()
+    time.sleep(2)
+    robot_handler.search_Home_J4()
+    time.sleep(2)
+    
     
     #Finish initialization calling ConfigureInit and ConfigureSPID
     robot_handler.ConfigureInit()
     robot_handler.ConfigureSPID()
 
-    #Then move one of the robot's joints
+    #Then move the robot's joints
     motors["ref_M1"].set(50)
     robot_handler.SendCommandJoint1_lite()
     log_position(1,robot_handler,"./log.txt")
-    # motors["ref_M2"].set(50)
-    # robot_handler.SendCommandJoint2_lite()
-    # motors["ref_M3"].set(50)
-    # robot_handler.SendCommandJoint3_lite()
-    # motors["ref_M4"].set(50)
-    # robot_handler.SendCommandJoint4_lite()
+    time.sleep(2)
+    
+    motors["ref_M2"].set(100)
+    robot_handler.SendCommandJoint2_lite()
+    time.sleep(2)
+    
+    motors["ref_M3"].set(100)
+    robot_handler.SendCommandJoint3_lite()
+    time.sleep(2)
+
+    motors["ref_M4"].set(-100)
+    robot_handler.SendCommandJoint4_lite()
+    time.sleep(2)
     #Access and change
     pass
             
