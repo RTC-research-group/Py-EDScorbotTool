@@ -46,14 +46,14 @@ if __name__ == "__main__":
     #Initialize the robot in order to work with it
     robot_handler.ConfigureInit()
 
-    robot_handler.search_Home_J1()
-    time.sleep(2)
-    robot_handler.search_Home_J2()
-    time.sleep(2)
-    robot_handler.search_Home_J3()
-    time.sleep(2)
-    robot_handler.search_Home_J4()
-    time.sleep(2)
+    # #robot_handler.search_Home_J1()
+    # time.sleep(2)
+    # robot_handler.search_Home_J2()
+    # time.sleep(2)
+    # robot_handler.search_Home_J3()
+    # time.sleep(2)
+    # robot_handler.search_Home_J4()
+    # time.sleep(2)
     
     
     #Finish initialization calling ConfigureInit and ConfigureSPID
