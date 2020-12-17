@@ -9,11 +9,8 @@
         * [TL;DR](#TL;DR-Too-long-didn't-read)
     2. [Understanding references](#Understanding-references)
     3. [How to make the robot move](#How-to-make-the-robot-move)
-    4. [Configure_SPID and cameras](#Configure_SPID-and-cameras)
-        1. [The real important part](#The-real-important-part)
-        2. [TL;DR](#TL;DR)
-    5. [Coding](#Coding)
-    6. [Camera(s) use](#Camera(s)-use)
+    4. [Coding](#Coding)
+    5. [Camera(s) use](#Camera(s)-use)
 3. [Frequently Asked Questions](#FAQ)
 
 # Establish connection
