@@ -13,6 +13,7 @@
         1. [The real important part](#The-real-important-part)
         2. [TL;DR](#TL;DR)
     5. [Coding](#Coding)
+    6. [Camera(s) use](#Camera(s)-use)
 3. [Frequently Asked Questions](#FAQ)
 
 # Establish connection
@@ -188,6 +189,22 @@ Therefore, the same functions and variables that are bound to the buttons in the
 
 A small demo script can be found [here](./demo.py). 
 
+## Camera(s) Use
+
+There are a couple of cameras setup in the laboratory, so that you may see how the robot is moving during the work sessions. 
+
+You may open the cameras with the following command:
+
+```bash
+python3 utils/camera1.py & #Add ampersand to execute in background
+python3 utils/camera2.py &
+```
+
+Provided that you are in your home directory. As you can see, `camera1.py` and `camera2.py` are located within the directory `utils`. 
+
+These commands should be executed before opening the graphical interface or running any script, or in a separate shell that one that is running those.
+
+In order to close the camera's windows, just click on the window you want to close and hit the escape key ('Esc') on the keyboard.
 # FAQ 
 
 
