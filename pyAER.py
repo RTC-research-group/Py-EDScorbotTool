@@ -2824,7 +2824,7 @@ class pyAER:
             f = lambda x: ((-11/100)*x) + 53
         elif motor == 3:
             #To be characterised
-            if ((ref >=-400) and (ref <= 200):
+            if ((ref >=-400) and (ref <= 200)):
                 f = lambda x: ((-67/200)*x) + 11
             else:
                 self.alert("Joint 3 out of range. Ref must be between 200 and -400")
@@ -2857,7 +2857,7 @@ class pyAER:
         elif motor == 2:
             f = lambda x: -(((100*x) - 5300)/11) #https://www.symbolab.com/solver/function-inverse-calculator/inverse%20f%5Cleft(x%5Cright)%3D%20-%5Cfrac%7B11%7D%7B100%7Dx%2B53
         elif motor == 3:
-            if ((angle >=-66.5) and (angle <= 143.5):
+            if ((angle >=-66.5) and (angle <= 143.5)):
                 f = lambda x: -(((200*x)-2200)/67) #https://www.symbolab.com/solver/function-inverse-calculator/inverse%20f%5Cleft(x%5Cright)%3D-%5Cfrac%7B67%7D%7B200%7Dx%2B11
             else:
                 self.alert("Joint 3 out of range. Angle must be between 143.5 and -66.5")
