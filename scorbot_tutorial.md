@@ -172,6 +172,48 @@ Therefore, the same functions and variables that are bound to the buttons in the
 
 A small demo script can be found [here](./demo.py). 
 
+Summarizing, the functions you really want to use are:
+* ConfigureInit() -- Once at the beginning of the session, before searching home locations
+* ConfigureSPID() -- Once after searching home locations, so that the robot stays in those
+* SendCommandJointX_lite -- These functions send each joint its reference and nothing else, so that you only send the required information for movement
+
+And last, but not least, you should be able to modify each joint's reference by modifying the variables that hold them in the graphical interface, as these variables are also accesible from the code. 
+
+The dictionary that holds all the variables is called `d` and is accesible directly from an object of the class pyAER. The structure of the dictionary is as follows:
+```python
+d
+{
+    Motor Config
+    {
+        "EI_FD_bank3_18bits_M1": ...,
+        "PD_FD_bank3_22bits_M1": ...,
+        "PI_FD_bank3_18bits_M1": ...,
+        "leds_M1": ...,
+        "ref_M1": ...,
+        "spike_expansor_M1": ...,
+        "EI_FD_bank3_18bits_M2"...,
+        ...
+        "spike_expansor_M6"
+    }
+    Joints
+    {
+        ... 
+    }
+    Scan Parameters
+    {
+        ...
+    }
+}
+```
+
+Each of these values is a Tkinter variable, so in order to read or write its value you have to do it like this:
+
+```python
+ref = d["Motor Config"]["ref_M1"].get() #Read
+d["Motor Config"]["ref_M1"].set(50) #Write
+```
+
+Don't worry if you find this confusing, as the demo script contains instructions that use and modify these variables
 ## Camera(s) Use
 
 There are a couple of cameras setup in the laboratory, so that you may see how the robot is moving during the work sessions. 
