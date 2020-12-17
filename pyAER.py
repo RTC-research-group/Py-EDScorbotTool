@@ -472,9 +472,9 @@ class pyAER:
         self.frame_list.append(self.render_scan_parameters(3, 2))
         self.render_buttons(3, 3)
         self.render_usbEnable(4,1)
-        self.render_cameras(4,2)
+        #self.render_cameras(4,2)
         self.init_config()
-        self.update_cameras()
+        #self.update_cameras()
         #And call mainloop to display GUI
         if self.visible:
             self.root.mainloop()
