@@ -153,27 +153,13 @@ So what does exactly this "reference" mean? You can think of it as a way of tell
 
 And that's everything you need to know if you're only interested in moving the robot. As for how to map references to angles, we're providing you with some functions in the code to help you with that, as that kind of mapping is specific to each robot and to each motor within a given robot. That's right, a reference of say, 50, can put the first motor in an angle ```alpha``` but the second motor in another completely different angle ```beta```, so it's best if you just adhere to the mappings we offer you.
 
+![scorbot_ranges](./scorbot_range.png)
+
 ## How to make the robot move
 
 So now that the concept of reference has been explained, we can move on to moving the robot. As it has been said, the only important parameter here would be the reference, so you can rest easy knowing that all of the other parameters won't have to be changed, at least from a user's point of view. 
 
 Therefore, in order to move the robot you have to first do the actions specified in the "Prepare the session section". Then, everything you need to do is change a joint's reference (via the graphical interface or via code) and hit the ```Configure_SPID``` button (or call the ```Configure_SPID``` function in the code). As long as you've specified some different references, you should see some movement going on. 
-
-## Configure_SPID and cameras
-
-In recent updates, we've added some functionality in order to make available a couple of cameras in the laboratory, so that you can see (and maybe work with) the robot's movement from a visual perspective and not only from a coding perspective.
-
-As of the writing of this, the cameras are available in the graphical interface via two buttons, one for the front camera and another one for the side camera. Please, keep in mind that, as everything is setup remotely, latency is expected when activating the cameras, as carrying video over the internet is quite a heavier data payload than just SSH commands.
-
-### The real important part
-
-This section is actually written because we have identified a problem with how the ```Configure_SPID``` function is implemented within the GUI, and this problem affects the cameras' setup. 
-
-Basically, when you hit the ```Configure_SPID``` button, a bunch of commands are being sent to the robot, and the GUI is frozen during that time. It is actually not that long that the graphical interface is frozen, but it is enough to make the cameras' feed miss continuity, in other words, when you use the ```Configure_SPID``` button to command movement, cameras freeze for a bit and when they unfreeze the robot has probably finished moving, meaning that we've missed its movement entirely.
-
-However, we've found a workaround for this situation: we've implemented a "light" function for each joint that moves that specific joint separately from the rest so that the only information that is sent is that concerning the movement of that joint, which turns out to be fast enough not to freeze the cameras.
-
-However, for this to work you need to press the ```Configure_SPID``` button at least once during the session. We heavily encourage you to do it right after the session preparement process, so that you can forget about it for the rest of the time and only use the light functions to move the robot.
 
 ### TL;DR
 
