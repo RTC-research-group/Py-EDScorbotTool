@@ -2906,7 +2906,7 @@ class pyAER:
         self.sendCommand16( 0x42,  ((self.d["Motor Config"]["ref_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M3"].get()) & 0xFF), True) #Ref M3 0
         # pass
         
-    def SendCommandJoint4_lite(self,ref):
+    def SendCommandJoint4_lite(self):
         '''
         Send only reference to 4th joint
 
@@ -2921,7 +2921,7 @@ class pyAER:
         self.sendCommand16( 0x62,  ((self.d["Motor Config"]["ref_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M4"].get()) & 0xFF), True) #Ref M4 0
         # pass
 
-    def SendCommandJoint5_lite(self,ref):
+    def SendCommandJoint5_lite(self):
         '''
         Send only reference to 5th joint
 
@@ -2936,7 +2936,7 @@ class pyAER:
         self.sendCommand16( 0x82,  ((self.d["Motor Config"]["ref_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M5"].get()) & 0xFF), True) #Ref M5 0
         pass
 
-    def SendCommandJoint6_lite(self,ref):
+    def SendCommandJoint6_lite(self):
         '''
         Send only reference to 6th joint
 
