@@ -44,6 +44,8 @@ if __name__ == "__main__":
     motors = robot_handler.d["Motor Config"]
 
     #Initialize the robot in order to work with it
+    robot_handler.ConfigureInit()
+
     robot_handler.search_Home_J1()
     time.sleep(2)
     robot_handler.search_Home_J2()
@@ -55,7 +57,6 @@ if __name__ == "__main__":
     
     
     #Finish initialization calling ConfigureInit and ConfigureSPID
-    robot_handler.ConfigureInit()
     robot_handler.ConfigureSPID()
 
     #Then move the robot's joints
