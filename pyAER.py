@@ -472,9 +472,9 @@ class pyAER:
         self.frame_list.append(self.render_scan_parameters(3, 2))
         self.render_buttons(3, 3)
         self.render_usbEnable(4,1)
-        self.render_cameras(4,2)
+        #self.render_cameras(4,2)
         self.init_config()
-        self.update_cameras()
+        #self.update_cameras()
         #And call mainloop to display GUI
         if self.visible:
             self.root.mainloop()
@@ -2821,12 +2821,16 @@ class pyAER:
         if motor == 1:
             f = lambda x: (-1/3)*x
         elif motor == 2:
-            f = lambda x: (-3/8)*x
+            f = lambda x: ((-11/100)*x) + 53
         elif motor == 3:
             #To be characterised
-            f = lambda x: x
+            if ((ref >=-400) and (ref <= 200):
+                f = lambda x: ((-67/200)*x) + 11
+            else:
+                self.alert("Joint 3 out of range. Ref must be between 200 and -400")
+                return
         elif motor == 4:
-            f = lambda x:(7/40)*x
+            f = lambda x:((9/50)*x) + 2
         
         return f(ref)
             
@@ -2836,7 +2840,7 @@ class pyAER:
 
         This function takes a motor and an angle and 
         returns the corresponding reference to said angle
-        for that specific motor
+        for that specific motor.
 
         Args:
             motor (int): Number of the motor (1-4)
@@ -2847,15 +2851,19 @@ class pyAER:
         """
         f = lambda x:x
 
+        #These are the inverse of the functions that appear in ref_to_angle function
         if motor == 1:
-            f = lambda x: (-3)*x
+            f = lambda x: (-3)*x #https://www.symbolab.com/solver/function-inverse-calculator/inverse%20f%5Cleft(x%5Cright)%3D-%5Cfrac%7B1%7D%7B3%7Dx
         elif motor == 2:
-            f = lambda x: (-8/3)*x
+            f = lambda x: -(((100*x) - 5300)/11) #https://www.symbolab.com/solver/function-inverse-calculator/inverse%20f%5Cleft(x%5Cright)%3D%20-%5Cfrac%7B11%7D%7B100%7Dx%2B53
         elif motor == 3:
-            #To be characterised
-            f = lambda x: x
+            if ((angle >=-66.5) and (angle <= 143.5):
+                f = lambda x: -(((200*x)-2200)/67) #https://www.symbolab.com/solver/function-inverse-calculator/inverse%20f%5Cleft(x%5Cright)%3D-%5Cfrac%7B67%7D%7B200%7Dx%2B11
+            else:
+                self.alert("Joint 3 out of range. Angle must be between 143.5 and -66.5")
+                return
         elif motor == 4:
-            f = lambda x:(40/7)*x
+            f = lambda x:-(((50*x)-100)/9) #https://www.symbolab.com/solver/function-inverse-calculator/inverse%20f%5Cleft(x%5Cright)%3D%5Cfrac%7B9%7D%7B50%7Dx%20%2B2
         
         return f(angle)  
 
@@ -2906,7 +2914,7 @@ class pyAER:
         self.sendCommand16( 0x42,  ((self.d["Motor Config"]["ref_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M3"].get()) & 0xFF), True) #Ref M3 0
         # pass
         
-    def SendCommandJoint4_lite(self,ref):
+    def SendCommandJoint4_lite(self):
         '''
         Send only reference to 4th joint
 
@@ -2921,7 +2929,7 @@ class pyAER:
         self.sendCommand16( 0x62,  ((self.d["Motor Config"]["ref_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M4"].get()) & 0xFF), True) #Ref M4 0
         # pass
 
-    def SendCommandJoint5_lite(self,ref):
+    def SendCommandJoint5_lite(self):
         '''
         Send only reference to 5th joint
 
@@ -2936,7 +2944,7 @@ class pyAER:
         self.sendCommand16( 0x82,  ((self.d["Motor Config"]["ref_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M5"].get()) & 0xFF), True) #Ref M5 0
         pass
 
-    def SendCommandJoint6_lite(self,ref):
+    def SendCommandJoint6_lite(self):
         '''
         Send only reference to 6th joint
 
