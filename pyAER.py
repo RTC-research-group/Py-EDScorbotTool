@@ -1,6 +1,5 @@
 from datetime import time
 from os import read
-from os import system
 import tkinter as tk
 from tkinter import ttk,messagebox
 import usb.core
@@ -12,7 +11,7 @@ import datetime
 import time
 import logging
 import cv2
-
+import subprocess
 
 class pyAER:
     '''
@@ -2989,12 +2988,15 @@ class pyAER:
         # pass
 
     def devmem(self,addr,length,data=None):
-        cmd = "devmem " + str(addr) + " " + str(length)
+        cmd = "devmem " + hex(addr) + " " + str(length)
         if data is not None:
             cmd += " " + str(data)
 
-        print("Executing",cmd,"command")    
-        system(cmd)
+        print("Executing command: ",cmd)    
+        #system(cmd)
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        tmp = proc.stdout.read()
+        return tmp
 
 # if __name__ == "__main__":
 
