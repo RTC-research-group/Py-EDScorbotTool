@@ -158,12 +158,21 @@ class pyAER:
         j4 = tk.IntVar()
         j5 = tk.IntVar()
         j6 = tk.IntVar()
+        j1_hex = tk.StringVar()
+        j2_hex = tk.StringVar()
+        j3_hex = tk.StringVar()
+        j4_hex = tk.StringVar()
+        j5_hex = tk.StringVar()
+        j6_hex = tk.StringVar()
 
         variables = [j1, j2, j3, j4, j5, j6]
+        variables_hex = [j1_hex,j2_hex,j3_hex,j4_hex,j5_hex,j6_hex]
         i = 1
-        for var, row_ in zip(variables, range(1, len(variables)+1)):
+        for var,var_hex, row_ in zip(variables,variables_hex, range(1, len(variables)+1)):
             labeltext = "J" + str(i) + "_sensor_value"
+            labeltext_hex = "J" + str(i) + "_sensor_value_hex"
             self.d["Joints"][labeltext] = var
+            self.d["Joints"][labeltext_hex] = var_hex
 
             if self.visible:
                 text = ttk.Entry(labelframe, width=7, textvariable=var)
@@ -171,9 +180,16 @@ class pyAER:
                 text.config(state="readonly")
                 ttk.Label(labelframe, text=labeltext).grid(
                 column=1, row=row_, sticky=tk.W)
+
+                text_hex = ttk.Entry(labelframe,width=7,textvariable=var_hex)
+                text_hex.grid(column=3,row=row_)
+                text_hex.config(state="readonly")
+                
             i += 1
 
         return labelframe
+        
+    
 
     def render_scan_parameters(self, row, col):
         '''
@@ -266,7 +282,6 @@ class pyAER:
             ttk.Button(labelframe,text="Send J4 ref",command=self.SendCommandJoint4_lite).grid(column=1,row=13,sticky=(tk.W,tk.E))
             ttk.Button(labelframe,text="Send J5 ref",command=self.SendCommandJoint5_lite).grid(column=2,row=13,sticky=(tk.W,tk.E))
             ttk.Button(labelframe,text="Send J6 ref",command=self.SendCommandJoint6_lite).grid(column=3,row=13,sticky=(tk.W,tk.E))
-
 
     def render_usbEnable(self,row,col):
         '''
@@ -470,11 +485,12 @@ class pyAER:
         #Render the rest of the components
         self.frame_list.append(self.render_joints(3, 1))
         self.frame_list.append(self.render_scan_parameters(3, 2))
+        #self.render_joints_hex(4,1)
         self.render_buttons(3, 3)
-        self.render_usbEnable(4,1)
+        self.render_usbEnable(5,1)
         #self.render_cameras(4,2)
         self.init_config()
-        #self.update_cameras()
+        self.update()
         #And call mainloop to display GUI
         if self.visible:
             self.root.mainloop()
@@ -507,42 +523,18 @@ class pyAER:
             except:
                 pass
 
-    def update_cameras(self):
+    def update(self):
 
-        if self.cam1_enable.get():            
-
-            #Front camera
-            if(self.camera1.isOpened()):
-                r,img = self.camera1.read()
-                if r:
-                    cv2.imshow('front',img)
-                    cv2.waitKey(1)
-
-            else:
-                self.alert("Could not open camera 1")
-                return
-        else:
-    
-            pass
-
-        if self.cam2_enable.get():            
-
-            #Front camera
-            if(self.camera2.isOpened()):
-                r,img = self.camera2.read()
-                if r:
-                    cv2.imshow('side',img)
-                    cv2.waitKey(1)
-
-            else:
-                self.alert("Could not open camera 2")
-                return
-        else:
-    
-            pass
-        
+        if self.checked.get():
+            self.Read_J1_gui()
+            self.Read_J2_gui()
+            self.Read_J3_gui()
+            self.Read_J4_gui()
+            self.Read_J5_gui()
+            self.Read_J6_gui()
+            
         if self.visible:
-            self.root.after(1,self.update_cameras)
+            self.root.after(1,self.update)
 
     def ConfigureInit(self):
         
@@ -1861,6 +1853,44 @@ class pyAER:
 
             return j6_pos
 
+    def Read_J1_gui(self):
+        pos = self.Read_J1_pos()
+        self.d["Joints"]["J1_sensor_value"].set(pos)
+        self.d["Joints"]["J1_sensor_value_hex"].set(hex(pos))
+        return
+
+    def Read_J2_gui(self):
+        pos = self.Read_J2_pos()
+        self.d["Joints"]["J2_sensor_value"].set(pos)
+        self.d["Joints"]["J2_sensor_value_hex"].set(hex(pos))
+
+        return
+
+    def Read_J3_gui(self):
+        pos = self.Read_J3_pos()
+        self.d["Joints"]["J3_sensor_value"].set(pos)
+        self.d["Joints"]["J3_sensor_value_hex"].set(hex(pos))
+        return
+
+    def Read_J4_gui(self):
+        pos = self.Read_J4_pos()
+        self.d["Joints"]["J4_sensor_value"].set(pos)
+        self.d["Joints"]["J4_sensor_value_hex"].set(hex(pos))
+        return
+
+    def Read_J5_gui(self):
+        pos = self.Read_J5_pos()
+        self.d["Joints"]["J5_sensor_value"].set(pos)
+        self.d["Joints"]["J5_sensor_value_hex"].set(hex(pos))
+        return
+
+    def Read_J6_gui(self):
+        pos = self.Read_J6_pos()
+        self.d["Joints"]["J6_sensor_value"].set(pos)
+        self.d["Joints"]["J6_sensor_value_hex"].set(hex(pos))
+        return
+
+
     def Reset_J1_pos(self):
         self.sendCommand16( 0xF1,  (0x00),  (0xF1), True)
     
@@ -2824,7 +2854,7 @@ class pyAER:
             f = lambda x: ((-11/100)*x) + 53
         elif motor == 3:
             #To be characterised
-            if ((ref >=-400) and (ref <= 200):
+            if ((ref >=-400) and (ref <= 200)):
                 f = lambda x: ((-67/200)*x) + 11
             else:
                 self.alert("Joint 3 out of range. Ref must be between 200 and -400")
@@ -2857,7 +2887,7 @@ class pyAER:
         elif motor == 2:
             f = lambda x: -(((100*x) - 5300)/11) #https://www.symbolab.com/solver/function-inverse-calculator/inverse%20f%5Cleft(x%5Cright)%3D%20-%5Cfrac%7B11%7D%7B100%7Dx%2B53
         elif motor == 3:
-            if ((angle >=-66.5) and (angle <= 143.5):
+            if ((angle >=-66.5) and (angle <= 143.5)):
                 f = lambda x: -(((200*x)-2200)/67) #https://www.symbolab.com/solver/function-inverse-calculator/inverse%20f%5Cleft(x%5Cright)%3D-%5Cfrac%7B67%7D%7B200%7Dx%2B11
             else:
                 self.alert("Joint 3 out of range. Angle must be between 143.5 and -66.5")
