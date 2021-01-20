@@ -10,7 +10,7 @@ from tkinter import filedialog
 import datetime
 import time
 import logging
-import cv2
+# import cv2
 import subprocess
 
 class pyAER:
