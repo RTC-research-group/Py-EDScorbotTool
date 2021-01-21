@@ -2992,9 +2992,10 @@ class pyAER:
         if data is not None:
             cmd += " " + str(data)
 
-        print("Executing command: ",cmd)    
+        print("Executing command: ",cmd)  
+
         #system(cmd)
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        proc = subprocess.Popen(cmd.split(' '), stdout=subprocess.PIPE)
         tmp = proc.stdout.read()
         return tmp
 
