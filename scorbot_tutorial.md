@@ -134,7 +134,7 @@ So, to sum it all up, any time that anyone has to work with the robot, the first
 
 ### **TL;DR** (Too long, didn't read)
 
-Just click on the ```Search_Home``` button before anything else and let it finish, then push the ```Configure_Init``` button when initiating a new work session and you should be fine.
+Just click on the ```Search_Home``` button before anything else and let it finish, then push the ```Configure_Init``` and ```Configure_SPID``` buttons in the specified order when initiating a new work session and you should be fine.
 
 NOTE: ```search_Home_JX``` functions should be used in case one of the joints is suspected to have lost its home reference, so that you don't have to wait for all joints to search their home in case just one of them has gone astray.
 
@@ -156,13 +156,13 @@ And that's everything you need to know if you're only interested in moving the r
 
 So now that the concept of reference has been explained, we can move on to moving the robot. As it has been said, the only important parameter here would be the reference, so you can rest easy knowing that all of the other parameters won't have to be changed, at least from a user's point of view. 
 
-Therefore, in order to move the robot you have to first do the actions specified in the "Prepare the session section". Then, everything you need to do is change a joint's reference (via the graphical interface or via code) and hit the ```Configure_SPID``` button (or call the ```Configure_SPID``` function in the code). As long as you've specified some different references, you should see some movement going on. 
+Therefore, in order to move the robot you have to first do the actions specified in the "Prepare the session section". Then, there are a couple of different ways to move the joints. The preferred and recommended way is to just use ```SendCommandJointX_lite``` functions, as they only send the minimal required information to the controller in order for the movement to be performed. The ```Configure_SPID``` function can also be used to update references (and thus moving the robot) but the issue here is that it doesn't only send the updated reference but it also sends everything else, so understand that when calling this function you're sending every parameter to every joint, so don't expect the performance to be as good as if you were using ```SendCommandJointX_lite``` functions.
 
 ### TL;DR
 
-In order to move the robot and be able to see it moving in the cameras, you have to hit ```Configure_SPID``` at least once after the initial setup (described [here](#Prepare-the-session)) and then use the ```Send JX ref``` buttons (within the GUI) or functions (within the code).
+In order to move the robot, you have to hit ```Configure_SPID``` at least once after the initial setup (described [here](#Prepare-the-session)) and then use the ```Send JX ref``` buttons (within the GUI) or ```SendCommandJointX_lite``` functions within the code.
 
-If you don't do this and program the movement with the ```Configure_SPID``` function or button, you will freeze the cameras and probably won't be able to see the movement.
+```Configure_SPID``` can also be used to update references, but it is far slower than using ```SendCommandJointX_lite``` functions, so using the latter method is recommended.
 
 ## Coding
 
@@ -213,8 +213,22 @@ ref = d["Motor Config"]["ref_M1"].get() #Read
 d["Motor Config"]["ref_M1"].set(50) #Write
 ```
 
+You can also bind the internal dictionaries to other variable so that you don't have to continuously write ```d["Motor Config]["ref_MX"]``` or such:
+
+```python
+motors = d["Motor Config"]
+#Same as ref = d["Motor Config"]["ref_M1"].get()
+ref = motors["ref_M1"].get() #Read
+
+#Same as d["Motor Config"]["ref_M1"].set(50) 
+motors["ref_M1"].set(50) #Write
+```
+
 Don't worry if you find this confusing, as the demo script contains instructions that use and modify these variables
 ## Camera(s) Use
+
+### WARNING: This section will change in the near future
+
 
 There are a couple of cameras setup in the laboratory, so that you may see how the robot is moving during the work sessions. 
 
@@ -230,14 +244,17 @@ Provided that you are in your home directory. As you can see, `camera1.py` and `
 These commands should be executed before opening the graphical interface or running any script, or in a separate shell that one that is running those.
 
 In order to close the camera's windows, just click on the window you want to close and hit the escape key ('Esc') on the keyboard.
+
 # FAQ 
 
 
 ## When I check the "Open device" checkbox a message box that says "Device not found, try again or check the connection" is displayed
+## When I execute the `checkUSB()` method with the `checked` variable set to `True` I get a message that says "Device not found, try again or check the connection"
+
 
 ![faq1](./faq1.JPG)
 
-There is nothing wrong with this, it normally means that the robot is not powered. This shouldn't happen during a scheduled work session, so it should typically occur when you're trying to check whether the GUI works for you or not. 
+There is nothing wrong with this, it normally means that the robot is not powered. This shouldn't happen during a scheduled work session, so it should typically occur when you're trying to check whether the GUI or scripting environment works for you or not. 
 
 ## What are the parameters that are not "ref_MX" for?
 
