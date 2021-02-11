@@ -79,7 +79,10 @@ class pyAER:
             text (str): Text to be displayed in the box
 
         '''
-        messagebox.showinfo(message=text)
+        if self.visible:
+            messagebox.showinfo(message=text)
+        else:
+            print(text)
 
     def render_motor(self, motor_number, row, col):
         '''
