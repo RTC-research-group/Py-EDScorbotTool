@@ -65,8 +65,8 @@ if __name__ == "__main__":
     #Establish initial references 
     initial_ref1 = 11771
     initial_ref2 = 18478
-    initial_ref3 = 47591
-    initial_ref4 = 39797
+    initial_ref3 = 17583
+    initial_ref4 = 25477
 
 
 
