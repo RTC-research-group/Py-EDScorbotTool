@@ -1,3 +1,10 @@
+#Example script that performs a 
+#sweep of the operation range of 
+#the first 4 joints of ED-Scorbot
+
+##########################
+# NEEDS TO BE TESTED YET #
+##########################
 import pyAER
 import datetime
 import time

@@ -1,3 +1,6 @@
+#Demonstration script to initialize and move 
+#the 4 first joints of ED-Scorbot
+
 import pyAER
 import datetime
 import time
