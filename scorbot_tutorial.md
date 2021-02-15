@@ -9,6 +9,7 @@
         * [TL;DR](#TL;DR-Too-long-didn't-read)
     2. [Understanding references](#Understanding-references)
     3. [How to make the robot move](#How-to-make-the-robot-move)
+        * [TL;DR](#TL;DR)
     4. [Coding](#Coding)
     5. [Camera(s) use](#Camera(s)-use)
 3. [Frequently Asked Questions](#FAQ)
