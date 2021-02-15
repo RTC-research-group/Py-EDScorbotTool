@@ -38,7 +38,7 @@
 
     If everything went correctly, you should have access to a terminal like this in your screen:
 
-    ![terminal](./terminal.jpg)
+    ![terminal](./images/terminal.jpg)
     
 
 4. Check everything runs fine by executing the GUI of the service (please be patient when using the GUI because it can take a little while to respond):
@@ -47,7 +47,7 @@
 
     A window like this should open in your PC:
 
-    ![gui](./gui.jpg)
+    ![gui](./images/gui.jpg)
 
     Check the bottom left checkbox that says "Open device", then look at the terminal where you have the active connection. If the message "*Device found and initialized successfully*" is displayed, you have successfully connected to the server and everything is ready for you to begin. 
     
@@ -59,11 +59,11 @@
 
     * Run PuTTYgen utility (it is installed with PuTTY). A window like this should appear:
         
-        ![puttygen](./puttygen.JPG)
+        ![puttygen](./images/images/puttygen.JPG)
 
     * Now click on the button that says "Generate". The program will need you to move your mouse around the blank area, so just do as it says. Once that is out of the way, you will have generated your keypair and the window should look like this:
 
-        ![puttygen2](./puttygen2.JPG)
+        ![puttygen2](./images/puttygen2.JPG)
 
     * Now save both private and public keys by clicking on the buttons that say so. You may also enter a passphrase for your key, which is recommended but optional. You may now close PuTTYgen 
 
@@ -78,14 +78,14 @@
     Once you've done this step, you will have to wait to receive a confirmation e-mail from the server's administrator. Upon receiving the confirmation e-mail, you will already have your user created (you will receive a username in case you didn't specify one in the e-mail) and ready to go. However, you will need to install the Xming software as well as configure PuTTY in order for you to be able to use the X11 utilities (otherwise you can't use the graphical interface).  
 
 3. Install Xming software ([official website](https://sourceforge.net/projects/xming/))
-    * During the installation process, you may select the option "Don't install an SSH client", as you have already installed PuTTY: ![xming_install](./xming_install.JPG)
+    * During the installation process, you may select the option "Don't install an SSH client", as you have already installed PuTTY: ![xming_install](./images/xming_install.JPG)
 
         You can just use the default configuration for everything else.
 
 4. Run Xming
     * Executing the software will make a small "X" icon appear in your tray bar:
 
-        ![xming_icon](./xming_icon.jpg)
+        ![xming_icon](./images/xming_icon.jpg)
     
         This means Xming is being executed. 
 5. Configure PuTTY connection
@@ -95,17 +95,17 @@
 
     * Uncollapse the "SSH" section under "Connection" in the tree view that's in the left side of the program. Now select "X11" and check the box that says "Enable X11 forwarding". In the input box that says "X display location" enter "localhost:0.0".
 
-        ![X11_forward](./x11_forward.jpg) 
+        ![X11_forward](./images/x11_forward.jpg) 
     
     * Now select the "Auth" section that is also under "Connection". The last option displayed lets you select a private key file. Click on "browse" and select the <key_name>.ppk file that you generated earlier.
 
-        ![ppk_select](./ppk_select.jpg) 
+        ![ppk_select](./images/ppk_select.jpg) 
 
     * Return to the session view by clicking on the "Session" section that is the first one in the tree view and save your session. 
     
 6. Now all you have to do is double-click on your connection's name and you will be connected to the server with your username. A window like this should appear before you: 
 
-    ![putty](./putty.jpg)
+    ![putty](./images/putty.jpg)
 
 
 7. Last, but not least, you should check that the Xming X server is working correctly, as well as test your configuration by doing the following:
@@ -114,7 +114,7 @@
     * ```python3 main.py```
 
     A window similar to this one should appear (please be patient, from now on it can take a while to load):
-    ![pyaer](./pyaer.jpg)
+    ![pyaer](./images/pyaer.jpg)
 
     You just have one more thing to check, and you can do that by checking the bottom left checkbox that says "Open device". If a message that says "*Device found and initialized successfully*" is displayed in the PuTTY console, then you're ready to begin.
 
@@ -143,7 +143,7 @@ NOTE: ```search_Home_JX``` functions should be used in case one of the joints is
 
 In order to make this section a little bit more understandable, let's take a look at the graphical interface first:
 
-![gui](./gui.jpg)
+![gui](./images/gui.jpg)
 
 As you can see, each motor has 6 different parameters and almost all of them are used to determine how it should move. However, if you're only interested in actually moving them and not in how they move you're lucky, because you're only going to need one of these parameters, and that would be the ```ref_MX``` one.
 
@@ -253,7 +253,7 @@ In order to close the camera's windows, just click on the window you want to clo
 ## When I execute the `checkUSB()` method with the `checked` variable set to `True` I get a message that says "Device not found, try again or check the connection"
 
 
-![faq1](./faq1.JPG)
+![faq1](./images/faq1.JPG)
 
 There is nothing wrong with this, it normally means that the robot is not powered. This shouldn't happen during a scheduled work session, so it should typically occur when you're trying to check whether the GUI or scripting environment works for you or not. 
 
