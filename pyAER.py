@@ -23,6 +23,7 @@ class pyEDScorbotTool:
     :ivar self.d: Dictionary in which there are stored the variables that allow for SPID configuration. Every input of the graphical interface corresponds to a variable that is stored in this dictionary. It contains three other dictionaries: Motor Config, Joints and Scan Parameters, which in turn hold the corresponding variables. The keys for the dictionaries are "Motor Config", "Joints" and "Scan Parameters", respectively.
     :ivar self.visible: Boolean variable that indicates whether the graphical interface should be rendered or not
     :ivar self.root: Root of the graphical interface's window
+    :ivar self.checked: Variable that holds the state of the checkbox that indicates whether USB is enabled or not.
     '''
     def __init__(self,visible=True):
         '''
