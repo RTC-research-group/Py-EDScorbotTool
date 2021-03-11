@@ -8,6 +8,14 @@ Py-EDScorbotTool's documentation
 
 .. toctree::
    :maxdepth: 2
+   :caption: Index
+
+   contents
+
+   
+
+.. toctree::
+   :maxdepth: 2
    :caption: Programming Reference
    
    api
