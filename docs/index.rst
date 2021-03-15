@@ -10,6 +10,7 @@ Py-EDScorbotTool's documentation
    :maxdepth: 2
    :caption: Index
 
+   introduction
    contents
 
    
