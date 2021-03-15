@@ -271,13 +271,13 @@ So, the graphical interface is nice and all, however, we understand that it is n
 
 Therefore, the same functions and variables that are bound to the buttons in the graphical interface are also accessible within the code, what means that all you have to do in order to use them is import the main module and use it just like any other Python module.
 
-A small demo script can be found `here <./demo.py>`_. 
+A small demo script can be found `here <https://github.com/RTC-research-group/Py-EDScorbotTool/blob/master/examples/demo.py>`_. 
 
 Summarizing, the functions you really want to use are:
 
 
-* ConfigureInit() -- Once at the beginning of the session, before searching home locations
-* ConfigureSPID() -- Once after searching home locations, so that the robot stays in those
+* ConfigureInit -- Once at the beginning of the session, before searching home locations
+* ConfigureSPID -- Once after searching home locations, so that the robot stays at home
 * SendCommandJointX_lite -- These functions send each joint its reference and nothing else, so that you only send the required information for movement
 
 And last, but not least, you should be able to modify each joint's reference by modifying the variables that hold them in the graphical interface, as these variables are also accesible from the code. 
