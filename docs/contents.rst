@@ -43,8 +43,8 @@ Linux
      If everything went correctly, you should have access to a terminal like this in your screen:
 
 
-     .. image:: ../images/terminal.jpg
-        :target: ../images/terminal.jpg
+     .. image:: ../images/terminal.png
+        :target: ../images/terminal.png
         :alt: terminal
 
 

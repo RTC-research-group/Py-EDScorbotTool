@@ -38,7 +38,7 @@
 
     If everything went correctly, you should have access to a terminal like this in your screen:
 
-    ![terminal](./images/terminal.jpg)
+    ![terminal](./images/terminal.png)
     
 
 4. Check everything runs fine by executing the GUI of the service (please be patient when using the GUI because it can take a little while to respond):
