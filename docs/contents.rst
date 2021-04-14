@@ -333,8 +333,6 @@ Don't worry if you find this confusing, as the demo script contains instructions
 Camera(s) Use
 -------------
 
-WARNING: This section will change in the near future
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 There are a couple of cameras setup in the laboratory, so that you may see how the robot is moving during the work sessions. 
 
@@ -342,14 +340,38 @@ You may open the cameras with the following command:
 
 .. code-block:: bash
 
-   python3 utils/camera1.py & #Add ampersand to execute in background
-   python3 utils/camera2.py &
+   /usr/local/bin/cam1.bash & #Add ampersand to execute in background
+   /usr/local/bin/cam2.bash &
 
-Provided that you are in your home directory. As you can see, ``camera1.py`` and ``camera2.py`` are located within the directory ``utils``. 
 
-These commands should be executed before opening the graphical interface or running any script, or in a separate shell that one that is running those.
+These commands should be executed before opening the graphical interface or running any script, or in a separate shell that the one that is running those.
 
-In order to close the camera's windows, just click on the window you want to close and hit the escape key ('Esc') on the keyboard.
+You can record what you are seeing in all cameras by selecting the camera's window with your mouse and then hitting the 'r' key. A message will display telling you it has begun recording. To stop it, hit the 'r' key again.
+
+In order to close the camera's windows, just click on the window you want to close and hit the escape key ('Esc') on the keyboard. If you happened to be recording when the 'Esc' key is pressed, the recording will be stopped and saved.
+
+Additional arguments can be specified for the use of a camera, as the scripts listed above are a small wrapper around a Python program that reads the cameras' feed. Here is the Python's script help message: 
+
+.. code-block:: bash
+
+  usage: cam.py [-h] [--show SHOW] [--base_path BASE_PATH] URL
+
+  Play and record options
+
+  positional arguments:
+    URL                   Link to rtsp stream
+
+  optional arguments:
+    -h, --help            show this help message and exit
+    --show SHOW           A flag whether to show video output or not. Recordings
+                        can still be made
+    --base_path BASE_PATH
+                        Path where recordings will be saved to
+
+You can display this information at any time by typing ``python3 /usr/local/bin/cam.py -h``.
+
+
+
 
 FAQ
 ===
