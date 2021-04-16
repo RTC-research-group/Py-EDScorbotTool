@@ -32,7 +32,7 @@ def log_position(j,handler,logfile=None):
 
 if __name__ == "__main__":
     #Instance the class
-    robot_handler = pyAER.pyAER(visible=False)
+    robot_handler = pyAER.pyEDScorbotTool(visible=False)
 
     # Init configuration, although we called render_gui it won't render anything because
     # we passed the "visible" parameter as False to constructor
