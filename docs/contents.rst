@@ -204,7 +204,7 @@ Windows
 
      You just have one more thing to check, and you can do that by checking the bottom left checkbox that says "Open device". If a message that says "\ *Device found and initialized successfully*\ " is displayed in the PuTTY console, then you're ready to begin.
 
-Scorbot use tutorial with Scorbot Server
+ED-Scorbot use tutorial with ED-Scorbot Server
 ========================================
 
 *NOTE: It is important to note that this access is quite limited, so that you only may perform certain activities. However, if you need to use any command or utility that isn't available out of the box, contact epinerof@us.es with your requests.*
