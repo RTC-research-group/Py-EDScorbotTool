@@ -286,6 +286,13 @@ class pyEDScorbotTool:
             ttk.Button(labelframe,text="Send J4 ref",command=self.SendCommandJoint4_lite).grid(column=1,row=13,sticky=(tk.W,tk.E))
             ttk.Button(labelframe,text="Send J5 ref",command=self.SendCommandJoint5_lite).grid(column=2,row=13,sticky=(tk.W,tk.E))
             ttk.Button(labelframe,text="Send J6 ref",command=self.SendCommandJoint6_lite).grid(column=3,row=13,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Reset J1 counter",command=self.Reset_J1_pos).grid(column=1,row=14,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Reset J2 counter",command=self.Reset_J2_pos).grid(column=2,row=14,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Reset J3 counter",command=self.Reset_J3_pos).grid(column=3,row=14,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Reset J4 counter",command=self.Reset_J4_pos).grid(column=1,row=15,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Reset J5 counter",command=self.Reset_J5_pos).grid(column=2,row=15,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Reset J6 counter",command=self.Reset_J6_pos).grid(column=3,row=15,sticky=(tk.W,tk.E))
+
 
     def render_usbEnable(self,row,col):
         '''
