@@ -53,7 +53,7 @@ Linux
    Check everything runs fine by executing the GUI of the service (please be patient when using the GUI because it can take a little while to respond):
 
 
-   * ``cd pyAER``
+   * ``cd Py-EDScorbotTool``
    * 
      ``python3 main.py``
 
