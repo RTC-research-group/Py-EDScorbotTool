@@ -32,7 +32,7 @@ def log_position(j,handler,logfile=None):
 
 if __name__ == "__main__":
     #Instance the class
-    robot_handler = pyAER.pyAER(visible=False)
+    robot_handler = pyAER.pyEDScorbotTool(visible=False)
 
     # Init configuration, although we called render_gui it won't render anything because
     # we passed the "visible" parameter as False to constructor
@@ -49,6 +49,8 @@ if __name__ == "__main__":
     #Initialize the robot in order to work with it
     robot_handler.ConfigureInit()
 
+    # You may have to execute this part depending on whether 
+    # home algorithm has been performed or not
     # #robot_handler.search_Home_J1()
     # time.sleep(2)
     # robot_handler.search_Home_J2()
@@ -59,7 +61,7 @@ if __name__ == "__main__":
     # time.sleep(2)
     
     
-    #Finish initialization calling ConfigureInit and ConfigureSPID
+    #Finish initialization calling ConfigureSPID
     robot_handler.ConfigureSPID()
 
     #Then move the robot's joints

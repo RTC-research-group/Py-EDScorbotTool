@@ -13,12 +13,17 @@ import logging
 # import cv2
 import subprocess
 
-class pyAER:
+class pyEDScorbotTool:
     '''
-    pyAER software, replacement of jAER
+    py-EDScorbotTool software, replacement of jAER filter for EDScorbot
 
     This class is used for establishing a communication with ED-Scorbot 
     Robot in order to be able to control it via neuromorphic control, also called SPID
+
+    :ivar self.d: Dictionary in which there are stored the variables that allow for SPID configuration. Every input of the graphical interface corresponds to a variable that is stored in this dictionary. It contains three other dictionaries: Motor Config, Joints and Scan Parameters, which in turn hold the corresponding variables. The keys for the dictionaries are "Motor Config", "Joints" and "Scan Parameters", respectively.
+    :ivar self.visible: Boolean variable that indicates whether the graphical interface should be rendered or not
+    :ivar self.root: Root of the graphical interface's window
+    :ivar self.checked: Variable that holds the state of the checkbox that indicates whether USB is enabled or not.
     '''
     def __init__(self,visible=True):
         '''
@@ -72,8 +77,8 @@ class pyAER:
         '''
         This function creates a messagebox with the text parameter as data
 
-        Useful to alert the user that something has gone wrong
-        To indicate successful procedures, please just print to console using print()
+        Useful to alert the user that something has gone wrong;
+        to indicate successful procedures, please just print to console using print()
 
         Args:
             text (str): Text to be displayed in the box
@@ -284,6 +289,13 @@ class pyAER:
             ttk.Button(labelframe,text="Send J4 ref",command=self.SendCommandJoint4_lite).grid(column=1,row=13,sticky=(tk.W,tk.E))
             ttk.Button(labelframe,text="Send J5 ref",command=self.SendCommandJoint5_lite).grid(column=2,row=13,sticky=(tk.W,tk.E))
             ttk.Button(labelframe,text="Send J6 ref",command=self.SendCommandJoint6_lite).grid(column=3,row=13,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Reset J1 counter",command=self.Reset_J1_pos).grid(column=1,row=14,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Reset J2 counter",command=self.Reset_J2_pos).grid(column=2,row=14,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Reset J3 counter",command=self.Reset_J3_pos).grid(column=3,row=14,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Reset J4 counter",command=self.Reset_J4_pos).grid(column=1,row=15,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Reset J5 counter",command=self.Reset_J5_pos).grid(column=2,row=15,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Reset J6 counter",command=self.Reset_J6_pos).grid(column=3,row=15,sticky=(tk.W,tk.E))
+
 
     def render_usbEnable(self,row,col):
         '''
@@ -733,8 +745,8 @@ class pyAER:
         Send reference to 1st joint
 
         This function allows to send a reference
-        to the 1st joint in order to move it
-        Reference to angle are mapped in this link: INSERT LINK
+        to the 1st joint in order to move it,
+        reference to angle are mapped in angle_to_ref function
         '''
         #EI_FD_bank0_12bits_M1 = 512
         #EI_FD_bank0_14bits_M1 = 512
@@ -770,8 +782,8 @@ class pyAER:
         Send reference to 2nd joint
 
         This function allows to send a reference
-        to the 2nd joint in order to move it
-        Reference to angle are mapped in this link: INSERT LINK
+        to the 2nd joint in order to move it,
+        reference to angle are mapped in angle_to_ref function
         '''
         #EI_FD_bank0_12bits_M2 = 512
         #EI_FD_bank0_14bits_M2 = 512
@@ -807,8 +819,8 @@ class pyAER:
         Send reference to 3rd joint
 
         This function allows to send a reference
-        to the 3rd joint in order to move it
-        Reference to angle are mapped in this link: INSERT LINK
+        to the 3rd joint in order to move it,
+        reference to angle are mapped in angle_to_ref function
         '''
         #EI_FD_bank0_12bits_M3 = 512
         #EI_FD_bank0_14bits_M3 = 512
@@ -844,8 +856,8 @@ class pyAER:
         Send reference to 4th joint
 
         This function allows to send a reference
-        to the 4th joint in order to move it
-        Reference to angle are mapped in this link: INSERT LINK
+        to the 4th joint in order to move it,
+        reference to angle are mapped in angle_to_ref function
         '''
         #EI_FD_bank0_12bits_M4 = 512
         #EI_FD_bank0_14bits_M4 = 512
@@ -881,8 +893,8 @@ class pyAER:
         Send reference to 5th joint
 
         This function allows to send a reference
-        to the 5th joint in order to move it
-        Reference to angle are mapped in this link: INSERT LINK
+        to the 5th joint in order to move it,
+        reference to angle are mapped in angle_to_ref function
         '''
         #EI_FD_bank0_12bits_M5 = 512
         #EI_FD_bank0_14bits_M5 = 512
@@ -918,8 +930,8 @@ class pyAER:
         Send reference to 6th joint
 
         This function allows to send a reference
-        to the 6th joint in order to move it
-        Reference to angle are mapped in this link: INSERT LINK
+        to the 6th joint in order to move it,
+        reference to angle are mapped in angle_to_ref function
         '''
         #EI_FD_bank0_12bits_M6 = 512
         #EI_FD_bank0_14bits_M6 = 512
@@ -953,11 +965,11 @@ class pyAER:
     def ConfigureSPID(self):
         
         '''
-        Command a movement to all the joints
+        Program SPID parameters and command a movement to all the joints
         
-        It calls sendCommandJoint1-6 and sends the 
-        reference that is specified in the
-        input boxes that the GUI offers.
+        It calls sendCommandJoint1-6 and sends 
+        the parameters needed to configure the SPID controller
+        as well as the reference specified 
         
         '''
 
@@ -1115,8 +1127,8 @@ class pyAER:
             sensor (int): The number of the sensor to be read, ranging from 1 to 6
         
         Returns:
-            int: Sensor position if everything went well
-            int: -1 if something went wrong
+            int: Sensor position if everything went well 
+            or  -1 if something went wrong
         '''
 
         if(self.dev == None):
@@ -1684,8 +1696,7 @@ class pyAER:
         readSensor functions to retrieve J1 position
 
         Returns:
-            int: Position of J1
-            int: -1 if something went wrong
+            int: Position of J1 or -1 if something went wrong
         '''
         j1_pos = -1
         if self.dev==None:
@@ -1714,8 +1725,7 @@ class pyAER:
         readSensor functions to retrieve J2 position
 
         Returns:
-            int: Position of J2
-            int: -1 if something went wrong
+            int: Position of J2 or -1 if something went wrong
         '''
         j2_pos = -1
         if self.dev==None:
@@ -1744,8 +1754,7 @@ class pyAER:
         readSensor functions to retrieve J3 position
 
         Returns:
-            int: Position of J3
-            int: -1 if something went wrong
+            int: Position of J3 or -1 if something went wrong
         '''
         j3_pos = -1
         if self.dev==None:
@@ -1774,8 +1783,7 @@ class pyAER:
         readSensor functions to retrieve J4 position
 
         Returns:
-            int: Position of J4
-            int: -1 if something went wrong
+            int: Position of J4 or -1 if something went wrong
         '''
         j4_pos = -1
         if self.dev==None:
@@ -1833,8 +1841,7 @@ class pyAER:
         readSensor functions to retrieve J6 position
 
         Returns:
-            int: Position of J6
-            int: -1 if something went wrong
+            int: Position of J6 or -1 if something went wrong
         '''
         j6_pos = -1
         if self.dev==None:
@@ -1917,8 +1924,7 @@ class pyAER:
 
         This function tells the FPGA to reset, in order 
         to restore its initial configuration in case
-        something is not working properly and we don't 
-        know what's going on
+        something is not working properly
 
         '''
         if self.dev==None:
@@ -1979,13 +1985,13 @@ class pyAER:
                         self.SendCommandJoint6(0)
 
     def ScanAllMotor(self):
-        '''
-        Perform scan procedure on all 6 joints
+        # '''
+        # Perform scan procedure on all 6 joints
 
-        This function commands the robot to find 
-        its base position on all 6 joints at 
-        the same time
-        '''
+        # This function commands the robot to find 
+        # its base position on all 6 joints at 
+        # the same time
+        # '''
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
             return
@@ -2172,7 +2178,7 @@ class pyAER:
         
     def ConfigureLeds(self):
         '''
-        Not used
+        Under development
         '''
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
@@ -2188,7 +2194,7 @@ class pyAER:
 
     def SwitchOffLEDS(self):
         '''
-        Not used
+        Under development
         '''
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
@@ -2204,7 +2210,7 @@ class pyAER:
 
     def Draw8xy(self):
         '''
-        Not used
+        Under development
         '''
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
@@ -2850,20 +2856,33 @@ class pyAER:
         """
         f = lambda x:x
 
-        if motor == 1:
-            f = lambda x: (-1/3)*x
+
+        #############DEPRECATED################
+        # if motor == 1:
+        #     f = lambda x: (-1/3)*x
+        # elif motor == 2:
+        #     f = lambda x: ((-11/100)*x) + 53
+        # elif motor == 3:
+        #     #To be characterised
+        #     if ((ref >=-400) and (ref <= 200)):
+        #         f = lambda x: ((-67/200)*x) + 11
+        #     else:
+        #         self.alert("Joint 3 out of range. Ref must be between 200 and -400")
+        #         return
+        # elif motor == 4:
+        #     f = lambda x:((9/50)*x) + 2
+        ########################################
+
+        if motor == 1: #BOUNDS TO ADDand (ref ):
+            f = lambda x:-0.3181828045*x
         elif motor == 2:
-            f = lambda x: ((-11/100)*x) + 53
+            f = lambda x:-0.113318364*x
         elif motor == 3:
-            #To be characterised
-            if ((ref >=-400) and (ref <= 200)):
-                f = lambda x: ((-67/200)*x) + 11
-            else:
-                self.alert("Joint 3 out of range. Ref must be between 200 and -400")
-                return
-        elif motor == 4:
-            f = lambda x:((9/50)*x) + 2
-        
+            f = lambda x:-0.2937357129*x
+
+        else: 
+            return 0
+
         return f(ref)
             
     def angle_to_ref(self,motor,angle):
@@ -2883,20 +2902,33 @@ class pyAER:
         """
         f = lambda x:x
 
-        #These are the inverse of the functions that appear in ref_to_angle function
-        if motor == 1:
-            f = lambda x: (-3)*x #https://www.symbolab.com/solver/function-inverse-calculator/inverse%20f%5Cleft(x%5Cright)%3D-%5Cfrac%7B1%7D%7B3%7Dx
-        elif motor == 2:
-            f = lambda x: -(((100*x) - 5300)/11) #https://www.symbolab.com/solver/function-inverse-calculator/inverse%20f%5Cleft(x%5Cright)%3D%20-%5Cfrac%7B11%7D%7B100%7Dx%2B53
-        elif motor == 3:
-            if ((angle >=-66.5) and (angle <= 143.5)):
-                f = lambda x: -(((200*x)-2200)/67) #https://www.symbolab.com/solver/function-inverse-calculator/inverse%20f%5Cleft(x%5Cright)%3D-%5Cfrac%7B67%7D%7B200%7Dx%2B11
-            else:
-                self.alert("Joint 3 out of range. Angle must be between 143.5 and -66.5")
-                return
-        elif motor == 4:
-            f = lambda x:-(((50*x)-100)/9) #https://www.symbolab.com/solver/function-inverse-calculator/inverse%20f%5Cleft(x%5Cright)%3D%5Cfrac%7B9%7D%7B50%7Dx%20%2B2
         
+        ##############DEPRECATED#############
+        #These are the inverse of the functions that appear in ref_to_angle function
+        
+        # if motor == 1:
+        #     f = lambda x: (-3)*x #https://www.symbolab.com/solver/function-inverse-calculator/inverse%20f%5Cleft(x%5Cright)%3D-%5Cfrac%7B1%7D%7B3%7Dx
+        # elif motor == 2:
+        #     f = lambda x: -(((100*x) - 5300)/11) #https://www.symbolab.com/solver/function-inverse-calculator/inverse%20f%5Cleft(x%5Cright)%3D%20-%5Cfrac%7B11%7D%7B100%7Dx%2B53
+        # elif motor == 3:
+        #     if ((angle >=-66.5) and (angle <= 143.5)):
+        #         f = lambda x: -(((200*x)-2200)/67) #https://www.symbolab.com/solver/function-inverse-calculator/inverse%20f%5Cleft(x%5Cright)%3D-%5Cfrac%7B67%7D%7B200%7Dx%2B11
+        #     else:
+        #         self.alert("Joint 3 out of range. Angle must be between 143.5 and -66.5")
+        #         return
+        # elif motor == 4:
+        #     f = lambda x:-(((50*x)-100)/9) #https://www.symbolab.com/solver/function-inverse-calculator/inverse%20f%5Cleft(x%5Cright)%3D%5Cfrac%7B9%7D%7B50%7Dx%20%2B2
+        #####################################
+
+        if motor == 1:
+            f = lambda x:-3.1428474*x
+        elif motor == 2:
+            f = lambda x:-8.824695*x
+        elif motor == 3:
+            f = lambda x:-3.4044209*x
+        else:
+            return 0
+
         return f(angle)  
 
 
@@ -2905,8 +2937,8 @@ class pyAER:
         Send only reference to 1st joint
 
         This function allows to send a reference
-        to the 1st joint in order to move it
-        Reference to angle are mapped in this link: INSERT LINK
+        to the 1st joint in order to move it,
+        reference to angle are mapped in angle_to_ref function
         '''
         
         self.sendCommand16( 0x02,  ((self.d["Motor Config"]["ref_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M1"].get()) & 0xFF), True) #Ref M1 0
@@ -2920,8 +2952,8 @@ class pyAER:
         Send only reference to 2nd joint
 
         This function allows to send a reference
-        to the 2nd joint in order to move it
-        Reference to angle are mapped in this link: INSERT LINK
+        to the 2nd joint in order to move it,
+        reference to angle are mapped in angle_to_ref function
         '''
         
         self.sendCommand16( 0x22,  ((self.d["Motor Config"]["ref_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M2"].get()) & 0xFF), True) #Ref M2 0
@@ -2936,8 +2968,8 @@ class pyAER:
         Send only reference to 3rd joint
 
         This function allows to send a reference
-        to the 3rd joint in order to move it
-        Reference to angle are mapped in this link: INSERT LINK
+        to the 3rd joint in order to move it,
+        reference to angle are mapped in angle_to_ref function
         '''
         
         self.sendCommand16( 0x42,  ((self.d["Motor Config"]["ref_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M3"].get()) & 0xFF), True) #Ref M3 0
@@ -2951,8 +2983,8 @@ class pyAER:
         Send only reference to 4th joint
 
         This function allows to send a reference
-        to the 4th joint in order to move it
-        Reference to angle are mapped in this link: INSERT LINK
+        to the 4th joint in order to move it,
+        reference to angle are mapped in angle_to_ref function
         '''
         
         self.sendCommand16( 0x62,  ((self.d["Motor Config"]["ref_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M4"].get()) & 0xFF), True) #Ref M4 0
@@ -2966,8 +2998,8 @@ class pyAER:
         Send only reference to 5th joint
 
         This function allows to send a reference
-        to the 5th joint in order to move it
-        Reference to angle are mapped in this link: INSERT LINK
+        to the 5th joint in order to move it,
+        reference to angle are mapped in angle_to_ref function
         '''
         
         self.sendCommand16( 0x82,  ((self.d["Motor Config"]["ref_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M5"].get()) & 0xFF), True) #Ref M5 0
@@ -2981,8 +3013,8 @@ class pyAER:
         Send only reference to 6th joint
 
         This function allows to send a reference
-        to the 6th joint in order to move it
-        Reference to angle are mapped in this link: INSERT LINK
+        to the 6th joint in order to move it,
+        reference to angle are mapped in angle_to_ref function
         '''
         
         self.sendCommand16( 0xA2,  ((self.d["Motor Config"]["ref_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M6"].get()) & 0xFF), True) #Ref M6 0
@@ -3001,6 +3033,10 @@ class pyAER:
         proc = subprocess.Popen(cmd.split(' '), stdout=subprocess.PIPE)
         tmp = proc.stdout.read()
         return tmp
+
+
+
+            
 
 # if __name__ == "__main__":
 
