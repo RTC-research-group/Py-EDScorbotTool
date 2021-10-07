@@ -2879,6 +2879,8 @@ class pyEDScorbotTool:
             f = lambda x:-0.113318364*x
         elif motor == 3:
             f = lambda x:-0.2937357129*x
+        elif motor == 4:
+            f = lambda x: -0.056780795*x
 
         else: 
             return 0
@@ -2926,6 +2928,8 @@ class pyEDScorbotTool:
             f = lambda x:-8.824695*x
         elif motor == 3:
             f = lambda x:-3.4044209*x
+        elif motor ==4:
+            f = lambda x:-17.61158871*x
         else:
             return 0
 
