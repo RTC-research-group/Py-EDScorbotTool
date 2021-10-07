@@ -2855,7 +2855,7 @@ class pyEDScorbotTool:
 
         
         Returns:
-            int: Angle that corresponds to the reference given for the given motor or the joint's limit if the calculated reference is above (or below) it
+            float: Angle that corresponds to the reference given for the given motor or the joint's limit if the calculated reference is above (or below) it
         """
         f = lambda x:x
 
@@ -2906,7 +2906,7 @@ class pyEDScorbotTool:
             strict (boolean): Whether to restrict reference values to ther maximum bounds or not (default is True)
         
         Returns:
-            int: Reference that corresponds to the angle given for the given motor or the joint's limit if the calculated reference is above (or below) it
+            float: Reference that corresponds to the angle given for the given motor or the joint's limit if the calculated reference is above (or below) it
         """
         f = lambda x:x
 
