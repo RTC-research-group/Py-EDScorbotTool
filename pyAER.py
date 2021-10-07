@@ -10,6 +10,7 @@ from tkinter import filedialog
 import datetime
 import time
 import logging
+import numpy as np
 # import cv2
 import subprocess
 
@@ -2839,7 +2840,7 @@ class pyEDScorbotTool:
             self.alert("Invalid config file")
             return
     
-    def ref_to_angle(self,motor,ref):
+    def ref_to_angle(self,motor,ref,strict=True):
         """
         Convert reference of motor to angle
 
@@ -2850,12 +2851,15 @@ class pyEDScorbotTool:
         Args:
             motor (int): Number of the motor (1-4)
             ref (int): reference to be converted
+            strict (boolean): Whether to restrict angle values to ther maximum bounds or not (default is True)
+
         
         Returns:
-            int: Angle that corresponds to the reference given for the given motor
+            int: Angle that corresponds to the reference given for the given motor or the joint's limit if the calculated reference is above (or below) it
         """
         f = lambda x:x
 
+        bounds = [[155,-155,],[85,-85],[112.5,-112.5],[90,-90]]
 
         #############DEPRECATED################
         # if motor == 1:
@@ -2882,12 +2886,13 @@ class pyEDScorbotTool:
         elif motor == 4:
             f = lambda x: -0.056780795*x
 
-        else: 
-            return 0
+        ret = f(ref)
+        if not(ret < bounds[motor][0] and ret > bounds[motor][1]) and strict:
+            ret = bounds[motor][0]*np.sign(ret)
 
-        return f(ref)
+        return ret
             
-    def angle_to_ref(self,motor,angle):
+    def angle_to_ref(self,motor,angle,strict=True):
         """
         Convert angle of motor to reference
 
@@ -2898,13 +2903,14 @@ class pyEDScorbotTool:
         Args:
             motor (int): Number of the motor (1-4)
             angle (int): angle to be converted
+            strict (boolean): Whether to restrict reference values to ther maximum bounds or not (default is True)
         
         Returns:
-            int: Reference that corresponds to the angle given for the given motor
+            int: Reference that corresponds to the angle given for the given motor or the joint's limit if the calculated reference is above (or below) it
         """
         f = lambda x:x
 
-        
+        bounds = [[485,-485],[748,-748],[380,-380],[1583,-1583]]
         ##############DEPRECATED#############
         #These are the inverse of the functions that appear in ref_to_angle function
         
@@ -2933,7 +2939,11 @@ class pyEDScorbotTool:
         else:
             return 0
 
-        return f(angle)  
+        ret = f(angle)
+        if not(ret < bounds[motor][0] and ret > bounds[motor][1]) and strict:
+            ret = bounds[motor][0]*np.sign(ret)
+
+        return ret
 
 
     def SendCommandJoint1_lite(self):
@@ -3037,7 +3047,7 @@ class pyEDScorbotTool:
         proc = subprocess.Popen(cmd.split(' '), stdout=subprocess.PIPE)
         tmp = proc.stdout.read()
         return tmp
-
+  
 
 
             
