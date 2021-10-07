@@ -85,7 +85,10 @@ class pyEDScorbotTool:
             text (str): Text to be displayed in the box
 
         '''
-        messagebox.showinfo(message=text)
+        if self.visible:
+            messagebox.showinfo(message=text)
+        else:
+            print(text)
 
     def render_motor(self, motor_number, row, col):
         '''
@@ -2852,7 +2855,7 @@ class pyEDScorbotTool:
 
         
         Returns:
-            int: Angle that corresponds to the reference given for the given motor or the joint's limit if the calculated reference is above (or below) it
+            float: Angle that corresponds to the reference given for the given motor or the joint's limit if the calculated reference is above (or below) it
         """
         f = lambda x:x
 
@@ -2903,7 +2906,7 @@ class pyEDScorbotTool:
             strict (boolean): Whether to restrict reference values to ther maximum bounds or not (default is True)
         
         Returns:
-            int: Reference that corresponds to the angle given for the given motor or the joint's limit if the calculated reference is above (or below) it
+            float: Reference that corresponds to the angle given for the given motor or the joint's limit if the calculated reference is above (or below) it
         """
         f = lambda x:x
 
