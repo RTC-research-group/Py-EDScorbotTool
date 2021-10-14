@@ -2,6 +2,7 @@ from datetime import time
 from os import read
 import tkinter as tk
 from tkinter import ttk,messagebox
+from tkinter.constants import X
 import usb.core
 import usb.util
 import usb.backend.libusb1
@@ -63,8 +64,10 @@ class pyEDScorbotTool:
         #Handle for USB connection
         self.dev = None
 
-        self.camera1 = None
-        self.camera2 = None
+        #Array for storing data
+        self.array = []
+        #Variable to record data or not
+        self.record = False
         return
   
     def millis_now(self):
@@ -296,6 +299,7 @@ class pyEDScorbotTool:
             ttk.Button(labelframe,text="Reset J4 counter",command=self.Reset_J4_pos).grid(column=1,row=15,sticky=(tk.W,tk.E))
             ttk.Button(labelframe,text="Reset J5 counter",command=self.Reset_J5_pos).grid(column=2,row=15,sticky=(tk.W,tk.E))
             ttk.Button(labelframe,text="Reset J6 counter",command=self.Reset_J6_pos).grid(column=3,row=15,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Start/Stop recording",command=self.toggle_record).grid(column=1,row=16,sticky=(tk.W,tk.E))
 
 
     def render_usbEnable(self,row,col):
@@ -537,19 +541,33 @@ class pyEDScorbotTool:
                 cv2.destroyWindow('side')
             except:
                 pass
+    def toggle_record(self):
+        self.record = not self.record
 
     def update(self):
 
         if self.checked.get():
-            self.Read_J1_gui()
-            self.Read_J2_gui()
-            self.Read_J3_gui()
-            self.Read_J4_gui()
-            self.Read_J5_gui()
-            self.Read_J6_gui()
+
+            j1 = self.Read_J1_gui()
+            j2 = self.Read_J2_gui()
+            j3 = self.Read_J3_gui()
+            j4 = self.Read_J4_gui()
+            j5 = self.Read_J5_gui()
+            j6 = self.Read_J6_gui()
+            if self.record:
+                motors = self.d["Motor Config"]
+                ts = self.millis_now()
+                positions = [j1,j2,j3,j4,j5,j6]
+                aux = []
+                for i in range(6):
+                    label = "ref_M"+str(i+1)
+                    data = [motors[label].get(),positions[i]]
+                    aux.append(data)
+                aux.append(ts)
+                self.array.append(aux)
+
             
-        if self.visible:
-            self.root.after(1,self.update)
+        self.root.after(1,self.update)
 
     def ConfigureInit(self):
         
@@ -1867,38 +1885,38 @@ class pyEDScorbotTool:
         pos = self.Read_J1_pos()
         self.d["Joints"]["J1_sensor_value"].set(pos)
         self.d["Joints"]["J1_sensor_value_hex"].set(hex(pos))
-        return
+        return pos
 
     def Read_J2_gui(self):
         pos = self.Read_J2_pos()
         self.d["Joints"]["J2_sensor_value"].set(pos)
         self.d["Joints"]["J2_sensor_value_hex"].set(hex(pos))
 
-        return
+        return pos
 
     def Read_J3_gui(self):
         pos = self.Read_J3_pos()
         self.d["Joints"]["J3_sensor_value"].set(pos)
         self.d["Joints"]["J3_sensor_value_hex"].set(hex(pos))
-        return
+        return pos
 
     def Read_J4_gui(self):
         pos = self.Read_J4_pos()
         self.d["Joints"]["J4_sensor_value"].set(pos)
         self.d["Joints"]["J4_sensor_value_hex"].set(hex(pos))
-        return
+        return pos
 
     def Read_J5_gui(self):
         pos = self.Read_J5_pos()
         self.d["Joints"]["J5_sensor_value"].set(pos)
         self.d["Joints"]["J5_sensor_value_hex"].set(hex(pos))
-        return
+        return pos
 
     def Read_J6_gui(self):
         pos = self.Read_J6_pos()
         self.d["Joints"]["J6_sensor_value"].set(pos)
         self.d["Joints"]["J6_sensor_value_hex"].set(hex(pos))
-        return
+        return pos
 
 
     def Reset_J1_pos(self):
@@ -3048,7 +3066,129 @@ class pyEDScorbotTool:
         tmp = proc.stdout.read()
         return tmp
   
+    def calculate_error(self,motor, gt, cmd, t='ref'):
+        if t not in ['ref','angle','counter']:
+            raise TypeError('Type not supported. Type must be one of ["ref","angle","counter"]')
+        else:
+            if t=='ref':
+                #Convert ground truth to ref
+                gt = self.count_to_ref(motor,gt)
+                pass
+            elif t =='angle':
+                #Convert both to angles
+                cmd = self.ref_to_angle(motor,cmd)
+                gt = self.count_to_angle(motor,gt)
+                pass
+            elif t=='counter':
+                #Convert commanded to counter 
+                cmd = self.ref_to_count(motor,cmd)
+                pass
+        
+            error = []
+            for ground_truth,command in zip(gt,cmd):
+                rmse = np.sqrt(np.mean((command - ground_truth)**2))
+                error.append(rmse)
+            
+                
+        return error
 
+    def count_to_ref(self,motor,count):
+        """
+        Convert counter of motor to reference
+
+        This function takes a motor and its collected position and 
+        returns the corresponding reference to said position
+        for that specific motor.
+
+        Args:
+            motor (int): Number of the motor (1-4)
+            count (int): Position counter to be converted
+        
+        Returns:
+            float: Reference that corresponds to the position given for the given motor 
+        """
+        f = lambda x:x
+
+        if motor == 1:
+            f = lambda x:0.02478*(x-32768)
+        elif motor == 2:
+            f = lambda x:0.0677*(x-32768)
+        elif motor == 3:
+            f = lambda x:0.02399*(x-32768)
+        elif motor ==4:
+            f = lambda x:0.2182353*(x-32768)
+        else:
+            return 0
+
+        
+        
+
+        return f(count)
+
+    def ref_to_count(self,motor,ref):
+        """
+        Convert reference of motor to counter (estimated) absolute position
+
+        This function takes a motor and an arbitrary reference and 
+        returns the corresponding estimated position for said reference
+        for that specific motor.
+
+        Args:
+            motor (int): Number of the motor (1-4)
+            ref (int): Reference to be converted
+        
+        Returns:
+            float: Absolute estimated position that corresponds to the reference given for the given motor 
+        """
+        
+        f = lambda x:x
+
+        if motor == 1:
+            f = lambda x:40.35269645959781*x + 32768
+        elif motor == 2:
+            f = lambda x:14.770677455806219*x + 32768
+        elif motor == 3:
+            f = lambda x:41.6752813118148*x + 32768
+        elif motor ==4:
+            f = lambda x:4.582209206643176*x + 32768
+        else:
+            return 0
+
+        return f(ref)
+        
+    def count_to_angle(self,motor,count):
+        """
+        Convert counter of motor to estimated angle
+
+        This function takes a motor and its collected position and 
+        returns the corresponding estimated angle to said position
+        for that specific motor.
+
+        Args:
+            motor (int): Number of the motor (1-4)
+            count (int): Position counter to be converted
+        
+        Returns:
+            float: Estimated angle that corresponds to the position given for the given motor 
+        """
+        f = lambda x:x
+
+        if motor == 1:
+            f = lambda x:0.007884569896712134*(x-32768)
+        elif motor == 2:
+            f = lambda x:0.007671653241273495*(x-32768)
+        elif motor == 3:
+            f = lambda x:0.007046719751955465*(x-32768)
+        elif motor ==4:
+            f = lambda x:0.012391573729863692*(x-32768)
+        else:
+            return 0
+
+        
+        
+
+        return f(count)
+        
 
             
 
