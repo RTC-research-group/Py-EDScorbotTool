@@ -68,6 +68,8 @@ class pyEDScorbotTool:
         self.array = []
         #Variable to record data or not
         self.record = False
+        #Variable to check if we keep updating the recordings
+        self.updating = True
         return
   
     def millis_now(self):
@@ -112,11 +114,11 @@ class pyEDScorbotTool:
         labels = ["EI_FD_bank3_18bits", "PD_FD_bank3_22bits",
                   "PI_FD_bank3_18bits", "leds", "ref", "spike_expansor"]
         labelframe = None
-        if self.visible:
-            labelframe = ttk.LabelFrame(
-                self.root, text="Motor " + str(motor_number))
-            labelframe.grid(
-                column=col, row=row, sticky=(tk.N, tk.W), padx=5, pady=5)
+        
+        labelframe = ttk.LabelFrame(
+            self.root, text="Motor " + str(motor_number))
+        labelframe.grid(
+            column=col, row=row, sticky=(tk.N, tk.W), padx=5, pady=5)
         EI_FD_bank3_18bits = tk.IntVar()
         PF_FD_bank3_22bits = tk.IntVar()
         PI_FD_bank3_18bits = tk.IntVar()
@@ -513,6 +515,7 @@ class pyEDScorbotTool:
         #And call mainloop to display GUI
         if self.visible:
             self.root.mainloop()
+        
 
     def openCamera1(self):
 
@@ -566,8 +569,8 @@ class pyEDScorbotTool:
                 aux.append(ts)
                 self.array.append(aux)
 
-            
-        self.root.after(1,self.update)
+        if self.updating:
+            self.root.after(1,self.update)
 
     def ConfigureInit(self):
         
@@ -2905,8 +2908,8 @@ class pyEDScorbotTool:
             f = lambda x: -0.056780795*x
 
         ret = f(ref)
-        if not(ret < bounds[motor][0] and ret > bounds[motor][1]) and strict:
-            ret = bounds[motor][0]*np.sign(ret)
+        if not(ret < bounds[motor-1][0] and ret > bounds[motor-1][1]) and strict:
+            ret = bounds[motor-1][0]*np.sign(ret)
 
         return ret
             
@@ -2958,8 +2961,8 @@ class pyEDScorbotTool:
             return 0
 
         ret = f(angle)
-        if not(ret < bounds[motor][0] and ret > bounds[motor][1]) and strict:
-            ret = bounds[motor][0]*np.sign(ret)
+        if not(ret < bounds[motor-1][0] and ret > bounds[motor-1][1]) and strict:
+            ret = bounds[motor-1][0]*np.sign(ret)
 
         return ret
 
