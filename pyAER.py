@@ -600,19 +600,25 @@ class pyEDScorbotTool:
                 for i in range(0,6):
                     #Motor 1
                     self.sendCommand16(0x00,0x00,0x03,True) #Leds M1
-                    self.sendCommand16(0x02,0x00,0x00,True) #Ref M1 0
+                    
                     self.sendCommand16(0x03,0x00,0x0f,True) #I banks disabled M1
+                    self.sendCommand16(0x03,0x00,0x03,True) #I banks enabled Bank3 M1
+                    self.sendCommand16(0x02,0x00,0x00,True) #Ref M1 0
                     self.sendCommand16(0x04,((512>>8) & 0xFF),512 & 0xFF,True) #FD I&G bank 0 M1
                     self.sendCommand16(0x05,((512>>8) & 0xFF),512 & 0xFF,True) #FD I&G bank 1 M1
                     self.sendCommand16(0x06,((512>>8) & 0xFF),512 & 0xFF,True) #FD I&G bank 2 M1
                     self.sendCommand16(0x07,((self.d["Motor Config"]["PI_FD_bank3_18bits_M1"].get()>>8) & 0xFF),self.d["Motor Config"]["PI_FD_bank3_18bits_M1"].get() & 0xFF,True) #FD I&G bank 3 M1
                     self.sendCommand16(0x08,(0x00),(0x0f), True) #d banks disabled M1
+                    self.sendCommand16(0x08,0x00,0x03,True) #I banks enabled Bank3 M1
                     self.sendCommand16(0x09, ((512 >> 8) & 0xFF),((512) & 0xFF), True) #FD I&G bank 0 M1
                     self.sendCommand16(0x0A, ((512 >> 8) & 0xFF), ((512) & 0xFF), True) #FD I&G bank 1 M1
                     self.sendCommand16(0x0B, ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M1
                     self.sendCommand16(0x0C, ((self.d["Motor Config"]["PD_FD_bank3_22bits_M1"].get() >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 3 M1
                     self.sendCommand16(0x12, (0x00),  (0x0), True); #spike expansor M1
+                    self.sendCommand16( 0x12,  ((self.d["Motor Config"]["spike_expansor_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M1"].get()) & 0xFF), True) #spike expansor M1
+
                     self.sendCommand16(0x13, (0x00),  (0x0f), True); #d banks disabled M1
+                    self.sendCommand16(0x13,0x00,0x03,True) #I banks enabled Bank3 M1
                     self.sendCommand16(0x14, ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M1
                     self.sendCommand16(0x15, ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 1 M1
                     self.sendCommand16(0x16, ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 2 M1
@@ -630,21 +636,26 @@ class pyEDScorbotTool:
                     self.sendCommand16( 0x20,  (0x00), (0x03), True); #LEDs M2
                     self.sendCommand16( 0x22,  (0x00),  (0x00), True); #Ref M2 0
                     self.sendCommand16( 0x23,  (0x00),  (0x0f), True); #I banks disabled M2
+                    self.sendCommand16( 0x23,0x00,0x03,True) #I banks enabled Bank3 M2
+                    self.sendCommand16( 0x22,  (0x00),  (0x00), True); #Ref M2 0
                     self.sendCommand16( 0x24,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M2
                     self.sendCommand16( 0x25,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 1 M2
                     self.sendCommand16( 0x26,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 2 M2
                     self.sendCommand16( 0x27,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M2"].get()) & 0xFF), True); #FD I&G bank 3 M2
                     self.sendCommand16( 0x28,  (0x00),  (0x0f), True); #I banks disabled M2
+                    self.sendCommand16( 0x28,0x00,0x03,True) #I banks enabled Bank3 M2
                     self.sendCommand16( 0x29,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M2
                     self.sendCommand16( 0x2A,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 1 M2
                     self.sendCommand16( 0x2B,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 2 M2
                     self.sendCommand16( 0x2C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M2"].get()) & 0xFF), True); #FD I&G bank 3 M2
                     self.sendCommand16( 0x32,  (0x00),  (0x0), True); #spike expansor M2
-                    self.sendCommand16( 0x33,  (0x00),  (0x0f), True); #d banks disabled M1
-                    self.sendCommand16( 0x34,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M1
-                    self.sendCommand16( 0x35,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 1 M1
-                    self.sendCommand16( 0x36,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 2 M1
-                    self.sendCommand16( 0x37,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M2"].get()) & 0xFF), True); #FD I&G bank 3 M1
+                    self.sendCommand16( 0x32,  ((self.d["Motor Config"]["spike_expansor_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M2"].get()) & 0xFF), True) #spike expansor M2
+                    self.sendCommand16( 0x33,  (0x00),  (0x0f), True); #d banks disabled M2
+                    self.sendCommand16( 0x33,0x00,0x03,True) #I banks enabled Bank3 M2
+                    self.sendCommand16( 0x34,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M2
+                    self.sendCommand16( 0x35,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 1 M2
+                    self.sendCommand16( 0x36,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 2 M2
+                    self.sendCommand16( 0x37,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M2"].get()) & 0xFF), True); #FD I&G bank 3 M2
                     self.sendCommand16( 0x20,  0,  0, False); #LEDs M2 off
                     print("PI_FD_bank0_12bits_M2={} \t PI_FD_bank1_14bits_M2={} \t PI_FD_bank2_16bits_M2={} \t PI_FD_bank3_18bits_M2={}\n"
                           .format(512,512,512,self.d["Motor Config"]["PI_FD_bank3_18bits_M2"].get()) +
@@ -657,21 +668,26 @@ class pyEDScorbotTool:
                     self.sendCommand16( 0x40,  (0x00), (0x03), True); #LEDs M3
                     self.sendCommand16( 0x42,  (0x00),  (0x00), True); #Ref M3 0
                     self.sendCommand16( 0x43,  (0x00),  (0x0f), True); #I banks disabled M3
+                    self.sendCommand16( 0x43,0x00,0x03,True) #I banks enabled Bank3 M3
+                    self.sendCommand16( 0x42,  (0x00),  (0x00), True); #Ref M3 0
                     self.sendCommand16( 0x44,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M3
                     self.sendCommand16( 0x45,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 1 M3
                     self.sendCommand16( 0x46,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 2 M3
                     self.sendCommand16( 0x47,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M3"].get()) & 0xFF), True); #FD I&G bank 3 M3
                     self.sendCommand16( 0x48,  (0x00),  (0x0f), True); #I banks disabled M3
+                    self.sendCommand16( 0x48,0x00,0x03,True) #I banks enabled Bank3 M3
                     self.sendCommand16( 0x49,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M3
                     self.sendCommand16( 0x4A,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 1 M3
                     self.sendCommand16( 0x4B,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 2 M3
                     self.sendCommand16( 0x4C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M3"].get()) & 0xFF), True); #FD I&G bank 3 M3
                     self.sendCommand16( 0x52,  (0x00),  (0x0), True); #spike expansor M3
-                    self.sendCommand16( 0x53,  (0x00),  (0x0f), True); #d banks disabled M1
-                    self.sendCommand16( 0x54,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M1
-                    self.sendCommand16( 0x55,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 1 M1
-                    self.sendCommand16( 0x56,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 2 M1
-                    self.sendCommand16( 0x57,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M3"].get()) & 0xFF), True); #FD I&G bank 3 M1
+                    self.sendCommand16( 0x52,  ((self.d["Motor Config"]["spike_expansor_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M3"].get()) & 0xFF), True) #spike expansor M3
+                    self.sendCommand16( 0x53,  (0x00),  (0x0f), True); #d banks disabled M3
+                    self.sendCommand16( 0x53,0x00,0x03,True) #I banks enabled Bank3 M3
+                    self.sendCommand16( 0x54,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M3
+                    self.sendCommand16( 0x55,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 1 M3
+                    self.sendCommand16( 0x56,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 2 M3
+                    self.sendCommand16( 0x57,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M3"].get()) & 0xFF), True); #FD I&G bank 3 M3
                     self.sendCommand16( 0x40,  0,  0, False); #LEDs M3 off
                     print("PI_FD_bank0_12bits_M3={} \t PI_FD_bank1_14bits_M3={} \t PI_FD_bank2_16bits_M3={} \t PI_FD_bank3_18bits_M3={}\n"
                           .format(512,512,512,self.d["Motor Config"]["PI_FD_bank3_18bits_M3"].get()) +
@@ -680,22 +696,25 @@ class pyEDScorbotTool:
                           "EI_FD_bank0_12bits_M3={} \t EI_FD_bank1_14bits_M3={} \t EI_FD_bank2_16bits_M3={} \t EI_FD_bank3_18bits_M3={}\n"
                           .format(512,512,512,self.d["Motor Config"]["EI_FD_bank3_18bits_M3"].get()))
                     
-                    #Motor 4
+                    #Motor 4                  
 
                     self.sendCommand16( 0x60,  (0x00), (0x03), True); #LEDs M4
                     self.sendCommand16( 0x62,  (0x00),  (0x00), True); #Ref M4 0
                     self.sendCommand16( 0x63,  (0x00),  (0x0f), True); #I banks disabled M4
+                    self.sendCommand16( 0x63,0x00,0x03,True) #I banks enabled Bank3 M4
                     self.sendCommand16( 0x64,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M4
                     self.sendCommand16( 0x65,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 1 M4
                     self.sendCommand16( 0x66,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 2 M4
                     self.sendCommand16( 0x67,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M4"].get()) & 0xFF), True); #FD I&G bank 3 M4
                     self.sendCommand16( 0x68,  (0x00),  (0x0f), True); #I banks disabled M4
+                    self.sendCommand16( 0x68,0x00,0x03,True) #I banks enabled Bank3 M4
                     self.sendCommand16( 0x69,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M4
                     self.sendCommand16( 0x6A,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 1 M4
                     self.sendCommand16( 0x6B,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 2 M4
                     self.sendCommand16( 0x6C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M4"].get()) & 0xFF), True); #FD I&G bank 3 M4
                     self.sendCommand16( 0x72,  (0x00),  (0x0), True); #spike expansor M4
                     self.sendCommand16( 0x73,  (0x00),  (0x0f), True); #d banks disabled M1
+                    self.sendCommand16( 0x73,0x00,0x03,True) #I banks enabled Bank3 M4
                     self.sendCommand16( 0x74,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M1
                     self.sendCommand16( 0x75,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 1 M1
                     self.sendCommand16( 0x76,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 2 M1
@@ -709,21 +728,24 @@ class pyEDScorbotTool:
                           .format(512,512,512,self.d["Motor Config"]["EI_FD_bank3_18bits_M4"].get()))
 
                     #Motor 5
-
+                    
                     self.sendCommand16( 0x80,  (0x00), (0x03), True); #LEDs M5
                     self.sendCommand16( 0x82,  (0x00),  (0x00), True); #Ref M5 0
                     self.sendCommand16( 0x83,  (0x00),  (0x0f), True); #I banks disabled M5
+                    self.sendCommand16( 0x83,0x00,0x03,True) #I banks enabled Bank3 M5
                     self.sendCommand16( 0x84,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M5
                     self.sendCommand16( 0x85,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 1 M5
                     self.sendCommand16( 0x86,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 2 M5
                     self.sendCommand16( 0x87,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M5"].get()) & 0xFF), True); #FD I&G bank 3 M5
                     self.sendCommand16( 0x88,  (0x00),  (0x0f), True); #I banks disabled M5
+                    self.sendCommand16( 0x88,0x00,0x03,True) #I banks enabled Bank3 M5
                     self.sendCommand16( 0x89,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M5
                     self.sendCommand16( 0x8A,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 1 M5
                     self.sendCommand16( 0x8B,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 2 M5
                     self.sendCommand16( 0x8C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M5"].get()) & 0xFF), True); #FD I&G bank 3 M5
                     self.sendCommand16( 0x92,  (0x00),  (0x0), True); #spike expansor M5
                     self.sendCommand16( 0x93,  (0x00),  (0x0f), True); #d banks disabled M1
+                    self.sendCommand16( 0x93,0x00,0x03,True) #I banks enabled Bank3 M5
                     self.sendCommand16( 0x94,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M1
                     self.sendCommand16( 0x95,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 1 M1
                     self.sendCommand16( 0x96,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 2 M1
@@ -737,21 +759,24 @@ class pyEDScorbotTool:
                           .format(512,512,512,self.d["Motor Config"]["EI_FD_bank3_18bits_M5"].get()))
 
                     #Motor 6
-
+                    
                     self.sendCommand16( 0xA0,  (0x00), (0x03), True); #LEDs M6
                     self.sendCommand16( 0xA2,  (0x00),  (0x00), True); #Ref M6 0
                     self.sendCommand16( 0xA3,  (0x00),  (0x0f), True); #I banks disabled M6
+                    self.sendCommand16( 0xA3,0x00,0x03,True) #I banks enabled Bank3 M6
                     self.sendCommand16( 0xA4,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M6
                     self.sendCommand16( 0xA5,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 1 M6
                     self.sendCommand16( 0xA6,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 2 M6
                     self.sendCommand16( 0xA7,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M6"].get()) & 0xFF), True); #FD I&G bank 3 M6
                     self.sendCommand16( 0xA8,  (0x00),  (0x0f), True); #I banks disabled M6
+                    self.sendCommand16( 0xA8,0x00,0x03,True) #I banks enabled Bank3 M6
                     self.sendCommand16( 0xA9,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M6
                     self.sendCommand16( 0xAA,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 1 M6
                     self.sendCommand16( 0xAB,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 2 M6
                     self.sendCommand16( 0xAC,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M5"].get()) & 0xFF), True); #FD I&G bank 3 M6
                     self.sendCommand16( 0xB2,  (0x00),  (0x0), True); #spike expansor M6
                     self.sendCommand16( 0xB3,  (0x00),  (0x0f), True); #d banks disabled M1
+                    self.sendCommand16( 0xB3,0x00,0x03,True) #I banks enabled Bank3 M6
                     self.sendCommand16( 0xB4,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M1
                     self.sendCommand16( 0xB5,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 1 M1
                     self.sendCommand16( 0xB6,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 2 M1
@@ -784,6 +809,7 @@ class pyEDScorbotTool:
         #PI_FD_bank0_12bits_M1 = 512
         #PI_FD_bank0_14bits_M1 = 512
         #PI_FD_bank0_16bits_M1 = 512
+        #Configuracion de bancos de registros
         self.sendCommand16( 0,  (0x00), ((self.d["Motor Config"]["leds_M1"].get()) & 0xFF), True) #LEDs M1
         self.sendCommand16( 0x03,  (0x00),  ((3)&0xFF), True) #I banks disabled M1
         self.sendCommand16( 0x04,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M1
@@ -2340,10 +2366,10 @@ class pyEDScorbotTool:
             self.alert("There is no opened device. Try opening one first")
             return 
         
-        old_sj = 0x20000/4
-        sj = 0x20000/4
-        addr_j = 0x02
-        inc_j = -50*pol
+        old_sj = 0x20000/4 #32768
+        sj = 0x20000/4 #32768
+        addr_j = 0x02 #2
+        inc_j = -50*pol 
 
         if JOINTNUM == 1:
             self.SendCommandJoint1(inc_j)
