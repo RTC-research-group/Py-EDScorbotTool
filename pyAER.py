@@ -12,6 +12,7 @@ import datetime
 import time
 import logging
 import numpy as np
+import pickle as P
 # import cv2
 import subprocess
 
@@ -545,7 +546,14 @@ class pyEDScorbotTool:
             except:
                 pass
     def toggle_record(self):
+        if self.record:
+            date = datetime.datetime.now()
+            timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
+            
+            P.dump(self.array,open(timeStamp + '.pkl','wb'))
+            self.array = []
         self.record = not self.record
+
 
     def update(self):
 
@@ -2184,7 +2192,7 @@ class pyEDScorbotTool:
             return
         else:
             if self.checked.get():
-                self.sendCommand16(0xF0,(0x00),(0x00), True);
+                self.sendCommand16(0xF0,(0x00),(0x00), True)
                 self.sendCommand16(0xF0,(0x00),(0x00), True)
 
     def resetUSB(self):
