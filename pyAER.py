@@ -61,7 +61,7 @@ class pyEDScorbotTool:
         self.ENDPOINT_OUT = 0x02
         self.ENDPOINT_IN = 0x81
         self.PACKET_LENGTH = 64
-
+        
         #Handle for USB connection
         self.dev = None
 
@@ -600,7 +600,6 @@ class pyEDScorbotTool:
                 for i in range(0,6):
                     #Motor 1
                     self.sendCommand16(0x00,0x00,0x03,True) #Leds M1
-
                     self.sendCommand16(0x03,0x00,0x0f,True) #I banks disabled M1
                     self.sendCommand16(0x03,0x00,0x03,True) #I banks enabled Bank3 M1
                     self.sendCommand16(0x02,0x00,0x00,True) #Ref M1 0
@@ -616,7 +615,6 @@ class pyEDScorbotTool:
                     self.sendCommand16(0x0C, ((self.d["Motor Config"]["PD_FD_bank3_22bits_M1"].get() >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 3 M1
                     self.sendCommand16(0x12, (0x00),  (0x0), True); #spike expansor M1
                     self.sendCommand16( 0x12,  ((self.d["Motor Config"]["spike_expansor_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M1"].get()) & 0xFF), True) #spike expansor M1
-
                     self.sendCommand16(0x13, (0x00),  (0x0f), True); #d banks disabled M1
                     self.sendCommand16(0x13,0x00,0x03,True) #I banks enabled Bank3 M1
                     self.sendCommand16(0x14, ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M1
@@ -784,7 +782,7 @@ class pyEDScorbotTool:
 
         return
 
-def SendCommandJoint1(self,ref):
+    def SendCommandJoint1(self,ref):
         '''
         Send reference to 1st joint
 
@@ -1237,7 +1235,7 @@ def SendCommandJoint1(self,ref):
             date = datetime.datetime.now()
             timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
             #Abrir archivo de log con el nombre de la fecha
-            logging.basicConfig(filename='./logs/Scan1_' + timeStamp + '.log',filemode='w')
+            logging.basicConfig(filename='./logs/Scan1_' + timeStamp + '.log',filemode='w',level=logging.INFO)
             logging.info("SMALL ED-Scorbot Joint1 Scan Log file")
 
             #
@@ -1324,7 +1322,7 @@ def SendCommandJoint1(self,ref):
             date = datetime.datetime.now()
             timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
             #Abrir archivo de log con el nombre de la fecha
-            logging.basicConfig(filename='./logs/Scan2_' + timeStamp + '.log',filemode='w')
+            logging.basicConfig(filename='./logs/Scan2_' + timeStamp + '.log',filemode='w',level=logging.INFO)
             logging.info("SMALL ED-Scorbot Joint2 Scan Log file")
 
             #
@@ -1411,7 +1409,7 @@ def SendCommandJoint1(self,ref):
             date = datetime.datetime.now()
             timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
             #Abrir archivo de log con el nombre de la fecha
-            logging.basicConfig(filename='./logs/Scan3_' + timeStamp + '.log',filemode='w')
+            logging.basicConfig(filename='./logs/Scan3_' + timeStamp + '.log',filemode='w',level=logging.INFO)
             logging.info("SMALL ED-Scorbot Joint3 Scan Log file")
 
             #
@@ -1498,7 +1496,7 @@ def SendCommandJoint1(self,ref):
             date = datetime.datetime.now()
             timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
             #Abrir archivo de log con el nombre de la fecha
-            logging.basicConfig(filename='./logs/Scan4_' + timeStamp + '.log',filemode='w')
+            logging.basicConfig(filename='./logs/Scan4_' + timeStamp + '.log',filemode='w',level=logging.INFO)
             logging.info("SMALL ED-Scorbot Joint4 Scan Log file")
 
             #
@@ -1585,7 +1583,7 @@ def SendCommandJoint1(self,ref):
             date = datetime.datetime.now()
             timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
             #Abrir archivo de log con el nombre de la fecha
-            logging.basicConfig(filename='./logs/Scan5_' + timeStamp + '.log',filemode='w')
+            logging.basicConfig(filename='./logs/Scan5_' + timeStamp + '.log',filemode='w',level=logging.INFO)
             logging.info("SMALL ED-Scorbot Joint5 Scan Log file")
 
             #
@@ -1672,7 +1670,7 @@ def SendCommandJoint1(self,ref):
             date = datetime.datetime.now()
             timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
             #Abrir archivo de log con el nombre de la fecha
-            logging.basicConfig(filename='./logs/Scan6_' + timeStamp + '.log',filemode='w')
+            logging.basicConfig(filename='./logs/Scan6_' + timeStamp + '.log',filemode='w',level=logging.INFO)
             logging.info("SMALL ED-Scorbot Joint6 Scan Log file")
 
             #
@@ -2172,7 +2170,7 @@ def SendCommandJoint1(self,ref):
             date = datetime.datetime.now()
             timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
             #Abrir archivo de log con el nombre de la fecha
-            logging.basicConfig(filename='./logs/ScanAllMotor_' + timeStamp + '.log',filemode='w')
+            logging.basicConfig(filename='./logs/ScanAllMotor_' + timeStamp + '.log',filemode='w',level=logging.INFO)
             logging.info("SMALL ED-Scorbot Scan All Motors Log file")
 
             iSIV = scan_Init_Value
@@ -2390,7 +2388,7 @@ def SendCommandJoint1(self,ref):
                 date = datetime.datetime.now()
                 timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
                 #Abrir archivo de log con el nombre de la fecha
-                logging.basicConfig(filename='./logs/Print8xy_' + timeStamp + '.log',filemode='w')
+                logging.basicConfig(filename='./logs/Print8xy_' + timeStamp + '.log',filemode='w',level=logging.INFO)
                 logging.info("CITEC ED-BioRob Print 8 x,y Log file") #Se usa esta funcion??
 
                 self.sendCommand16( 0x03,  (0x00),  ((3)&0xFF), True) #I banks disabled M1
