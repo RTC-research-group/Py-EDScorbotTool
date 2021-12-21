@@ -71,6 +71,8 @@ class pyEDScorbotTool:
         self.record = False
         #Variable to check if we keep updating the recordings
         self.updating = True
+        logging.basicConfig(filemode='w',level=logging.INFO)
+
         return
   
     def millis_now(self):
@@ -1227,7 +1229,7 @@ class pyEDScorbotTool:
         scan_Final_Value = self.d["Scan Parameters"]["scan_Final_Value"].get()
         scan_Step_Value = self.d["Scan Parameters"]["scan_Step_Value"].get()
         scan_Wait_Time = self.d["Scan Parameters"]["scan_Wait_Time"].get()
-
+        motor = 1
         if self.checked.get():
             
             #Fecha en str, formato: yyyy_MM_dd_HH_mm_ss
@@ -1235,8 +1237,11 @@ class pyEDScorbotTool:
             date = datetime.datetime.now()
             timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
             #Abrir archivo de log con el nombre de la fecha
-            logging.basicConfig(filename='./logs/Scan1_' + timeStamp + '.log',filemode='w',level=logging.INFO)
-            logging.info("SMALL ED-Scorbot Joint1 Scan Log file")
+            filename='./logs/Scan1_' + timeStamp + '.log'
+            logger_file = logging.FileHandler(filename)
+            logger = logging.getLogger("logger_J{}".format(motor))
+            logger.addHandler(logger_file)
+            logger.info("SMALL ED-Scorbot Joint1 Scan Log file")
 
             #
             self.sendCommand16( 0x03,  (0x00),  ((3)&0xFF), True) #I banks disabled M1 PI_bank_select_M1 = 3
@@ -1249,7 +1254,7 @@ class pyEDScorbotTool:
             self.sendCommand16( 0x02,  ((scan_Init_Value >> 8) & 0xFF),  ((scan_Init_Value) & 0xFF), True) #Ref M1 0
 
 
-            logging.info("Time\tM1 Ref\tJ1 Pos\tM2 Ref\tJ2 Pos\tM3 Ref\tJ3 Pos\tM4 Ref\tJ4 Pos\tM5 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
+            logger.info("Time\tM1 Ref\tJ1 Pos\tM2 Ref\tJ2 Pos\tM3 Ref\tJ3 Pos\tM4 Ref\tJ4 Pos\tM5 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
 
             start = self.millis_now()
             now = self.millis_now()
@@ -1257,7 +1262,7 @@ class pyEDScorbotTool:
                 lap = self.millis_now()
                 while(abs(now-lap) < 100):
                     now = self.millis_now()
-                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),scan_Init_Value,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),scan_Init_Value,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                 now = self.millis_now()
 
 
@@ -1273,7 +1278,7 @@ class pyEDScorbotTool:
                         lap = self.millis_now()
                         while((now-lap) < 100):
                             now = self.millis_now()
-                        logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                        logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                         now = self.millis_now()
                     i = i + scan_Step_Value
                 
@@ -1288,7 +1293,7 @@ class pyEDScorbotTool:
                         lap = self.millis_now()
                         while((now-lap) < 100):
                             now = self.millis_now()
-                        logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                        logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                         now = self.millis_now()
                     
                     i = i - scan_Step_Value
@@ -1314,7 +1319,7 @@ class pyEDScorbotTool:
         scan_Final_Value = self.d["Scan Parameters"]["scan_Final_Value"].get()
         scan_Step_Value = self.d["Scan Parameters"]["scan_Step_Value"].get()
         scan_Wait_Time = self.d["Scan Parameters"]["scan_Wait_Time"].get()
-
+        motor = 2
         if self.checked.get():
             
             #Fecha en str, formato: yyyy_MM_dd_HH_mm_ss
@@ -1322,8 +1327,10 @@ class pyEDScorbotTool:
             date = datetime.datetime.now()
             timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
             #Abrir archivo de log con el nombre de la fecha
-            logging.basicConfig(filename='./logs/Scan2_' + timeStamp + '.log',filemode='w',level=logging.INFO)
-            logging.info("SMALL ED-Scorbot Joint2 Scan Log file")
+            filename='./logs/Scan2_' + timeStamp + '.log'
+            logger_file = logging.FileHandler(filename)
+            logger = logging.getLogger("logger_J{}".format(motor))
+            logger.addHandler(logger_file)
 
             #
             self.sendCommand16( 0x23,  (0x00),  ((3)&0xFF), True) #I banks disabled M2 PI_bank_select_M2 = 3
@@ -1336,7 +1343,7 @@ class pyEDScorbotTool:
             self.sendCommand16( 0x22,  ((scan_Init_Value >> 8) & 0xFF),  ((scan_Init_Value) & 0xFF), True) #Ref M2 0
 
 
-            logging.info("Time\tM2 Ref\tJ1 Pos\tM2 Ref\tJ2 Pos\tM3 Ref\tJ3 Pos\tM4 Ref\tJ4 Pos\tM5 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
+            logger.info("Time\tM2 Ref\tJ1 Pos\tM2 Ref\tJ2 Pos\tM3 Ref\tJ3 Pos\tM4 Ref\tJ4 Pos\tM5 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
 
             start = self.millis_now()
             now = self.millis_now()
@@ -1344,7 +1351,7 @@ class pyEDScorbotTool:
                 lap = self.millis_now()
                 while(abs(now-lap) < 100):
                     now = self.millis_now()
-                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),scan_Init_Value,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),scan_Init_Value,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                 now = self.millis_now()
 
 
@@ -1360,7 +1367,7 @@ class pyEDScorbotTool:
                         lap = self.millis_now()
                         while((now-lap) < 100):
                             now = self.millis_now()
-                        logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                        logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                         now = self.millis_now()
                     i = i + scan_Step_Value
                 
@@ -1375,7 +1382,7 @@ class pyEDScorbotTool:
                         lap = self.millis_now()
                         while((now-lap) < 100):
                             now = self.millis_now()
-                        logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                        logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                         now = self.millis_now()
                     
                     i = i - scan_Step_Value
@@ -1401,7 +1408,7 @@ class pyEDScorbotTool:
         scan_Final_Value = self.d["Scan Parameters"]["scan_Final_Value"].get()
         scan_Step_Value = self.d["Scan Parameters"]["scan_Step_Value"].get()
         scan_Wait_Time = self.d["Scan Parameters"]["scan_Wait_Time"].get()
-
+        motor = 3
         if self.checked.get():
             
             #Fecha en str, formato: yyyy_MM_dd_HH_mm_ss
@@ -1409,8 +1416,10 @@ class pyEDScorbotTool:
             date = datetime.datetime.now()
             timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
             #Abrir archivo de log con el nombre de la fecha
-            logging.basicConfig(filename='./logs/Scan3_' + timeStamp + '.log',filemode='w',level=logging.INFO)
-            logging.info("SMALL ED-Scorbot Joint3 Scan Log file")
+            filename='./logs/Scan3_' + timeStamp + '.log'
+            logger_file = logging.FileHandler(filename)
+            logger = logging.getLogger("logger_J{}".format(motor))
+            logger.addHandler(logger_file)
 
             #
             self.sendCommand16( 0x43,  (0x00),  ((3)&0xFF), True) #I banks disabled M3 PI_bank_select_M3 = 3
@@ -1423,7 +1432,7 @@ class pyEDScorbotTool:
             self.sendCommand16( 0x42,  ((scan_Init_Value >> 8) & 0xFF),  ((scan_Init_Value) & 0xFF), True) #Ref M3 0
 
 
-            logging.info("Time\tM3 Ref\tJ1 Pos\tM3 Ref\tJ2 Pos\tM3 Ref\tJ3 Pos\tM4 Ref\tJ4 Pos\tM5 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
+            logger.info("Time\tM3 Ref\tJ1 Pos\tM3 Ref\tJ2 Pos\tM3 Ref\tJ3 Pos\tM4 Ref\tJ4 Pos\tM5 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
 
             start = self.millis_now()
             now = self.millis_now()
@@ -1431,7 +1440,7 @@ class pyEDScorbotTool:
                 lap = self.millis_now()
                 while(abs(now-lap) < 100):
                     now = self.millis_now()
-                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),scan_Init_Value,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),scan_Init_Value,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                 now = self.millis_now()
 
 
@@ -1447,7 +1456,7 @@ class pyEDScorbotTool:
                         lap = self.millis_now()
                         while((now-lap) < 100):
                             now = self.millis_now()
-                        logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                        logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                         now = self.millis_now()
                     i = i + scan_Step_Value
                 
@@ -1462,7 +1471,7 @@ class pyEDScorbotTool:
                         lap = self.millis_now()
                         while((now-lap) < 100):
                             now = self.millis_now()
-                        logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                        logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                         now = self.millis_now()
                     
                     i = i - scan_Step_Value
@@ -1488,7 +1497,7 @@ class pyEDScorbotTool:
         scan_Final_Value = self.d["Scan Parameters"]["scan_Final_Value"].get()
         scan_Step_Value = self.d["Scan Parameters"]["scan_Step_Value"].get()
         scan_Wait_Time = self.d["Scan Parameters"]["scan_Wait_Time"].get()
-
+        motor = 4
         if self.checked.get():
             
             #Fecha en str, formato: yyyy_MM_dd_HH_mm_ss
@@ -1496,8 +1505,10 @@ class pyEDScorbotTool:
             date = datetime.datetime.now()
             timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
             #Abrir archivo de log con el nombre de la fecha
-            logging.basicConfig(filename='./logs/Scan4_' + timeStamp + '.log',filemode='w',level=logging.INFO)
-            logging.info("SMALL ED-Scorbot Joint4 Scan Log file")
+            filename='./logs/Scan4_' + timeStamp + '.log'
+            logger_file = logging.FileHandler(filename)
+            logger = logging.getLogger("logger_J{}".format(motor))
+            logger.addHandler(logger_file)
 
             #
             self.sendCommand16( 0x63,  (0x00),  ((3)&0xFF), True) #I banks disabled M4 PI_bank_select_M4 = 3
@@ -1510,7 +1521,7 @@ class pyEDScorbotTool:
             self.sendCommand16( 0x62,  ((scan_Init_Value >> 8) & 0xFF),  ((scan_Init_Value) & 0xFF), True) #Ref M4 0
 
 
-            logging.info("Time\tM4 Ref\tJ1 Pos\tM4 Ref\tJ2 Pos\tM4 Ref\tJ3 Pos\tM4 Ref\tJ4 Pos\tM5 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
+            logger.info("Time\tM4 Ref\tJ1 Pos\tM4 Ref\tJ2 Pos\tM4 Ref\tJ3 Pos\tM4 Ref\tJ4 Pos\tM5 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
 
             start = self.millis_now()
             now = self.millis_now()
@@ -1518,7 +1529,7 @@ class pyEDScorbotTool:
                 lap = self.millis_now()
                 while(abs(now-lap) < 100):
                     now = self.millis_now()
-                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),scan_Init_Value,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),scan_Init_Value,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                 now = self.millis_now()
 
 
@@ -1534,7 +1545,7 @@ class pyEDScorbotTool:
                         lap = self.millis_now()
                         while((now-lap) < 100):
                             now = self.millis_now()
-                        logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                        logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                         now = self.millis_now()
                     i = i + scan_Step_Value
                 
@@ -1549,7 +1560,7 @@ class pyEDScorbotTool:
                         lap = self.millis_now()
                         while((now-lap) < 100):
                             now = self.millis_now()
-                        logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                        logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                         now = self.millis_now()
                     
                     i = i - scan_Step_Value
@@ -1575,7 +1586,7 @@ class pyEDScorbotTool:
         scan_Final_Value = self.d["Scan Parameters"]["scan_Final_Value"].get()
         scan_Step_Value = self.d["Scan Parameters"]["scan_Step_Value"].get()
         scan_Wait_Time = self.d["Scan Parameters"]["scan_Wait_Time"].get()
-
+        motor = 5
         if self.checked.get():
             
             #Fecha en str, formato: yyyy_MM_dd_HH_mm_ss
@@ -1583,8 +1594,10 @@ class pyEDScorbotTool:
             date = datetime.datetime.now()
             timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
             #Abrir archivo de log con el nombre de la fecha
-            logging.basicConfig(filename='./logs/Scan5_' + timeStamp + '.log',filemode='w',level=logging.INFO)
-            logging.info("SMALL ED-Scorbot Joint5 Scan Log file")
+            filename='./logs/Scan5_' + timeStamp + '.log'
+            logger_file = logging.FileHandler(filename)
+            logger = logging.getLogger("logger_J{}".format(motor))
+            logger.addHandler(logger_file)
 
             #
             self.sendCommand16( 0x83,  (0x00),  ((3)&0xFF), True) #I banks disabled M5 PI_bank_select_M5 = 3
@@ -1597,7 +1610,7 @@ class pyEDScorbotTool:
             self.sendCommand16( 0x82,  ((scan_Init_Value >> 8) & 0xFF),  ((scan_Init_Value) & 0xFF), True) #Ref M5 0
 
 
-            logging.info("Time\tM5 Ref\tJ1 Pos\tM5 Ref\tJ2 Pos\tM5 Ref\tJ3 Pos\tM5 Ref\tJ4 Pos\tM5 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
+            logger.info("Time\tM5 Ref\tJ1 Pos\tM5 Ref\tJ2 Pos\tM5 Ref\tJ3 Pos\tM5 Ref\tJ4 Pos\tM5 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
 
             start = self.millis_now()
             now = self.millis_now()
@@ -1605,7 +1618,7 @@ class pyEDScorbotTool:
                 lap = self.millis_now()
                 while(abs(now-lap) < 100):
                     now = self.millis_now()
-                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),scan_Init_Value,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),scan_Init_Value,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                 now = self.millis_now()
 
 
@@ -1621,7 +1634,7 @@ class pyEDScorbotTool:
                         lap = self.millis_now()
                         while((now-lap) < 100):
                             now = self.millis_now()
-                        logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                        logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                         now = self.millis_now()
                     i = i + scan_Step_Value
                 
@@ -1636,7 +1649,7 @@ class pyEDScorbotTool:
                         lap = self.millis_now()
                         while((now-lap) < 100):
                             now = self.millis_now()
-                        logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                        logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                         now = self.millis_now()
                     
                     i = i - scan_Step_Value
@@ -1662,7 +1675,7 @@ class pyEDScorbotTool:
         scan_Final_Value = self.d["Scan Parameters"]["scan_Final_Value"].get()
         scan_Step_Value = self.d["Scan Parameters"]["scan_Step_Value"].get()
         scan_Wait_Time = self.d["Scan Parameters"]["scan_Wait_Time"].get()
-
+        motor = 6
         if self.checked.get():
             
             #Fecha en str, formato: yyyy_MM_dd_HH_mm_ss
@@ -1670,8 +1683,10 @@ class pyEDScorbotTool:
             date = datetime.datetime.now()
             timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
             #Abrir archivo de log con el nombre de la fecha
-            logging.basicConfig(filename='./logs/Scan6_' + timeStamp + '.log',filemode='w',level=logging.INFO)
-            logging.info("SMALL ED-Scorbot Joint6 Scan Log file")
+            filename='./logs/Scan6_' + timeStamp + '.log'
+            logger_file = logging.FileHandler(filename)
+            logger = logging.getLogger("logger_J{}".format(motor))
+            logger.addHandler(logger_file)
 
             #
             self.sendCommand16( 0xA3,  (0x00),  ((3)&0xFF), True) #I banks disabled M6 PI_bank_select_M6 = 3
@@ -1684,7 +1699,7 @@ class pyEDScorbotTool:
             self.sendCommand16( 0xA2,  ((scan_Init_Value >> 8) & 0xFF),  ((scan_Init_Value) & 0xFF), True) #Ref M6 0
 
 
-            logging.info("Time\tM6 Ref\tJ1 Pos\tM6 Ref\tJ2 Pos\tM6 Ref\tJ3 Pos\tM6 Ref\tJ4 Pos\tM6 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
+            logger.info("Time\tM6 Ref\tJ1 Pos\tM6 Ref\tJ2 Pos\tM6 Ref\tJ3 Pos\tM6 Ref\tJ4 Pos\tM6 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
 
             start = self.millis_now()
             now = self.millis_now()
@@ -1692,7 +1707,7 @@ class pyEDScorbotTool:
                 lap = self.millis_now()
                 while(abs(now-lap) < 100):
                     now = self.millis_now()
-                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),scan_Init_Value,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),scan_Init_Value,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                 now = self.millis_now()
 
 
@@ -1708,7 +1723,7 @@ class pyEDScorbotTool:
                         lap = self.millis_now()
                         while((now-lap) < 100):
                             now = self.millis_now()
-                        logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                        logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                         now = self.millis_now()
                     i = i + scan_Step_Value
                 
@@ -1723,7 +1738,7 @@ class pyEDScorbotTool:
                         lap = self.millis_now()
                         while((now-lap) < 100):
                             now = self.millis_now()
-                        logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                        logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                         now = self.millis_now()
                     
                     i = i - scan_Step_Value
@@ -2170,8 +2185,10 @@ class pyEDScorbotTool:
             date = datetime.datetime.now()
             timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
             #Abrir archivo de log con el nombre de la fecha
-            logging.basicConfig(filename='./logs/ScanAllMotor_' + timeStamp + '.log',filemode='w',level=logging.INFO)
-            logging.info("SMALL ED-Scorbot Scan All Motors Log file")
+            filename='./logs/ScanAllmotor_' + timeStamp + '.log'
+            logger_file = logging.FileHandler(filename)
+            logger = logging.getLogger("logger_allmotors")
+            logger.addHandler(logger_file)
 
             iSIV = scan_Init_Value
             iSFV = scan_Final_Value
@@ -2247,7 +2264,7 @@ class pyEDScorbotTool:
             self.sendCommand16( 0xA2,  ((iSIV >> 8) & 0xFF),  ((iSIV) & 0xFF), True) #Ref M6 0
             '''
 
-            logging.info("Time\tM1 Ref\tJ1 Pos\tM2 Ref\tJ2 Pos\tM3 Ref\tJ3 Pos\tM4 Ref\tJ4 Pos\tM5 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
+            logger.info("Time\tM1 Ref\tJ1 Pos\tM2 Ref\tJ2 Pos\tM3 Ref\tJ3 Pos\tM4 Ref\tJ4 Pos\tM5 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
 
             start = self.millis_now()
             now = self.millis_now()
@@ -2256,7 +2273,7 @@ class pyEDScorbotTool:
                 lap = self.millis_now()
                 while(abs(now-lap) < 100):
                     now = self.millis_now()
-                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now() - start),scan_Init_Value,self.Read_J1_pos(),scan_Init_Value,self.Read_J2_pos(),scan_Init_Value,self.Read_J3_pos(),scan_Init_Value,self.Read_J4_pos(),scan_Init_Value,self.Read_J5_pos(),scan_Init_Value,self.Read_J6_pos()))
+                logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now() - start),scan_Init_Value,self.Read_J1_pos(),scan_Init_Value,self.Read_J2_pos(),scan_Init_Value,self.Read_J3_pos(),scan_Init_Value,self.Read_J4_pos(),scan_Init_Value,self.Read_J5_pos(),scan_Init_Value,self.Read_J6_pos()))
                 now = self.millis_now()
 
             for j in range(0,5):
@@ -2277,7 +2294,7 @@ class pyEDScorbotTool:
                         lap = self.millis_now()
                         while(abs(now-lap) < 100):
                             now = self.millis_now()
-                        logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),i,self.Read_J2_pos(),i,self.Read_J3_pos(),i,self.Read_J4_pos(),i,self.Read_J5_pos(),i,self.Read_J6_pos()))
+                        logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),i,self.Read_J2_pos(),i,self.Read_J3_pos(),i,self.Read_J4_pos(),i,self.Read_J5_pos(),i,self.Read_J6_pos()))
 
                     i = i + iSSV
 
@@ -2298,7 +2315,7 @@ class pyEDScorbotTool:
                         lap = self.millis_now()
                         while(abs(now-lap) < 100):
                             now = self.millis_now()
-                        logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),i,self.Read_J2_pos(),i,self.Read_J3_pos(),i,self.Read_J4_pos(),i,self.Read_J5_pos(),i,self.Read_J6_pos()))
+                        logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),i,self.Read_J2_pos(),i,self.Read_J3_pos(),i,self.Read_J4_pos(),i,self.Read_J5_pos(),i,self.Read_J6_pos()))
                         now = self.millis_now()
                     
                     i = i - iSSV
@@ -2384,12 +2401,15 @@ class pyEDScorbotTool:
                 refsM2 = [0,-50,0,-50,0]
                 refsM3 = [0, -200,    0, -200,    0]
                 refsM4 = [0, -200,    0, -200,    0]
-
+                
                 date = datetime.datetime.now()
                 timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
                 #Abrir archivo de log con el nombre de la fecha
-                logging.basicConfig(filename='./logs/Print8xy_' + timeStamp + '.log',filemode='w',level=logging.INFO)
-                logging.info("CITEC ED-BioRob Print 8 x,y Log file") #Se usa esta funcion??
+                filename='./logs/8xy' + timeStamp + '.log'
+                logger_file = logging.FileHandler(filename)
+                logger = logging.getLogger("logger_8xy")
+                logger.addHandler(logger_file)  
+                logger.info("CITEC ED-BioRob Print 8 x,y Log file") #Se usa esta funcion??
 
                 self.sendCommand16( 0x03,  (0x00),  ((3)&0xFF), True) #I banks disabled M1
                 self.sendCommand16( 0x07,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
@@ -2427,7 +2447,7 @@ class pyEDScorbotTool:
                 self.sendCommand16( 0x77,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
                 self.sendCommand16( 0x62,  ((refsM4[0] >> 8) & 0xFF),  ((refsM4[0]) & 0xFF), True) #Ref M4 0
 
-                logging.info("Time\tM1 Ref\tJ1 Pos\tM2 Ref\tJ2 Pos\tM3 Ref\tJ3 Pos\tM4 Ref\tJ4 Pos\t")
+                logger.info("Time\tM1 Ref\tJ1 Pos\tM2 Ref\tJ2 Pos\tM3 Ref\tJ3 Pos\tM4 Ref\tJ4 Pos\t")
                 start = self.millis_now()
                 now = self.millis_now()
                 
@@ -2435,7 +2455,7 @@ class pyEDScorbotTool:
                     lap = self.millis_now()
                     while(abs(now-lap)<100):
                         now = self.millis_now()
-                    logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),refsM1[0],self.Read_J1_pos(),refsM2[0],self.Read_J2_pos(),refsM3[0],self.Read_J3_pos(),refsM4[0],self.Read_J4_pos()))
+                    logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),refsM1[0],self.Read_J1_pos(),refsM2[0],self.Read_J2_pos(),refsM3[0],self.Read_J3_pos(),refsM4[0],self.Read_J4_pos()))
                     now = self.millis_now()
                 
                 for j in range(0,2):
@@ -2451,7 +2471,7 @@ class pyEDScorbotTool:
                             lap = self.millis_now()
                             while(abs(now-lap) < 100):
                                 now = self.millis_now()
-                            logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),refsM1[i],self.Read_J1_pos(),refsM2[i],self.Read_J2_pos(),refsM3[i],self.Read_J3_pos(),refsM4[i],self.Read_J4_pos()))
+                            logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),refsM1[i],self.Read_J1_pos(),refsM2[i],self.Read_J2_pos(),refsM3[i],self.Read_J3_pos(),refsM4[i],self.Read_J4_pos()))
                             now = self.millis_now()
     
     def search_Joint_home(self,JOINTNUM,pol):
