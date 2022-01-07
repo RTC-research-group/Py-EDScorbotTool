@@ -3060,12 +3060,12 @@ class pyEDScorbotTool:
         #     f = lambda x:((9/50)*x) + 2
         ########################################
 
-        if motor == 1: #BOUNDS TO ADDand (ref ):
-            f = lambda x:-0.3181828045*x
+        if motor == 1: 
+            f = lambda x:-(1/3)*x
         elif motor == 2:
-            f = lambda x:-0.113318364*x
+            f = lambda x:-(1/9.4)*x
         elif motor == 3:
-            f = lambda x:-0.2937357129*x
+            f = lambda x:-(1/-3.1)*x
         elif motor == 4:
             f = lambda x: -0.056780795*x
 
@@ -3093,7 +3093,7 @@ class pyEDScorbotTool:
         """
         f = lambda x:x
 
-        bounds = [[485,-485],[748,-748],[380,-380],[1583,-1583]]
+        bounds = [[400,-400],[700,-900],[300,-400],[1583,-1583]]
         ##############DEPRECATED#############
         #These are the inverse of the functions that appear in ref_to_angle function
         
@@ -3112,11 +3112,14 @@ class pyEDScorbotTool:
         #####################################
 
         if motor == 1:
-            f = lambda x:-3.1428474*x
+            #f = lambda x:-3.1428474*x
+            f = lambda x:-3*x
         elif motor == 2:
-            f = lambda x:-8.824695*x
+            #f = lambda x:-8.824695*x
+            f = lambda x:-9.4*x
         elif motor == 3:
-            f = lambda x:-3.4044209*x
+            #f = lambda x:-3.4044209*x
+            f = lambda x:-3.1*x
         elif motor ==4:
             f = lambda x:-17.61158871*x
         else:
@@ -3339,11 +3342,11 @@ class pyEDScorbotTool:
         f = lambda x:x
 
         if motor == 1:
-            f = lambda x:0.007884569896712134*(x-32768)
+            f = lambda x:(1/125.5)*(x-32768)
         elif motor == 2:
-            f = lambda x:0.007671653241273495*(x-32768)
+            f = lambda x:(1/131)*(x-32768)
         elif motor == 3:
-            f = lambda x:0.007046719751955465*(x-32768)
+            f = lambda x:(1/127.7)*(x-32768)
         elif motor ==4:
             f = lambda x:0.012391573729863692*(x-32768)
         else:
