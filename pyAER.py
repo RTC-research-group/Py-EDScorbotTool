@@ -557,7 +557,7 @@ class pyEDScorbotTool:
         self.record = not self.record
 
 
-    def update(self):
+    def update(self,ref=None):
 
         if self.checked.get():
 
@@ -574,7 +574,10 @@ class pyEDScorbotTool:
                 aux = []
                 for i in range(6):
                     label = "ref_M"+str(i+1)
-                    data = [motors[label].get(),positions[i]]
+                    if ref == None:
+                        data = [motors[label].get(),positions[i]]
+                    else:
+                        data = [motors[label].get(),positions[i],ref[i]]
                     aux.append(data)
                 aux.append(ts)
                 self.array.append(aux)
