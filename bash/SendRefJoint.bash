@@ -1,10 +1,7 @@
 #!/bin/bash
 
-# ConfigureInit + SPID
-
-
-
-#!/bin/bash
+#Send a reference to a joint
+#usage: SendRefJoint.bash <joint> <reference>
 
 declare -A addressPerJoint
 addressPerJoint[1]=0x02
@@ -13,6 +10,8 @@ addressPerJoint[3]=0x42
 addressPerJoint[4]=0x62
 addressPerJoint[5]=0x82
 addressPerJoint[6]=0xA2
+
+
 
 j=$1
 ref=$2
