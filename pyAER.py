@@ -39,10 +39,10 @@ class pyEDScorbotTool:
         '''
         #Initialize GUI: create root Tk object
         self.visible = visible
-        self.root = tk.Tk()
+        
         if self.visible:
         
-
+            self.root = tk.Tk()
                 #Set the icon
             self.root.iconphoto(False,tk.PhotoImage(file="./atc.png"))
 
@@ -51,7 +51,12 @@ class pyEDScorbotTool:
         self.d["Motor Config"] = {}
         self.d["Joints"] = {}
         self.d["Scan Parameters"] = {}
-        
+        self.j1 = -1
+        self.j2 = -1
+        self.j3 = -1
+        self.j4 = -1
+        self.j5 = -1
+        self.j6 = -1
         #Standalone variable to control if USB is enabled
         self.checked = False
 
@@ -623,34 +628,53 @@ class pyEDScorbotTool:
             self.array = []
         self.record = not self.record
 
+    def print_updates(self,):
+        
+        self.j1 = self.execute_script("bash/readJoint.bash 1")
+        self.j2 = self.execute_script("bash/readJoint.bash 2")
+        self.j3 = self.execute_script("bash/readJoint.bash 3")
+        self.j4 = self.execute_script("bash/readJoint.bash 4")
+        self.j5 = self.execute_script("bash/readJoint.bash 5")
+        self.j6 = self.execute_script("bash/readJoint.bash 6")
+
+        print("Joint\tPosition\tHex\nJ1\t{}\t{}\nJ2\t{}\t{}\nJ3\t{}\t{}\nJ4\t{}\t{}\nJ5\t{}\t{}\nJ6\t{}\t{}\n"
+        .format(self.j1,hex(self.j1),self.j2,hex(self.j2),self.j3,hex(self.j3),self.j4,hex(self.j4),self.j5,hex(self.j5),self.j6,hex(self.j6))
+        ,end='/r')
+
 
     def update(self,ref=None):
 
-        if self.checked.get():
+        if self.visible:
+            if self.checked.get():
 
-            j1 = self.Read_J1_gui()
-            j2 = self.Read_J2_gui()
-            j3 = self.Read_J3_gui()
-            j4 = self.Read_J4_gui()
-            j5 = self.Read_J5_gui()
-            j6 = self.Read_J6_gui()
-            if self.record:
-                motors = self.d["Motor Config"]
-                ts = self.millis_now()
-                positions = [j1,j2,j3,j4,j5,j6]
-                aux = []
-                for i in range(6):
-                    label = "ref_M"+str(i+1)
-                    if ref == None:
-                        data = [motors[label].get(),positions[i]]
-                    else:
-                        data = [motors[label].get(),positions[i],ref[i]]
-                    aux.append(data)
-                aux.append(ts)
-                self.array.append(aux)
+                j1 = self.Read_J1_gui()
+                j2 = self.Read_J2_gui()
+                j3 = self.Read_J3_gui()
+                j4 = self.Read_J4_gui()
+                j5 = self.Read_J5_gui()
+                j6 = self.Read_J6_gui()
+                if self.record:
+                    motors = self.d["Motor Config"]
+                    ts = self.millis_now()
+                    positions = [j1,j2,j3,j4,j5,j6]
+                    aux = []
+                    for i in range(6):
+                        label = "ref_M"+str(i+1)
+                        if ref == None:
+                            data = [motors[label].get(),positions[i]]
+                        else:
+                            data = [motors[label].get(),positions[i],ref[i]]
+                        aux.append(data)
+                    aux.append(ts)
+                    self.array.append(aux)
+                
 
-        if self.updating:
-            self.root.after(1,self.update)
+            if self.updating:
+                self.root.after(1,self.update)
+        
+            
+            
+            
 
     def ConfigureInit(self):
         
