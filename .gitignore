@@ -130,4 +130,4 @@ dmypy.json
 
 # Downloaded libraries
 
-c/json
+c/src/json
