@@ -13,7 +13,7 @@
 typedef long long int u64;
 typedef unsigned char uchar;
 
-int sendCommand(uchar addr, uchar b1, uchar b2, int *mem, int verbose)
+int sendCommand16(uchar addr, uchar b1, uchar b2, int *mem, int verbose)
 {
     int data = 0x000000 | addr << 16 | b1 << 8 | b2;
     if (verbose)
@@ -52,7 +52,7 @@ int main()
         puts("Ocurrió un problema al abrir /dev/mem");
     }
     clock_t start = clock();
-    sendCommand(0x02, 0x43, 0xff, bram64_vptr, 0);
+    sendCommand16(0x02, 0x43, 0xff, bram64_vptr, 0);
     clock_t end = clock();
     float seconds = (float)(end - start) / CLOCKS_PER_SEC;
     printf("Tiempo en ejecutar el comando: %f segundos\n",seconds);
