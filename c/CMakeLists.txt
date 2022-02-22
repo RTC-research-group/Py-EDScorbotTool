@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.10)
 project(edscorbot_runtime)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++11)
+add_compile_options(-std=c++17)
+
 add_subdirectory(/home/enrique/Trabajo/Py-EDScorbotTool/c/src/json)
 #set(nlohmann_json_DIR "/home/enrique/Trabajo/Py-EDScorbotTool/c/src/json/cmake")
 #find_package(nlohmann_json 3.10.5 REQUIRED)
@@ -10,13 +11,13 @@ add_subdirectory(/home/enrique/Trabajo/Py-EDScorbotTool/c/src/json)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 
-SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fPIC")
+SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fPIC -D_GLIBCXX_DEBUG -DEDS_VERBOSE")
 
 # Custom CMake base module
 
 # Compile this module (standard C++ file, no additional dependencies)
 #add_library(test_target SHARED src/testModule.cpp)
-add_executable(test_edscorbot src/EDScorbot.cpp)
+add_executable(test_edscorbot src/EDScorbot.cpp src/test.cpp src/devmem.cpp)
 #add_library(image_generator SHARED src/Image_generator.cpp)
 
 
@@ -33,7 +34,7 @@ target_include_directories(test_edscorbot PUBLIC "c/src/include")
 #TARGET_LINK_LIBRARIES(test_target PRIVATE ${DV_LIBRARIES})
 TARGET_LINK_LIBRARIES(test_edscorbot PRIVATE nlohmann_json::nlohmann_json)
 
-#INSTALL(TARGETS test_target DESTINATION "/usr/share/dv/modules")
+#INSTALL(TARGETS test_edscorbot DESTINATION "/usr/share/dv/modules")
 #INSTALL(TARGETS image_generator DESTINATION "/usr/share/dv/modules")
 
 ## Add folders to be run by python nosetests
