@@ -4,7 +4,7 @@ project(edscorbot_runtime)
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++17)
 
-add_subdirectory("../c/src/json")
+add_subdirectory("src/json")
 #set(nlohmann_json_DIR "/home/enrique/Trabajo/Py-EDScorbotTool/c/src/json/cmake")
 #find_package(nlohmann_json 3.10.5 REQUIRED)
 ## Find catkin macros and libraries
