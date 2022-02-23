@@ -75,13 +75,13 @@ EDScorbot::EDScorbot(string config_path)
     }
     // Create array to iterate over joints
     array<EDScorbotJoint *, 6> joints = {{&j1, &j2, &j3, &j4, &j5, &j6}};
-
+    int i = 1;
     for (const auto &j : joints)
     { // Assign each joint its correct address -- 0x00,0x20,...,0xA0
         j->address = addresses[j->id];
 #ifdef EDS_VERBOSE
         // print controller configuration if verbose
-        int i = 1;
+        
         cout << "J" << i << "\n";
         i = i + 1;
         for (const auto &[k, v] : j->controller)
