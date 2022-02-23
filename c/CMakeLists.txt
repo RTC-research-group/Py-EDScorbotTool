@@ -11,7 +11,7 @@ add_subdirectory("src/json")
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 
-SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fPIC -D_GLIBCXX_DEBUG -DEDS_VERBOSE")
+SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fPIC --static -D_GLIBCXX_DEBUG -DEDS_VERBOSE")
 
 # Custom CMake base module
 
