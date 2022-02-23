@@ -81,7 +81,7 @@ EDScorbot::EDScorbot(string config_path)
         j->address = addresses[j->id];
 #ifdef EDS_VERBOSE
         // print controller configuration if verbose
-        
+
         cout << "J" << i << "\n";
         i = i + 1;
         for (const auto &[k, v] : j->controller)
@@ -102,20 +102,21 @@ EDScorbot::EDScorbot(string config_path)
 };
 
 int EDScorbot::sendRef(int ref, EDScorbotJoint j)
-{   
+{
     uchar offset = 0x02;
     uchar address = j.address + offset;
     uchar b1 = ((ref >> 8) & 0xFF);
     uchar b2 = ref & 0xFF;
-    sendCommand16(address,b1,b2,this->bram_ptr);
+    sendCommand16(address, b1, b2, this->bram_ptr);
     return 0;
 }
 
-array<int,6> EDScorbot::readJoints(){
-    //int base_address = 0x00;//To be defined
-    //int offset = 0x20;
+array<int, 6> EDScorbot::readJoints()
+{
+    // int base_address = 0x00;//To be defined
+    // int offset = 0x20;
 
-    int j1,j2,j3,j4,j5,j6;
+    int j1, j2, j3, j4, j5, j6;
 
     j1 = this->bram_ptr[0];
     j2 = this->bram_ptr[0];
@@ -124,7 +125,62 @@ array<int,6> EDScorbot::readJoints(){
     j5 = this->bram_ptr[0];
     j6 = this->bram_ptr[0];
 
-    array <int,6> ret = {j1,j2,j3,j4,j5,j6};
+    array<int, 6> ret = {j1, j2, j3, j4, j5, j6};
     return ret;
+};
 
+void EDScorbot::initJoints()
+{
+
+    EDScorbotJoint joints[6] = {j1, j2, j3, j4, j5, j6};
+    int data, base;
+    // podria desenrollarse el bucle
+    for (int i = 0; i < 6; i++)
+    {
+
+        base = 0x00000000 | (i * JOINT_STEP)<<16;
+
+        data = base | PI_FD_ENABLE_ADDR << 16 | 0x0f; //|0x00 << 8
+        this->bram_ptr[0] = data;
+        data = base | PI_FD_ENABLE_ADDR << 16 | 0x03; //|0x00 << 8
+        this->bram_ptr[0] = data;
+
+        data = base | PI_FD_ADDR << 16 | ((joints[i].controller["PI_FD_bank3_18bits"] << 8) & 0xFF) | (joints[i].controller["PI_FD_bank3_18bits"] & 0xFF);
+        this->bram_ptr[0] = data;
+#ifdef EDS_VERBOSE
+        printf("J%d PI_FD: %08x\n", i + 1, data);
+#endif
+        data = base | PD_FD_ENABLE_ADDR << 16 | 0x0f; //|0x00 << 8
+        this->bram_ptr[0] = data;
+        data = base | PD_FD_ENABLE_ADDR << 16 | 0x03; //|0x00 << 8
+        this->bram_ptr[0] = data;
+
+        data = base | PD_FD_ADDR << 16 | ((joints[i].controller["PD_FD_bank3_22bits"] << 8) & 0xFF) | (joints[i].controller["PD_FD_bank3_22bits"] & 0xFF);
+        this->bram_ptr[0] = data;
+#ifdef EDS_VERBOSE
+        printf("J%d PD_FD: %08x\n", i + 1, data);
+#endif
+
+        data = base | EI_FD_ENABLE_ADDR << 16 | 0x0f; //|0x00 << 8
+        this->bram_ptr[0] = data;
+        data = base | EI_FD_ENABLE_ADDR << 16 | 0x03; //|0x00 << 8
+        this->bram_ptr[0] = data;
+
+        data = base | EI_FD_ADDR << 16 | ((joints[i].controller["EI_FD_bank3_18bits"] << 8) & 0xFF) | (joints[i].controller["EI_FD_bank3_18bits"] & 0xFF);
+        this->bram_ptr[0] = data;
+
+#ifdef EDS_VERBOSE
+        printf("J%d EI_FD: %08x\n", i + 1, data);
+#endif
+
+        data = base | SPIKE_EXPANSOR_ADDR <<16 | ((joints[i].controller["spike_expansor"]<<8) & 0xFF )|(joints[i].controller["spike_expansor"] & 0xFF );
+        this->bram_ptr[0] = data;
+
+#ifdef EDS_VERBOSE
+        printf("J%d spike expansor: %08x\n",i+1,data);
+
+#endif
+        //send ref = 0 to stay put
+        data = base | REF_ADDR << 16;
+    }
 };

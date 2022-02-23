@@ -1,6 +1,16 @@
 #include <string>
 #include "nlohmann/json.hpp"
 #include <map>
+#define REF_ADDR 0x02   
+#define PI_FD_ENABLE_ADDR 0x03
+#define PI_FD_ADDR 0x07
+#define PD_FD_ENABLE_ADDR 0x08
+#define PD_FD_ADDR 0x0c
+#define SPIKE_EXPANSOR_ADDR 0x12
+#define EI_FD_ENABLE_ADDR 0x13
+#define EI_FD_ADDR 0x17
+#define JOINT_STEP 0x20
+
 
 using namespace std;
 using json = nlohmann::json;
@@ -71,7 +81,7 @@ public:
     EDScorbot();
     EDScorbot(string);
     ~EDScorbot(){};
-
+    void initJoints();
     void configureSPID(EDScorbotJoint);
     void configureInit(EDScorbotJoint);
     void searchHome(EDScorbotJoint);
