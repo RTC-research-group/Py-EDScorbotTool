@@ -1,6 +1,7 @@
 #include <string>
 #include "nlohmann/json.hpp"
 #include <map>
+#include <thread>
 #define REF_ADDR 0x02   
 #define PI_FD_ENABLE_ADDR 0x03
 #define PI_FD_ADDR 0x07
@@ -33,7 +34,7 @@ class EDScorbotJoint
 
 private:
     // Declaring
-
+    std::thread* t;
 public:
     int address;
     string id;
@@ -86,10 +87,14 @@ public:
     void configureInit(EDScorbotJoint);
     void searchHome(EDScorbotJoint);
     int sendRef(int, EDScorbotJoint);
-    array<int,6> readJoints();
     void resetCounter(EDScorbotJoint);
     void configureLeds(int, EDScorbotJoint);
     void sendFPGAReset();
     void loadConfig(string);
     void dumpConfig(string);
+#ifdef THREADED
+    void EDScorbot::readJoints();
+#else
+    array<int, 6> readJoints();
+#endif
 };
