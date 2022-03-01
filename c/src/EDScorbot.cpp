@@ -10,11 +10,18 @@ using json = nlohmann::json;
 
 static int j1_t,j2_t,j3_t,j4_t,j5_t,j6_t;
 
+EDScorbot::~EDScorbot(){
+#ifdef THREADED
+
+    stopRead();
+
+#endif
+}
+
 // Constructor
 // string config_path -> relative path to json configuration file
 // Initializes configuration for SPID controllers of EDScorbot
-EDScorbot::~EDScorbot(){
-}
+
 
 EDScorbot::EDScorbot(string config_path)
 {
@@ -175,14 +182,14 @@ void EDScorbot::initJoints()
 #ifdef THREADED
 
 void EDScorbot::read_threaded(){
-
-    while(1){
-    j1_t = this->bram_ptr[0];
-    j2_t = this->bram_ptr[0];
-    j3_t = this->bram_ptr[0];
-    j4_t = this->bram_ptr[0];
-    j5_t = this->bram_ptr[0];
-    j6_t = this->bram_ptr[0];
+    assert(exec);
+    while(exec){
+    j1_t = this->bram_ptr[1];
+    j2_t = this->bram_ptr[2];
+    j3_t = this->bram_ptr[3];
+    j4_t = this->bram_ptr[4];
+    j5_t = this->bram_ptr[5];
+    j6_t = this->bram_ptr[6];
     this_thread::sleep_for(chrono::microseconds(1));
     }
 }
@@ -190,6 +197,11 @@ void EDScorbot::read_threaded(){
 void EDScorbot::readJoints(){
     t2 = std::thread(&EDScorbot::read_threaded,this);
     this->t = &t2;
+}
+
+void EDScorbot::stopRead(){
+    this->exec = false;
+    this->t.join();
 }
 
 #else
@@ -201,12 +213,12 @@ array<int, 6> EDScorbot::readJoints()
 
     int j1, j2, j3, j4, j5, j6;
 
-    j1 = this->bram_ptr[0];
-    j2 = this->bram_ptr[0];
-    j3 = this->bram_ptr[0];
-    j4 = this->bram_ptr[0];
-    j5 = this->bram_ptr[0];
-    j6 = this->bram_ptr[0];
+    j1 = this->bram_ptr[1];
+    j2 = this->bram_ptr[2];
+    j3 = this->bram_ptr[3];
+    j4 = this->bram_ptr[4];
+    j5 = this->bram_ptr[5];
+    j6 = this->bram_ptr[6];
 
     array<int, 6> ret = {j1, j2, j3, j4, j5, j6};
     return ret;

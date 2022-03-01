@@ -81,7 +81,7 @@ public:
 
     EDScorbot();
     EDScorbot(string);
-    ~EDScorbot(){};
+    ~EDScorbot();
     void initJoints();
     void configureSPID(EDScorbotJoint);
     void configureInit(EDScorbotJoint);
@@ -94,6 +94,7 @@ public:
     void dumpConfig(string);
 #ifdef THREADED
     void EDScorbot::readJoints();
+    bool exec;
 #else
     array<int, 6> readJoints();
 #endif
