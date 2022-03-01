@@ -18,6 +18,7 @@ SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fPIC --static -D_GLIBCXX_DEBUG -DEDS_V
 # Compile this module (standard C++ file, no additional dependencies)
 #add_library(test_target SHARED src/testModule.cpp)
 add_executable(test_edscorbot src/EDScorbot.cpp src/test.cpp src/devmem.cpp)
+add_executable(server src/server.cpp src/EDScorbot.cpp src/devmem.cpp)
 #add_library(image_generator SHARED src/Image_generator.cpp)
 
 
@@ -28,11 +29,15 @@ add_executable(test_edscorbot src/EDScorbot.cpp src/test.cpp src/devmem.cpp)
 
 #target_include_directories(test_target PUBLIC "/usr/include")
 target_include_directories(test_edscorbot PUBLIC "c/json/single_include/")
-
 target_include_directories(test_edscorbot PUBLIC "c/src/include")
+
+target_include_directories(server PUBLIC "c/json/single_include/")
+target_include_directories(server PUBLIC "c/src/")
+
 
 #TARGET_LINK_LIBRARIES(test_target PRIVATE ${DV_LIBRARIES})
 TARGET_LINK_LIBRARIES(test_edscorbot PRIVATE nlohmann_json::nlohmann_json)
+TARGET_LINK_LIBRARIES(server PRIVATE nlohmann_json::nlohmann_json)
 
 #INSTALL(TARGETS test_edscorbot DESTINATION "/usr/share/dv/modules")
 #INSTALL(TARGETS image_generator DESTINATION "/usr/share/dv/modules")
