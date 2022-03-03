@@ -140,7 +140,7 @@ void EDScorbot::initJoints()
         data = base | PI_FD_ENABLE_ADDR << 16 | 0x03; //|0x00 << 8
         this->bram_ptr[0] = data;
 
-        data = base | PI_FD_ADDR << 16 | ((joints[i]->controller["PI_FD_bank3_18bits"] << 8) & 0xFF) | (joints[i]->controller["PI_FD_bank3_18bits"] & 0xFF);
+        data = base | PI_FD_ADDR << 16 | ((joints[i]->controller["PI_FD_bank3_18bits"] >> 8) & 0xFF) << 8| (joints[i]->controller["PI_FD_bank3_18bits"] & 0xFF);
         this->bram_ptr[0] = data;
 #ifdef EDS_VERBOSE
         printf("J%d PI_FD: %08x\n", i + 1, data);
@@ -150,7 +150,7 @@ void EDScorbot::initJoints()
         data = base | PD_FD_ENABLE_ADDR << 16 | 0x03; //|0x00 << 8
         this->bram_ptr[0] = data;
 
-        data = base | PD_FD_ADDR << 16 | ((joints[i]->controller["PD_FD_bank3_22bits"] << 8) & 0xFF) | (joints[i]->controller["PD_FD_bank3_22bits"] & 0xFF);
+        data = base | PD_FD_ADDR << 16 | ((joints[i]->controller["PD_FD_bank3_22bits"] >> 8) & 0xFF) << 8| (joints[i]->controller["PD_FD_bank3_22bits"] & 0xFF);
         this->bram_ptr[0] = data;
 #ifdef EDS_VERBOSE
         printf("J%d PD_FD: %08x\n", i + 1, data);
@@ -161,14 +161,14 @@ void EDScorbot::initJoints()
         data = base | EI_FD_ENABLE_ADDR << 16 | 0x03; //|0x00 << 8
         this->bram_ptr[0] = data;
 
-        data = base | EI_FD_ADDR << 16 | ((joints[i]->controller["EI_FD_bank3_18bits"] << 8) & 0xFF) | (joints[i]->controller["EI_FD_bank3_18bits"] & 0xFF);
+        data = base | EI_FD_ADDR << 16 | ((joints[i]->controller["EI_FD_bank3_18bits"] >> 8) & 0xFF) << 8| (joints[i]->controller["EI_FD_bank3_18bits"] & 0xFF);
         this->bram_ptr[0] = data;
 
 #ifdef EDS_VERBOSE
         printf("J%d EI_FD: %08x\n", i + 1, data);
 #endif
 
-        data = base | SPIKE_EXPANSOR_ADDR <<16 | ((joints[i]->controller["spike_expansor"]<<8) & 0xFF )|(joints[i]->controller["spike_expansor"] & 0xFF );
+        data = base | SPIKE_EXPANSOR_ADDR <<16 | ((joints[i]->controller["spike_expansor"] >> 8) & 0xFF ) << 8|(joints[i]->controller["spike_expansor"] & 0xFF );
         this->bram_ptr[0] = data;
 
 #ifdef EDS_VERBOSE
