@@ -1,9 +1,11 @@
 #include "include/EDScorbot.hpp"
 
+
 int main(int argc, char* argv[])
 {   
     int j = atoi(argv[1]);
     int ref = atoi(argv[2]);
+    int init = atoi(argv[3]);
     EDScorbot handler("./initial_config.json");
     EDScorbotJoint* joint;
     switch (j)
@@ -18,7 +20,19 @@ int main(int argc, char* argv[])
     default:
         break;
     }
+    if(init)
+        handler.initJoints();
+
     handler.sendRef(ref,*joint);
+    array<int,6> reads = handler.readJoints();
+
+    puts("Leido:");
+    for (int i = 0;i<6; i++){
+        printf("J%d: %d\n",i+1,reads[i]);
+    }
+
+    
+
     return 0;
 
 }
