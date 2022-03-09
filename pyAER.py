@@ -39,10 +39,10 @@ class pyEDScorbotTool:
         '''
         #Initialize GUI: create root Tk object
         self.visible = visible
-        self.root = tk.Tk()
+        
         if self.visible:
         
-
+            self.root = tk.Tk()
                 #Set the icon
             self.root.iconphoto(False,tk.PhotoImage(file="./atc.png"))
 
@@ -51,8 +51,17 @@ class pyEDScorbotTool:
         self.d["Motor Config"] = {}
         self.d["Joints"] = {}
         self.d["Scan Parameters"] = {}
+<<<<<<< HEAD
         self.d["Dynapse2"] = {}
         
+=======
+        self.j1 = -1
+        self.j2 = -1
+        self.j3 = -1
+        self.j4 = -1
+        self.j5 = -1
+        self.j6 = -1
+>>>>>>> 9e55fa461f025528b661a958cdaf19da40741215
         #Standalone variable to control if USB is enabled
         self.checked = False
 
@@ -345,7 +354,12 @@ class pyEDScorbotTool:
             ttk.Button(labelframe,text="Reset J5 counter",command=self.Reset_J5_pos).grid(column=2,row=15,sticky=(tk.W,tk.E))
             ttk.Button(labelframe,text="Reset J6 counter",command=self.Reset_J6_pos).grid(column=3,row=15,sticky=(tk.W,tk.E))
             ttk.Button(labelframe,text="Start/Stop recording",command=self.toggle_record).grid(column=1,row=16,sticky=(tk.W,tk.E))
+<<<<<<< HEAD
             ttk.Button(labelframe,text="DYNAPSE2",command=self.send_dynapse2).grid(column=2,row=16,sticky=(tk.W,tk.E))
+=======
+            ttk.Button(labelframe,text="Test",command=self.test_load).grid(column=2,row=16,sticky=(tk.W,tk.E))
+
+>>>>>>> 9e55fa461f025528b661a958cdaf19da40741215
 
     def render_usbEnable(self,row,col):
         '''
@@ -481,7 +495,55 @@ class pyEDScorbotTool:
             jsondict = json.dumps(d,indent=2)
             print("Settings generated: \n"+jsondict)
                 
-    def loadConfig(self):
+    def loadConfig(self,visible=True):
+        '''
+        Load configuration in an extern .json file
+
+        This function allows users to load a json file containing
+        a valid configuration file, just as the ones generated with 
+        the dumpConfig function
+
+        Also works without gui, just pass the correspondent argument
+        to the --config option
+        '''
+        
+         #Open file dialog to select config file
+        filename = filedialog.askopenfile(mode="r")
+        #Read file contents and parse as JSON
+        obj = filename.read()
+        j = json.loads(obj)
+
+        if visible:
+            #Then try to fit said JSON in the app variables
+            try:
+                for key in self.d["Motor Config"].keys():
+                    self.d["Motor Config"][key].set(j["Motor Config"][key])
+                
+                for key in self.d["Scan Parameters"].keys():
+                    self.d["Scan Parameters"][key].set(j["Scan Parameters"][key])
+                
+                return
+            #If we catch a KeyError, the config is invalid, so alert the user and end execution
+            except KeyError:
+                self.alert("Invalid config file")
+                return
+        else:
+            
+            d = {}
+            d["Motor Config"] = {}
+            d["Joints"] = {}
+            d["Scan Parameters"] = {}
+
+            for config,configdict in j.items():
+                for k,v in configdict.items():
+                    d[config][k] = v
+
+                
+            self.d = d
+
+
+            
+    def test_load(self,visible=False):
         '''
         Load configuration in an extern .json file
 
@@ -496,19 +558,37 @@ class pyEDScorbotTool:
         obj = filename.read()
         j = json.loads(obj)
 
-        #Then try to fit said JSON in the app variables
-        try:
-            for key in self.d["Motor Config"].keys():
-                self.d["Motor Config"][key].set(j["Motor Config"][key])
+        if visible:
+            #Then try to fit said JSON in the app variables
+            try:
+                for key in self.d["Motor Config"].keys():
+                    self.d["Motor Config"][key].set(j["Motor Config"][key])
+                
+                for key in self.d["Scan Parameters"].keys():
+                    self.d["Scan Parameters"][key].set(j["Scan Parameters"][key])
+                
+                return
+            #If we catch a KeyError, the config is invalid, so alert the user and end execution
+            except KeyError:
+                self.alert("Invalid config file")
+                return
+        else:
             
-            for key in self.d["Scan Parameters"].keys():
-                self.d["Scan Parameters"][key].set(j["Scan Parameters"][key])
-            
-            return
-        #If we catch a KeyError, the config is invalid, so alert the user and end execution
-        except KeyError:
-            self.alert("Invalid config file")
-            return
+            d = {}
+            d["Motor Config"] = {}
+            d["Joints"] = {}
+            d["Scan Parameters"] = {}
+
+            for config,configdict in j.items():
+                for k,v in configdict.items():
+                    d[config][k] = v
+
+                
+            self.d = d
+
+
+    
+
     
     def render_cameras(self,row,col):
         
@@ -601,34 +681,53 @@ class pyEDScorbotTool:
             self.array = []
         self.record = not self.record
 
+    def print_updates(self,):
+        
+        self.j1 = self.execute_script("bash/readJoint.bash 1")
+        self.j2 = self.execute_script("bash/readJoint.bash 2")
+        self.j3 = self.execute_script("bash/readJoint.bash 3")
+        self.j4 = self.execute_script("bash/readJoint.bash 4")
+        self.j5 = self.execute_script("bash/readJoint.bash 5")
+        self.j6 = self.execute_script("bash/readJoint.bash 6")
+
+        print("Joint\tPosition\tHex\nJ1\t{}\t{}\nJ2\t{}\t{}\nJ3\t{}\t{}\nJ4\t{}\t{}\nJ5\t{}\t{}\nJ6\t{}\t{}\n"
+        .format(self.j1,hex(self.j1),self.j2,hex(self.j2),self.j3,hex(self.j3),self.j4,hex(self.j4),self.j5,hex(self.j5),self.j6,hex(self.j6))
+        ,end='/r')
+
 
     def update(self,ref=None):
 
-        if self.checked.get():
+        if self.visible:
+            if self.checked.get():
 
-            j1 = self.Read_J1_gui()
-            j2 = self.Read_J2_gui()
-            j3 = self.Read_J3_gui()
-            j4 = self.Read_J4_gui()
-            j5 = self.Read_J5_gui()
-            j6 = self.Read_J6_gui()
-            if self.record:
-                motors = self.d["Motor Config"]
-                ts = self.millis_now()
-                positions = [j1,j2,j3,j4,j5,j6]
-                aux = []
-                for i in range(6):
-                    label = "ref_M"+str(i+1)
-                    if ref == None:
-                        data = [motors[label].get(),positions[i]]
-                    else:
-                        data = [motors[label].get(),positions[i],ref[i]]
-                    aux.append(data)
-                aux.append(ts)
-                self.array.append(aux)
+                j1 = self.Read_J1_gui()
+                j2 = self.Read_J2_gui()
+                j3 = self.Read_J3_gui()
+                j4 = self.Read_J4_gui()
+                j5 = self.Read_J5_gui()
+                j6 = self.Read_J6_gui()
+                if self.record:
+                    motors = self.d["Motor Config"]
+                    ts = self.millis_now()
+                    positions = [j1,j2,j3,j4,j5,j6]
+                    aux = []
+                    for i in range(6):
+                        label = "ref_M"+str(i+1)
+                        if ref == None:
+                            data = [motors[label].get(),positions[i]]
+                        else:
+                            data = [motors[label].get(),positions[i],ref[i]]
+                        aux.append(data)
+                    aux.append(ts)
+                    self.array.append(aux)
+                
 
-        if self.updating:
-            self.root.after(1,self.update)
+            if self.updating:
+                self.root.after(1,self.update)
+        
+            
+            
+            
 
     def ConfigureInit(self):
         
@@ -3301,6 +3400,13 @@ class pyEDScorbotTool:
         tmp = proc.stdout.read()
         return tmp
   
+    def execute_script(self,script):
+        cmd = script
+        proc = proc = subprocess.Popen(cmd.split(' '), stdout=subprocess.PIPE)
+        tmp = proc.stdout.read()
+        return tmp
+        
+
     def calculate_error(self,motor, gt, cmd, t='ref'):
         if t not in ['ref','angle','counter']:
             raise TypeError('Type not supported. Type must be one of ["ref","angle","counter"]')
