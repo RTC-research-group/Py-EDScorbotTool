@@ -51,17 +51,14 @@ class pyEDScorbotTool:
         self.d["Motor Config"] = {}
         self.d["Joints"] = {}
         self.d["Scan Parameters"] = {}
-<<<<<<< HEAD
         self.d["Dynapse2"] = {}
         
-=======
         self.j1 = -1
         self.j2 = -1
         self.j3 = -1
         self.j4 = -1
         self.j5 = -1
         self.j6 = -1
->>>>>>> 9e55fa461f025528b661a958cdaf19da40741215
         #Standalone variable to control if USB is enabled
         self.checked = False
 
@@ -354,12 +351,7 @@ class pyEDScorbotTool:
             ttk.Button(labelframe,text="Reset J5 counter",command=self.Reset_J5_pos).grid(column=2,row=15,sticky=(tk.W,tk.E))
             ttk.Button(labelframe,text="Reset J6 counter",command=self.Reset_J6_pos).grid(column=3,row=15,sticky=(tk.W,tk.E))
             ttk.Button(labelframe,text="Start/Stop recording",command=self.toggle_record).grid(column=1,row=16,sticky=(tk.W,tk.E))
-<<<<<<< HEAD
             ttk.Button(labelframe,text="DYNAPSE2",command=self.send_dynapse2).grid(column=2,row=16,sticky=(tk.W,tk.E))
-=======
-            ttk.Button(labelframe,text="Test",command=self.test_load).grid(column=2,row=16,sticky=(tk.W,tk.E))
-
->>>>>>> 9e55fa461f025528b661a958cdaf19da40741215
 
     def render_usbEnable(self,row,col):
         '''
