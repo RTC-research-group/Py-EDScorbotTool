@@ -43,5 +43,11 @@
     "scan_Init_Value": -100,
     "scan_Step_Value": 10,
     "scan_Wait_Time": 100
+  },
+  "Dynapse2": {
+    "Threshold1": 0,
+    "Reset1": 0,
+    "Threshold2": 0,
+    "Reset2": 0
   }
 }

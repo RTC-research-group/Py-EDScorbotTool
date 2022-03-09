@@ -51,6 +51,7 @@ class pyEDScorbotTool:
         self.d["Motor Config"] = {}
         self.d["Joints"] = {}
         self.d["Scan Parameters"] = {}
+        self.d["Dynapse2"] = {}
         
         #Standalone variable to control if USB is enabled
         self.checked = False
@@ -246,6 +247,45 @@ class pyEDScorbotTool:
 
         return labelframe
 
+    def render_dynapse2(self, row, col):
+        '''
+        Create the Threshold and Reset counters paramters
+
+        Each variable created is stored in the "Dynapse2" dictionary 
+        and can be accessed directly using the name that appears on the graphical interface
+
+        Args:
+            row (int): Row of the grid in which the inputs will be displayed
+            col (int): Column of the grid in which the inputs will be displayed
+
+        Returns:
+            Labelframe in which the inputs are rendered
+        '''
+        labels = ["Threshold1", "Reset1", "Threshold2", "Reset2"]
+        labelframe=None
+        if self.visible:
+            labelframe = ttk.LabelFrame(self.root, text="Dynapse2")
+            labelframe.grid(column=col, row=row, sticky=(
+                tk.N, tk.W), padx=5, pady=5)
+        th1_value = tk.IntVar()
+        rst1_value = tk.IntVar()
+        th2_value = tk.IntVar()
+        rst2_time = tk.IntVar()
+
+        variables = [th1_value, rst1_value, th2_value, rst2_time]
+        for var, row_, label in zip(variables, range(1, len(variables)+1), labels):
+            labeltext = label
+            self.d["Dynapse2"][labeltext] = var
+            if self.visible:
+                ttk.Entry(labelframe, width=7, textvariable=var).grid(
+                    column=2, row=row_, sticky=tk.W)
+                
+                ttk.Label(labelframe, text=labeltext).grid(
+                    column=1, row=row_, sticky=tk.W)
+            
+
+        return labelframe
+
     def render_buttons(self, row, col):
         '''
         Create the buttons that will be bounded to  all different usable actions
@@ -305,7 +345,7 @@ class pyEDScorbotTool:
             ttk.Button(labelframe,text="Reset J5 counter",command=self.Reset_J5_pos).grid(column=2,row=15,sticky=(tk.W,tk.E))
             ttk.Button(labelframe,text="Reset J6 counter",command=self.Reset_J6_pos).grid(column=3,row=15,sticky=(tk.W,tk.E))
             ttk.Button(labelframe,text="Start/Stop recording",command=self.toggle_record).grid(column=1,row=16,sticky=(tk.W,tk.E))
-
+            ttk.Button(labelframe,text="DYNAPSE2",command=self.send_dynapse2).grid(column=2,row=16,sticky=(tk.W,tk.E))
 
     def render_usbEnable(self,row,col):
         '''
@@ -423,12 +463,16 @@ class pyEDScorbotTool:
         d["Motor Config"] = {}
         d["Joints"] = {}
         d["Scan Parameters"] = {}
+        d["Dynapse2"] = {}
 
         for key in self.d["Motor Config"].keys():
             d["Motor Config"][key] =  self.d["Motor Config"][key].get()
         
         for key in self.d["Scan Parameters"].keys():
             d["Scan Parameters"][key] = self.d["Scan Parameters"][key].get()
+
+        for key in self.d["Dynapse2"].keys():
+            d["Dynapse2"][key] = self.d["Dynapse2"][key].get()
 
         #Once we've collected all variables, dump dictionary d as json to config.json
         with open('config.json','w') as f:
@@ -512,6 +556,7 @@ class pyEDScorbotTool:
         #self.render_joints_hex(4,1)
         self.render_buttons(3, 3)
         self.render_usbEnable(5,1)
+        self.render_dynapse2(4,1)
         #self.render_cameras(4,2)
         self.init_config()
         self.update()
@@ -3019,6 +3064,9 @@ class pyEDScorbotTool:
             
             for key in self.d["Scan Parameters"].keys():
                 self.d["Scan Parameters"][key].set(j["Scan Parameters"][key])
+
+            for key in self.d["Dynapse2"].keys():
+                self.d["Dynapse2"][key].set(j["Dynapse2"][key])
             
             return
         #If we cacth a KeyError, the config is invalid, so alert the user and end execution
@@ -3224,6 +3272,22 @@ class pyEDScorbotTool:
         self.sendCommand16( 0xA2,  ((self.d["Motor Config"]["ref_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M6"].get()) & 0xFF), True) #Ref M6 0
         self.sendCommand16( 0xA2,  ((self.d["Motor Config"]["ref_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M6"].get()) & 0xFF), True) #Ref M6 0
         # pass
+
+    def send_dynapse2(self):
+        '''
+        Sends dynapse2 filter threshold and reset for joint1 now.
+
+        '''
+        
+        self.sendCommand16( 0xE1,  ((self.d["Dynapse2"]["Threshold1"].get() >> 8) & 0xFF),  ((self.d["Dynapse2"]["Threshold1"].get()) & 0xFF), True) #
+        print("Reference sent:",self.d["Dynapse2"]["Threshold1"].get())
+        self.sendCommand16( 0xE1,  ((self.d["Dynapse2"]["Threshold1"].get() >> 8) & 0xFF),  ((self.d["Dynapse2"]["Threshold1"].get()) & 0xFF), True) #
+
+        self.sendCommand16( 0xE9,  ((self.d["Dynapse2"]["Reset1"].get() >> 8) & 0xFF),  ((self.d["Dynapse2"]["Reset1"].get()) & 0xFF), True) #
+        print("Reference sent:",self.d["Dynapse2"]["Reset1"].get())
+        self.sendCommand16( 0xE9,  ((self.d["Dynapse2"]["Reset1"].get() >> 8) & 0xFF),  ((self.d["Dynapse2"]["Reset1"].get()) & 0xFF), True) #
+        # pass
+
 
     def devmem(self,addr,length,data=None):
         cmd = "devmem " + hex(addr) + " " + str(length)
