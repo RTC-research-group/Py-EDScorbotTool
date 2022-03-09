@@ -122,7 +122,7 @@ class pyEDScorbotTool:
 
         '''
         labels = ["EI_FD_bank3_18bits", "PD_FD_bank3_22bits",
-                  "PI_FD_bank3_18bits", "leds", "ref", "spike_expansor"]
+                  "PI_FD_bank3_18bits", "leds", "ref", "spike_expansor","ref_freq_divider"]
         labelframe = None
         
         labelframe = ttk.LabelFrame(
@@ -135,9 +135,10 @@ class pyEDScorbotTool:
         leds = tk.IntVar()
         ref = tk.IntVar()
         spike_expansor = tk.IntVar()
+        spike_freq_divider = tk.IntVar()
         
         variables = [EI_FD_bank3_18bits, PF_FD_bank3_22bits,
-                        PI_FD_bank3_18bits, leds, ref, spike_expansor, labelframe]
+                        PI_FD_bank3_18bits, leds, ref, spike_expansor, spike_freq_divider,labelframe]
 
         for var, row_, label in zip(variables, range(1, len(variables)), labels):
 
@@ -741,6 +742,7 @@ class pyEDScorbotTool:
                 for i in range(0,6):
                     #Motor 1
                     self.sendCommand16(0x00,0x00,0x03,True) #Leds M1
+                    self.sendCommand16(0x01,0x00,0x01,True) #spike gen freq divider
                     self.sendCommand16(0x03,0x00,0x0f,True) #I banks disabled M1
                     self.sendCommand16(0x03,0x00,0x03,True) #I banks enabled Bank3 M1
                     self.sendCommand16(0x02,0x00,0x00,True) #Ref M1 0
@@ -773,6 +775,7 @@ class pyEDScorbotTool:
                     
                     #Motor 2
                     self.sendCommand16( 0x20,  (0x00), (0x03), True); #LEDs M2
+                    self.sendCommand16( 0x21,  0x00,   0x01   ,True) #spike gen freq divider
                     self.sendCommand16( 0x23,  (0x00),  (0x0f), True); #I banks disabled M2
                     self.sendCommand16( 0x23,0x00,0x03,True) #I banks enabled Bank3 M1
                     self.sendCommand16( 0x22,  (0x00),  (0x00), True); #Ref M2 0
@@ -804,6 +807,7 @@ class pyEDScorbotTool:
                     #Motor 3
 
                     self.sendCommand16( 0x40,  (0x00), (0x03), True); #LEDs M3
+                    self.sendCommand16( 0x41,  0x00,   0x01   ,True) #spike gen freq divider
                     self.sendCommand16( 0x43,  (0x00),  (0x0f), True); #I banks disabled M3
                     self.sendCommand16( 0x43,0x00,0x03,True) #I banks enabled Bank3 M1
                     self.sendCommand16( 0x42,  (0x00),  (0x00), True); #Ref M3 0
@@ -836,6 +840,7 @@ class pyEDScorbotTool:
                     #Motor 4
 
                     self.sendCommand16( 0x60,  (0x00), (0x03), True); #LEDs M4
+                    self.sendCommand16( 0x61,  0x00,   0x01   ,True) #spike gen freq divider
                     self.sendCommand16( 0x62,  (0x00),  (0x00), True); #Ref M4 0
                     self.sendCommand16( 0x63,  (0x00),  (0x0f), True); #I banks disabled M4
                     self.sendCommand16( 0x64,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M4
@@ -864,6 +869,7 @@ class pyEDScorbotTool:
                     #Motor 5
 
                     self.sendCommand16( 0x80,  (0x00), (0x03), True); #LEDs M5
+                    self.sendCommand16( 0x81,  0x00,   0x01   ,True) #spike gen freq divider
                     self.sendCommand16( 0x82,  (0x00),  (0x00), True); #Ref M5 0
                     self.sendCommand16( 0x83,  (0x00),  (0x0f), True); #I banks disabled M5
                     self.sendCommand16( 0x84,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M5
@@ -892,6 +898,7 @@ class pyEDScorbotTool:
                     #Motor 6
 
                     self.sendCommand16( 0xA0,  (0x00), (0x03), True); #LEDs M6
+                    self.sendCommand16( 0xA1,  0x00,   0x01   ,True) #spike gen freq divider
                     self.sendCommand16( 0xA2,  (0x00),  (0x00), True); #Ref M6 0
                     self.sendCommand16( 0xA3,  (0x00),  (0x0f), True); #I banks disabled M6
                     self.sendCommand16( 0xA4,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M6
@@ -938,6 +945,7 @@ class pyEDScorbotTool:
         #PI_FD_bank0_14bits_M1 = 512
         #PI_FD_bank0_16bits_M1 = 512
         self.sendCommand16( 0,  (0x00), ((self.d["Motor Config"]["leds_M1"].get()) & 0xFF), True) #LEDs M1
+        self.sendCommand16(0x01,((self.d["Motor Config"]["ref_freq_divider_M1"].get() >> 8) & 0xFF),(self.d["Motor Config"]["ref_freq_divider_M1"].get() & 0xFF),True) #spike gen freq divider
         self.sendCommand16( 0x03,  (0x00),  ((3)&0xFF), True) #I banks disabled M1
 #        self.sendCommand16( 0x04,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M1
 #        self.sendCommand16( 0x05,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M1
@@ -975,6 +983,7 @@ class pyEDScorbotTool:
         #PI_FD_bank0_14bits_M2 = 512
         #PI_FD_bank0_16bits_M2 = 512
         self.sendCommand16( 0x20,  (0x00), ((self.d["Motor Config"]["leds_M2"].get()) & 0xFF), True) #LEDs M2
+        self.sendCommand16( 0x21,  ((self.d["Motor Config"]["ref_freq_divider_M1"].get() >> 8) & 0xFF),(self.d["Motor Config"]["ref_freq_divider_M1"].get() & 0xFF),True) #spike gen freq divider
         self.sendCommand16( 0x23,  (0x00),  ((3)&0xFF), True) #I banks disabled M2
 #        self.sendCommand16( 0x24,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M2
 #        self.sendCommand16( 0x25,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M2
@@ -1012,6 +1021,7 @@ class pyEDScorbotTool:
         #PI_FD_bank0_14bits_M3 = 512
         #PI_FD_bank0_16bits_M3 = 512
         self.sendCommand16( 0x40,  (0x00), ((self.d["Motor Config"]["leds_M3"].get()) & 0xFF), True) #LEDs M3
+        self.sendCommand16( 0x41,  ((self.d["Motor Config"]["ref_freq_divider_M1"].get() >> 8) & 0xFF),(self.d["Motor Config"]["ref_freq_divider_M1"].get() & 0xFF),True) #spike gen freq divider
         self.sendCommand16( 0x43,  (0x00),  ((3)&0xFF), True) #I banks disabled M3
 #        self.sendCommand16( 0x44,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M3
 #        self.sendCommand16( 0x45,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M3
@@ -1049,6 +1059,7 @@ class pyEDScorbotTool:
         #PI_FD_bank0_14bits_M4 = 512
         #PI_FD_bank0_16bits_M4 = 512
         self.sendCommand16( 0x60,  (0x00), ((self.d["Motor Config"]["leds_M4"].get()) & 0xFF), True) #LEDs M4
+        self.sendCommand16( 0x61,  ((self.d["Motor Config"]["ref_freq_divider_M1"].get() >> 8) & 0xFF),(self.d["Motor Config"]["ref_freq_divider_M1"].get() & 0xFF),True) #spike gen freq divider
         self.sendCommand16( 0x63,  (0x00),  ((3)&0xFF), True) #I banks disabled M4
 #        self.sendCommand16( 0x64,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M4
 #        self.sendCommand16( 0x65,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M4
@@ -1086,6 +1097,7 @@ class pyEDScorbotTool:
         #PI_FD_bank0_14bits_M5 = 512
         #PI_FD_bank0_16bits_M5 = 512
         self.sendCommand16( 0x80,  (0x00), ((self.d["Motor Config"]["leds_M5"].get()) & 0xFF), True) #LEDs M5
+        self.sendCommand16( 0x81,  ((self.d["Motor Config"]["ref_freq_divider_M1"].get() >> 8) & 0xFF),(self.d["Motor Config"]["ref_freq_divider_M1"].get() & 0xFF),True) #spike gen freq divider
         self.sendCommand16( 0x83,  (0x00),  ((3)&0xFF), True) #I banks disabled M5
 #        self.sendCommand16( 0x84,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M5
 #        self.sendCommand16( 0x85,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M5
@@ -1123,6 +1135,7 @@ class pyEDScorbotTool:
         #PI_FD_bank0_14bits_M6 = 512
         #PI_FD_bank0_16bits_M6 = 512
         self.sendCommand16( 0xA0,  (0x00), ((self.d["Motor Config"]["leds_M6"].get()) & 0xFF), True) #LEDs M6
+        self.sendCommand16( 0xA1,  ((self.d["Motor Config"]["ref_freq_divider_M1"].get() >> 8) & 0xFF),(self.d["Motor Config"]["ref_freq_divider_M1"].get() & 0xFF),True) #spike gen freq divider
         self.sendCommand16( 0xA3,  (0x00),  ((3)&0xFF), True) #I banks disabled M6
 #        self.sendCommand16( 0xA4,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M6
 #        self.sendCommand16( 0xA5,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M6
