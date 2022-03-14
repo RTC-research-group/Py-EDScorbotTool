@@ -4,11 +4,10 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <unistd.h>
-#include <string>
+#include "include/EDScorbot.hpp"
 #include <arpa/inet.h>
 #include <string.h>
 #include <stdio.h>
-#include "include/EDScorbot.hpp"
 #include <stdlib.h>
 #define MAX_BYTES 1500
 #define SERVER_PORT htons(9999)
@@ -35,7 +34,7 @@ int main(int argc, char *argv[])
        Necessary so that server can use a specific port */
     bind(serverSock, (struct sockaddr *)&serverAddr, sizeof(struct sockaddr));
     while (1)
-    {
+    {   
         // wait for a client
         /* listen (this socket, request queue length) */
         listen(serverSock, 1);
@@ -55,10 +54,22 @@ int main(int argc, char *argv[])
             n = read(clientSock, buffer, MAX_BYTES);
             // cout << "Confirmation code  " << n << endl;
             // cout << "Server received:  " << buffer << endl;
-#ifdef EDS_VERBOSE            
+#ifdef EDS_VERBOSE
             printJson(buffer);
-#endif      
-//Añadir maquina de estados
+#endif
+            // Añadir maquina de estados
+            int estado = 0;
+            for (int i = 0; i < strlen(buffer);i++){
+                char c = buffer[i];
+                switch(estado){
+                    
+                    case 0:break;
+
+                    default:break;
+
+                }
+            }
+
             if (strcmp(buffer, "refJ1 50") == 0)
             {
                 puts("blop");
@@ -67,7 +78,7 @@ int main(int argc, char *argv[])
 
             strcpy(buffer, "test");
             n = write(clientSock, buffer, strlen(buffer));
-            cout << "Confirmation code  " << n << endl;
+            std::cout << "Confirmation code  " << n << std::endl;
         } while (go);
     }
     return 0;
@@ -76,6 +87,7 @@ int main(int argc, char *argv[])
 int printJson(const char *json)
 {
     FILE *f = fopen("./tmp_config.json", "w");
-    fprintf(f, "%s", json);
+    int written = fprintf(f, "%s", json);
     fclose(f);
+    return written;
 };

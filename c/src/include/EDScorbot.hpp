@@ -13,10 +13,10 @@
 #define JOINT_STEP 0x20
 
 
-using namespace std;
+//using namespace std;
 using json = nlohmann::json;
 
-static map<string, int> addresses = {
+static std::map<std::string, int> addresses = {
         {"M1", 0x00},
         {"M2", 0x20},
         {"M3", 0x40},
@@ -37,8 +37,8 @@ private:
     std::thread* t;
 public:
     int address;
-    string id;
-    map<string, int> controller = {
+    std::string id;
+    std::map<std::string, int> controller = {
         {"EI_FD_bank3_18bits", 0},
         {"PD_FD_bank3_22bits", 0},
         {"PI_FD_bank3_18bits", 0},
@@ -47,7 +47,7 @@ public:
         {"spike_expansor", 0}};
 
 
-    EDScorbotJoint(int EI_FD, int PD_FD, int PI_FD, int leds, int spike_exp, int address, string id)
+    EDScorbotJoint(int EI_FD, int PD_FD, int PI_FD, int leds, int spike_exp, int address, std::string id)
     {
         controller["EI_FD_bank3_18bits"] = EI_FD;
         controller["PD_FD_bank3_22bits"] = PD_FD;
@@ -58,7 +58,7 @@ public:
         this->id = id;
         this->address = addresses[id];
     };
-    EDScorbotJoint(string id)
+    EDScorbotJoint(std::string id)
     {
         this->id = id;
         this->address = addresses[id];
@@ -80,10 +80,10 @@ public:
     EDScorbotJoint j1 = {"M1"}, j2 = {"M2"}, j3 = {"M3"}, j4 = {"M4"}, j5 = {"M5"}, j6 = {"M6"};
 
     EDScorbot();
-    EDScorbot(string);
+    EDScorbot(std::string);
     ~EDScorbot();
     void initJoints();
-    void configureInit(){
+    void configureInit();
     void configureSPID(EDScorbotJoint);
     void configureInit(EDScorbotJoint);
     void searchHome(EDScorbotJoint);
@@ -91,12 +91,13 @@ public:
     void resetCounter(EDScorbotJoint);
     void configureLeds(int, EDScorbotJoint);
     void sendFPGAReset();
-    void loadConfig(string);
-    void dumpConfig(string);
+    void loadConfig(std::string);
+    void dumpConfig(std::string);
 #ifdef THREADED
     void EDScorbot::readJoints();
     bool exec;
 #else
-    array<int, 6> readJoints();
+    std::array<int, 6> readJoints();
 #endif
+    
 };
