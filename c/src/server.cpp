@@ -12,10 +12,13 @@
 #define MAX_BYTES 1500
 #define SERVER_PORT htons(9999)
 
-int printJson(const char *json);
+int fprintJson(const char *json);
+int fprintTrajectory(const char *tray);
 
 int main(int argc, char *argv[])
 {
+
+    EDScorbot handler("./initial_config.json");
     // Buffer for incoming data
     char buffer[MAX_BYTES];
     // We will store return values of functions in n
@@ -34,7 +37,7 @@ int main(int argc, char *argv[])
        Necessary so that server can use a specific port */
     bind(serverSock, (struct sockaddr *)&serverAddr, sizeof(struct sockaddr));
     while (1)
-    {   
+    {
         // wait for a client
         /* listen (this socket, request queue length) */
         listen(serverSock, 1);
@@ -44,8 +47,8 @@ int main(int argc, char *argv[])
         socklen_t sin_size = sizeof(struct sockaddr_in);
         // Accept incoming connection
         int clientSock = accept(serverSock, (struct sockaddr *)&clientAddr, &sin_size);
-
         int go = 0;
+
         do
         {
             bzero(buffer, MAX_BYTES);
@@ -55,39 +58,90 @@ int main(int argc, char *argv[])
             // cout << "Confirmation code  " << n << endl;
             // cout << "Server received:  " << buffer << endl;
 #ifdef EDS_VERBOSE
-            printJson(buffer);
+            fprintJson(buffer);
 #endif
             // Añadir maquina de estados
-            int estado = 0;
-            for (int i = 0; i < strlen(buffer);i++){
-                char c = buffer[i];
-                switch(estado){
-                    
-                    case 0:break;
 
-                    default:break;
-
-                }
-            }
-
-            if (strcmp(buffer, "refJ1 50") == 0)
+            if (strcmp(buffer, "[0]") == 0)
             {
-                puts("blop");
-                // handler.sendRef(50,handler.j1);
+                char w_buffer[10] = "[OK]";
+                n = write(clientSock, w_buffer, strlen(w_buffer));
+
+                // handler.configureInit();
+                //  handler.sendRef(50,handler.j1);
             }
 
-            strcpy(buffer, "test");
-            n = write(clientSock, buffer, strlen(buffer));
-            std::cout << "Confirmation code  " << n << std::endl;
+            if (strcmp(buffer, "[1]") == 0)
+            {
+                char w_buffer[10] = "[OK]";
+                n = write(clientSock, w_buffer, strlen(w_buffer));
+
+                handler.initJoints();
+            }
+
+            if (strcmp(buffer, "[2]") == 0)
+            {
+                char w_buffer[10] = "[OK]";
+                n = write(clientSock, w_buffer, strlen(w_buffer));
+
+                // handler.resetCount();
+            }
+
+            if (strcmp(buffer, "[3]") == 0)
+            {
+                char w_buffer[10] = "[OK]";
+                n = write(clientSock, w_buffer, strlen(w_buffer));
+                usleep(10000);
+                n = read(clientSock, buffer, MAX_BYTES);
+                char delim = ',';
+                char *j = (strtok(buffer, (const char *)delim));
+                printf("char* j: %s\n", j);
+                // Seguir probando
+                // Ref de 1 en 1 --> [3] ; [j,ref]
+            }
+
+            if (strcmp(buffer, "[4]") == 0)
+            {
+                // Enviar trayectoria --> [4]
+                char w_buffer[10] = "[OK]";
+                n = write(clientSock, w_buffer, strlen(w_buffer));
+                usleep(10000);
+                n = read(clientSock, buffer, MAX_BYTES);
+                fprintTrajectory(buffer);
+                // Probar que esto funciona y que se abre el .npy correctamente
+            }
+
+            if (strcmp(buffer, "[5]") == 0)
+            {
+                // Enviar .json configuracion --> [5] ; datos
+                char w_buffer[10] = "[OK]";
+                n = write(clientSock, w_buffer, strlen(w_buffer));
+                usleep(10000);
+                n = read(clientSock, buffer, MAX_BYTES);
+                fprintJson(buffer);
+            }
+
+            // strcpy(buffer, "test");
+            // n = write(clientSock, buffer, strlen(buffer));
+            // std::cout << "Confirmation code  " << n << std::endl;
         } while (go);
     }
+
     return 0;
 };
 
-int printJson(const char *json)
+int fprintJson(const char *json)
 {
     FILE *f = fopen("./tmp_config.json", "w");
     int written = fprintf(f, "%s", json);
+    fclose(f);
+    return written;
+};
+
+int fprintTrajectory(const char *tray)
+{
+    FILE *f = fopen("./tmp_tray.npy", "wb");
+    int written = fprintf(f, "%s", tray);
     fclose(f);
     return written;
 };
