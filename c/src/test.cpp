@@ -6,7 +6,9 @@ int main(int argc, char* argv[])
     int j = atoi(argv[1]);
     int ref = atoi(argv[2]);
     int init = atoi(argv[3]);
-    EDScorbot handler("./initial_config.json");
+    char* config_file = argv[4];
+    EDScorbot handler(config_file);
+    
     EDScorbotJoint* joint;
     switch (j)
     {
