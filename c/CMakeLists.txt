@@ -4,7 +4,7 @@ project(edscorbot_runtime)
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++17)
 
-add_subdirectory("src/json")
+add_subdirectory("json")
 #set(nlohmann_json_DIR "/home/enrique/Trabajo/Py-EDScorbotTool/c/src/json/cmake")
 #find_package(nlohmann_json 3.10.5 REQUIRED)
 ## Find catkin macros and libraries
@@ -37,6 +37,7 @@ target_include_directories(server PUBLIC "c/src/")
 
 #TARGET_LINK_LIBRARIES(test_target PRIVATE ${DV_LIBRARIES})
 TARGET_LINK_LIBRARIES(test_edscorbot PRIVATE nlohmann_json::nlohmann_json)
+SET(CMAKE_BUILD_TYPE "Debug")
 TARGET_LINK_LIBRARIES(server PRIVATE nlohmann_json::nlohmann_json)
 
 #INSTALL(TARGETS test_edscorbot DESTINATION "/usr/share/dv/modules")
@@ -45,6 +46,7 @@ TARGET_LINK_LIBRARIES(server PRIVATE nlohmann_json::nlohmann_json)
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 SET(CMAKE_BUILD_TYPE "Debug")
+
 
 #target_include_directories(caller PUBLIC "/home/ubuntu/libs/ros_lib/")
 #target_include_directories(caller PUBLIC "/home/ubuntu/ros_app/src/movement/include")
