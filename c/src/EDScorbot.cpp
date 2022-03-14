@@ -179,6 +179,18 @@ void EDScorbot::initJoints()
         data = base | REF_ADDR << 16;
     }
 };
+
+
+void EDScorbot::configureInit(){
+    //Comprobar que hace que los contadores se reseteen
+    EDScorbotJoint* joints[6] = {&j1, &j2, &j3, &j4, &j5, &j6};
+    int data, base;
+    for (int i = 0; i < 6; i++)
+    {
+        int a = 1;
+    }
+}
+
 #ifdef THREADED
 
 void EDScorbot::read_threaded(){

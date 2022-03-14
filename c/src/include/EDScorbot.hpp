@@ -83,6 +83,7 @@ public:
     EDScorbot(string);
     ~EDScorbot();
     void initJoints();
+    void configureInit(){
     void configureSPID(EDScorbotJoint);
     void configureInit(EDScorbotJoint);
     void searchHome(EDScorbotJoint);
