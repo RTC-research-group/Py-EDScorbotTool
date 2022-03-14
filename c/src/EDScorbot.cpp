@@ -86,7 +86,7 @@ EDScorbot::EDScorbot(string config_path)
         }
     }
     // Create array to iterate over joints
-    array<EDScorbotJoint *, 6> joints = {{&j1, &j2, &j3, &j4, &j5, &j6}};
+    std::array<EDScorbotJoint *, 6> joints = {{&j1, &j2, &j3, &j4, &j5, &j6}};
     int i = 1;
     for (const auto &j : joints)
     { // Assign each joint its correct address -- 0x00,0x20,...,0xA0
@@ -218,7 +218,7 @@ void EDScorbot::stopRead(){
 
 #else
 
-array<int, 6> EDScorbot::readJoints()
+std::array<int, 6> EDScorbot::readJoints()
 {
     // int base_address = 0x00;//To be defined
     // int offset = 0x20;
@@ -232,7 +232,7 @@ array<int, 6> EDScorbot::readJoints()
     j5 = this->bram_ptr[5];
     j6 = this->bram_ptr[6];
 
-    array<int, 6> ret = {j1, j2, j3, j4, j5, j6};
+    std::array<int, 6> ret = {j1, j2, j3, j4, j5, j6};
     return ret;
 };
 
