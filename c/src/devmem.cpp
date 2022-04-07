@@ -17,7 +17,7 @@ int sendCommand16(uchar addr, uchar b1, uchar b2, int *mem)
 int *open_devmem()
 {
     unsigned int bram_size = 0xFF;
-    off_t bram_pbase = 0x43c00000; // physical base address
+    off_t bram_pbase = 0x44000000; // physical base address
     int *bram_ptr;
     int fd;
 
