@@ -8,9 +8,10 @@
 using namespace std;
 using json = nlohmann::json;
 
-static int j1_t,j2_t,j3_t,j4_t,j5_t,j6_t;
+static int j1_t, j2_t, j3_t, j4_t, j5_t, j6_t;
 
-EDScorbot::~EDScorbot(){
+EDScorbot::~EDScorbot()
+{
 #ifdef THREADED
 
     stopRead();
@@ -21,7 +22,6 @@ EDScorbot::~EDScorbot(){
 // Constructor
 // string config_path -> relative path to json configuration file
 // Initializes configuration for SPID controllers of EDScorbot
-
 
 EDScorbot::EDScorbot(string config_path)
 {
@@ -123,24 +123,23 @@ int EDScorbot::sendRef(int ref, EDScorbotJoint j)
     return 0;
 }
 
-
 void EDScorbot::initJoints()
 {
 
-    EDScorbotJoint* joints[6] = {&j1, &j2, &j3, &j4, &j5, &j6};
+    EDScorbotJoint *joints[6] = {&j1, &j2, &j3, &j4, &j5, &j6};
     int data, base;
     // podria desenrollarse el bucle
     for (int i = 0; i < 6; i++)
     {
 
-        base = 0x00000000 | (i * JOINT_STEP)<<16;
+        base = 0x00000000 | (i * JOINT_STEP) << 16;
 
         data = base | PI_FD_ENABLE_ADDR << 16 | 0x0f; //|0x00 << 8
         this->bram_ptr[0] = data;
         data = base | PI_FD_ENABLE_ADDR << 16 | 0x03; //|0x00 << 8
         this->bram_ptr[0] = data;
 
-        data = base | PI_FD_ADDR << 16 | ((joints[i]->controller["PI_FD_bank3_18bits"] >> 8) & 0xFF) << 8| (joints[i]->controller["PI_FD_bank3_18bits"] & 0xFF);
+        data = base | PI_FD_ADDR << 16 | ((joints[i]->controller["PI_FD_bank3_18bits"] >> 8) & 0xFF) << 8 | (joints[i]->controller["PI_FD_bank3_18bits"] & 0xFF);
         this->bram_ptr[0] = data;
 #ifdef EDS_VERBOSE
         printf("J%d PI_FD: %08x\n", i + 1, data);
@@ -150,7 +149,7 @@ void EDScorbot::initJoints()
         data = base | PD_FD_ENABLE_ADDR << 16 | 0x03; //|0x00 << 8
         this->bram_ptr[0] = data;
 
-        data = base | PD_FD_ADDR << 16 | ((joints[i]->controller["PD_FD_bank3_22bits"] >> 8) & 0xFF) << 8| (joints[i]->controller["PD_FD_bank3_22bits"] & 0xFF);
+        data = base | PD_FD_ADDR << 16 | ((joints[i]->controller["PD_FD_bank3_22bits"] >> 8) & 0xFF) << 8 | (joints[i]->controller["PD_FD_bank3_22bits"] & 0xFF);
         this->bram_ptr[0] = data;
 #ifdef EDS_VERBOSE
         printf("J%d PD_FD: %08x\n", i + 1, data);
@@ -161,29 +160,29 @@ void EDScorbot::initJoints()
         data = base | EI_FD_ENABLE_ADDR << 16 | 0x03; //|0x00 << 8
         this->bram_ptr[0] = data;
 
-        data = base | EI_FD_ADDR << 16 | ((joints[i]->controller["EI_FD_bank3_18bits"] >> 8) & 0xFF) << 8| (joints[i]->controller["EI_FD_bank3_18bits"] & 0xFF);
+        data = base | EI_FD_ADDR << 16 | ((joints[i]->controller["EI_FD_bank3_18bits"] >> 8) & 0xFF) << 8 | (joints[i]->controller["EI_FD_bank3_18bits"] & 0xFF);
         this->bram_ptr[0] = data;
 
 #ifdef EDS_VERBOSE
         printf("J%d EI_FD: %08x\n", i + 1, data);
 #endif
 
-        data = base | SPIKE_EXPANSOR_ADDR <<16 | ((joints[i]->controller["spike_expansor"] >> 8) & 0xFF ) << 8|(joints[i]->controller["spike_expansor"] & 0xFF );
+        data = base | SPIKE_EXPANSOR_ADDR << 16 | ((joints[i]->controller["spike_expansor"] >> 8) & 0xFF) << 8 | (joints[i]->controller["spike_expansor"] & 0xFF);
         this->bram_ptr[0] = data;
 
 #ifdef EDS_VERBOSE
-        printf("J%d spike expansor: %08x\n",i+1,data);
+        printf("J%d spike expansor: %08x\n", i + 1, data);
 
 #endif
-        //send ref = 0 to stay put
+        // send ref = 0 to stay put
         data = base | REF_ADDR << 16;
     }
 };
 
-
-void EDScorbot::configureInit(){
-    //Comprobar que hace que los contadores se reseteen
-    EDScorbotJoint* joints[6] = {&j1, &j2, &j3, &j4, &j5, &j6};
+void EDScorbot::configureInit()
+{
+    // Comprobar que hace que los contadores se reseteen
+    EDScorbotJoint *joints[6] = {&j1, &j2, &j3, &j4, &j5, &j6};
     int data, base;
     for (int i = 0; i < 6; i++)
     {
@@ -191,49 +190,74 @@ void EDScorbot::configureInit(){
     }
 }
 
+
+void EDScorbot::searchHome(EDScorbotJoint jx){
+
+    
+
+}
+
 #ifdef THREADED
 
-void EDScorbot::read_threaded(){
+void EDScorbot::read_threaded()
+{
     assert(exec);
-    while(exec){
-    j1_t = this->bram_ptr[1];
-    j2_t = this->bram_ptr[2];
-    j3_t = this->bram_ptr[3];
-    j4_t = this->bram_ptr[4];
-    j5_t = this->bram_ptr[5];
-    j6_t = this->bram_ptr[6];
-    this_thread::sleep_for(chrono::microseconds(1));
+    while (exec)
+    {
+        j1_t = this->bram_ptr[1];
+        j2_t = this->bram_ptr[2];
+        j3_t = this->bram_ptr[3];
+        j4_t = this->bram_ptr[4];
+        j5_t = this->bram_ptr[5];
+        j6_t = this->bram_ptr[6];
+        this_thread::sleep_for(chrono::microseconds(1));
     }
 }
 
-void EDScorbot::readJoints(){
-    t2 = std::thread(&EDScorbot::read_threaded,this);
+void EDScorbot::readJoints()
+{
+    t2 = std::thread(&EDScorbot::read_threaded, this);
     this->t = &t2;
 }
 
-void EDScorbot::stopRead(){
+void EDScorbot::stopRead()
+{
     this->exec = false;
     this->t.join();
 }
 
 #else
 
-std::array<int, 6> EDScorbot::readJoints()
+void EDScorbot::readJoints(int *ret)
 {
     // int base_address = 0x00;//To be defined
     // int offset = 0x20;
 
-    int j1, j2, j3, j4, j5, j6;
+    // int j1, j2, j3, j4, j5, j6;
 
-    j1 = this->bram_ptr[1];
-    j2 = this->bram_ptr[2];
-    j3 = this->bram_ptr[3];
-    j4 = this->bram_ptr[4];
-    j5 = this->bram_ptr[5];
-    j6 = this->bram_ptr[6];
+    // j1 = this->bram_ptr[1];
+    // j2 = this->bram_ptr[2];
+    // j3 = this->bram_ptr[3];
+    // j4 = this->bram_ptr[4];
+    // j5 = this->bram_ptr[5];
+    // j6 = this->bram_ptr[6];
 
-    std::array<int, 6> ret = {j1, j2, j3, j4, j5, j6};
-    return ret;
+    ret[0] = this->bram_ptr[1];
+    ret[1] = this->bram_ptr[2];
+    ret[2] = this->bram_ptr[3];
+    ret[3] = this->bram_ptr[4];
+    ret[4] = this->bram_ptr[5];
+    ret[5] = this->bram_ptr[6];
+
+    // std::array<int, 6> ret = {j1, j2, j3, j4, j5, j6};
+    // int reads[6]= {j1,j2,j3,j4,j5,j6};
+    // ret[0] = j1;
+    // ret[1] = j2;
+    // ret[2] = j3;
+    // ret[3] = j4;
+    // ret[4] = j5;
+    // ret[5] = j6;
+    // return ret;
 };
 
 #endif
