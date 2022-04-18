@@ -163,7 +163,6 @@ void EDScorbot::initJoints()//Equivalente a configurespid sin las referencias
         data = base | EI_FD_ENABLE_ADDR << 16 | 0x03; //|0x00 << 8
         this->bram_ptr[0] = data;
 
-
         data = base | EI_FD_ADDR << 16 | ((joints[i]->controller["EI_FD_bank3_18bits"] >> 8) & 0xFF) << 8 | (joints[i]->controller["EI_FD_bank3_18bits"] & 0xFF);
         this->bram_ptr[0] = data;
 
@@ -216,22 +215,36 @@ void EDScorbot::stopRead()
 
 #else
 
-std::array<int, 6> EDScorbot::readJoints()
+void EDScorbot::readJoints(int *ret)
 {
     // int base_address = 0x00;//To be defined
     // int offset = 0x20;
 
-    int j1, j2, j3, j4, j5, j6;
+    // int j1, j2, j3, j4, j5, j6;
 
-    j1 = this->bram_ptr[1];
-    j2 = this->bram_ptr[2];
-    j3 = this->bram_ptr[3];
-    j4 = this->bram_ptr[4];
-    j5 = this->bram_ptr[5];
-    j6 = this->bram_ptr[6];
+    // j1 = this->bram_ptr[1];
+    // j2 = this->bram_ptr[2];
+    // j3 = this->bram_ptr[3];
+    // j4 = this->bram_ptr[4];
+    // j5 = this->bram_ptr[5];
+    // j6 = this->bram_ptr[6];
 
-    std::array<int, 6> ret = {j1, j2, j3, j4, j5, j6};
-    return ret;
+    ret[0] = this->bram_ptr[1];
+    ret[1] = this->bram_ptr[2];
+    ret[2] = this->bram_ptr[3];
+    ret[3] = this->bram_ptr[4];
+    ret[4] = this->bram_ptr[5];
+    ret[5] = this->bram_ptr[6];
+
+    // std::array<int, 6> ret = {j1, j2, j3, j4, j5, j6};
+    // int reads[6]= {j1,j2,j3,j4,j5,j6};
+    // ret[0] = j1;
+    // ret[1] = j2;
+    // ret[2] = j3;
+    // ret[3] = j4;
+    // ret[4] = j5;
+    // ret[5] = j6;
+    // return ret;
 };
 
 #endif

@@ -101,7 +101,7 @@ public:
     void EDScorbot::readJoints();
     bool exec;
 #else
-    std::array<int, 6> readJoints();
+    void readJoints(int*);
 #endif
     
 };
