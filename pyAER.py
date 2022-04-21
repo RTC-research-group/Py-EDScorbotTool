@@ -105,7 +105,7 @@ class pyEDScorbotTool:
             messagebox.showinfo(message=text)
         else:
             print(text)
-
+    
     def render_motor(self, motor_number, row, col):
         '''
         Create the inputs for 1 motor
@@ -183,12 +183,12 @@ class pyEDScorbotTool:
         j4 = tk.IntVar()
         j5 = tk.IntVar()
         j6 = tk.IntVar()
-        j1_hex = tk.StringVar()
-        j2_hex = tk.StringVar()
-        j3_hex = tk.StringVar()
-        j4_hex = tk.StringVar()
-        j5_hex = tk.StringVar()
-        j6_hex = tk.StringVar()
+        j1_hex = tk.DoubleVar()
+        j2_hex = tk.DoubleVar()
+        j3_hex = tk.DoubleVar()
+        j4_hex = tk.DoubleVar()
+        j5_hex = tk.DoubleVar()
+        j6_hex = tk.DoubleVar()
 
         variables = [j1, j2, j3, j4, j5, j6]
         variables_hex = [j1_hex,j2_hex,j3_hex,j4_hex,j5_hex,j6_hex]
@@ -211,7 +211,16 @@ class pyEDScorbotTool:
                 text_hex.config(state="readonly")
                 
             i += 1
+        xyz_row = len(variables)+1
+        xyz = tk.StringVar()
+        text = ttk.Entry(labelframe, width=7, textvariable=xyz)
+        text.grid(column=2, row=xyz_row, sticky=tk.W)
+        text.config(state="readonly")
+        ttk.Label(labelframe, text="XYZ coordinates").grid(
+        column=1, row=xyz_row, sticky=tk.W)
+        self.d["Joints"]["XYZ coordinates"] = xyz
 
+        
         return labelframe
         
     
@@ -693,27 +702,30 @@ class pyEDScorbotTool:
 
         if self.checked.get():
 
-            j1 = self.Read_J1_gui()
-            j2 = self.Read_J2_gui()
-            j3 = self.Read_J3_gui()
-            j4 = self.Read_J4_gui()
-            j5 = self.Read_J5_gui()
-            j6 = self.Read_J6_gui()
-            if self.record:
-                motors = self.d["Motor Config"]
-                ts = self.millis_now()
-                positions = [j1,j2,j3,j4,j5,j6]
-                aux = []
-                for i in range(6):
-                    label = "ref_M"+str(i+1)
-                    if ref == None:
-                        data = [motors[label].get(),positions[i]]
-                    else:
-                        data = [motors[label].get(),positions[i],ref[i]]
-                    aux.append(data)
-                aux.append(ts)
-                self.array.append(aux)
-            
+                j1 = self.Read_J1_gui()
+                j2 = self.Read_J2_gui()
+                j3 = self.Read_J3_gui()
+                j4 = self.Read_J4_gui()
+                j5 = self.Read_J5_gui()
+                j6 = self.Read_J6_gui()
+                xyz = self.CalculateXYZ()
+                self.d["Joints"]["XYZ coordinates"].set(xyz)
+                
+                if self.record:
+                    motors = self.d["Motor Config"]
+                    ts = self.millis_now()
+                    positions = [j1,j2,j3,j4,j5,j6]
+                    aux = []
+                    for i in range(6):
+                        label = "ref_M"+str(i+1)
+                        if ref == None:
+                            data = [motors[label].get(),positions[i]]
+                        else:
+                            data = [motors[label].get(),positions[i],ref[i]]
+                        aux.append(data)
+                    aux.append(ts)
+                    self.array.append(aux)
+                
 
         if self.updating:
             self.root.after(1,self.update)
@@ -2072,41 +2084,67 @@ class pyEDScorbotTool:
 
             return j6_pos
 
+    def CalculateXYZ(self,njoints=4):
+        j1 = self.count_to_angle(self.d["Joints"]["J1_sensor_value"].get())
+        j2 = self.count_to_angle(self.d["Joints"]["J2_sensor_value"].get())
+        j3 = self.count_to_angle(self.d["Joints"]["J3_sensor_value"].get())
+        j4 = self.count_to_angle(self.d["Joints"]["J4_sensor_value"].get())
+        j5 = self.count_to_angle(self.d["Joints"]["J5_sensor_value"].get())
+        j6 = self.count_to_angle(self.d["Joints"]["J6_sensor_value"].get())
+        l = [j1,j2,j3,j4,j5,j6]
+        l2 = []
+        for i in range(njoints):
+            l2.append(l[i])
+
+
+        xyz = inverse_kinematics(l2)
+
+
+
+        return xyz
+        
+
     def Read_J1_gui(self):
         pos = self.Read_J1_pos()
         self.d["Joints"]["J1_sensor_value"].set(pos)
-        self.d["Joints"]["J1_sensor_value_hex"].set(hex(pos))
+        #self.d["Joints"]["J1_sensor_value_hex"].set(hex(pos))
+        self.d["Joints"]["J1_sensor_value_hex"].set(self.count_to_angle(pos))
         return pos
 
     def Read_J2_gui(self):
         pos = self.Read_J2_pos()
         self.d["Joints"]["J2_sensor_value"].set(pos)
-        self.d["Joints"]["J2_sensor_value_hex"].set(hex(pos))
+        #self.d["Joints"]["J2_sensor_value_hex"].set(hex(pos))
+        self.d["Joints"]["J2_sensor_value_hex"].set(self.count_to_angle(pos))
 
         return pos
 
     def Read_J3_gui(self):
         pos = self.Read_J3_pos()
         self.d["Joints"]["J3_sensor_value"].set(pos)
-        self.d["Joints"]["J3_sensor_value_hex"].set(hex(pos))
+        #self.d["Joints"]["J3_sensor_value_hex"].set(hex(pos))
+        self.d["Joints"]["J3_sensor_value_hex"].set(self.count_to_angle(pos))
         return pos
 
     def Read_J4_gui(self):
         pos = self.Read_J4_pos()
         self.d["Joints"]["J4_sensor_value"].set(pos)
-        self.d["Joints"]["J4_sensor_value_hex"].set(hex(pos))
+        #self.d["Joints"]["J4_sensor_value_hex"].set(hex(pos))
+        self.d["Joints"]["J4_sensor_value_hex"].set(self.count_to_angle(pos))
         return pos
 
     def Read_J5_gui(self):
         pos = self.Read_J5_pos()
         self.d["Joints"]["J5_sensor_value"].set(pos)
-        self.d["Joints"]["J5_sensor_value_hex"].set(hex(pos))
+        #self.d["Joints"]["J5_sensor_value_hex"].set(hex(pos))
+        self.d["Joints"]["J5_sensor_value_hex"].set(self.count_to_angle(pos))
         return pos
 
     def Read_J6_gui(self):
         pos = self.Read_J6_pos()
         self.d["Joints"]["J6_sensor_value"].set(pos)
-        self.d["Joints"]["J6_sensor_value_hex"].set(hex(pos))
+        #self.d["Joints"]["J6_sensor_value_hex"].set(hex(pos))
+        self.d["Joints"]["J6_sensor_value_hex"].set(self.count_to_angle(pos))
         return pos
 
 

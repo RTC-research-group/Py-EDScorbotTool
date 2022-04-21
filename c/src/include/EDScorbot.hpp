@@ -37,6 +37,7 @@ private:
     std::thread* t;
 public:
     int address;
+    int jnum;
     std::string id;
     std::map<std::string, int> controller = {
         {"EI_FD_bank3_18bits", 0},
@@ -58,10 +59,11 @@ public:
         this->id = id;
         this->address = addresses[id];
     };
-    EDScorbotJoint(std::string id)
+    EDScorbotJoint(std::string id,int jnum)
     {
         this->id = id;
         this->address = addresses[id];
+        this->jnum = jnum;
     }
     ~EDScorbotJoint(){};
     void configureInit();
@@ -77,7 +79,7 @@ private:
     int* bram_ptr;
 
 public:
-    EDScorbotJoint j1 = {"M1"}, j2 = {"M2"}, j3 = {"M3"}, j4 = {"M4"}, j5 = {"M5"}, j6 = {"M6"};
+    EDScorbotJoint j1 = {"M1",1}, j2 = {"M2",2}, j3 = {"M3",3}, j4 = {"M4",4}, j5 = {"M5",5}, j6 = {"M6",6};
 
     EDScorbot();
     EDScorbot(std::string);
@@ -86,6 +88,7 @@ public:
     void configureInit();
     void configureSPID(EDScorbotJoint);
     void configureInit(EDScorbotJoint);
+    void configureInitJoint(EDScorbotJoint);
     void searchHome(EDScorbotJoint);
     int sendRef(int, EDScorbotJoint);
     void resetCounter(EDScorbotJoint);
@@ -93,11 +96,12 @@ public:
     void sendFPGAReset();
     void loadConfig(std::string);
     void dumpConfig(std::string);
+    void resetJPos(EDScorbotJoint);
 #ifdef THREADED
     void EDScorbot::readJoints();
     bool exec;
 #else
-    std::array<int, 6> readJoints();
+    void readJoints(int*);
 #endif
     
 };

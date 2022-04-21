@@ -26,7 +26,8 @@ int main(int argc, char* argv[])
         handler.initJoints();
 
     handler.sendRef(ref,*joint);
-    std::array<int,6> reads = handler.readJoints();
+    int reads[6];
+    handler.readJoints(reads);
 
     puts("Leido:");
     for (int i = 0;i<6; i++){
