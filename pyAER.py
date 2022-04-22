@@ -2682,7 +2682,9 @@ class pyEDScorbotTool:
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
             return 
-        
+
+        self.sendCommand16(0xF7,0xffff,0xffff,True) #enable counter reset when microswitch is hit
+
         old_sj = 0x20000/4 #32768
         sj = 0x20000/4 #32768
         addr_j = 0x02 #2
@@ -2902,8 +2904,11 @@ class pyEDScorbotTool:
 
             if (abs(sj - (0x20000/4)) < 0x400 and abs(old_sj - sj) > 0x300):
                 self.SendFPGAReset_joint(JOINTNUM)
+               
                 #self.ConfigureInit()
                 #self.ConfigureSPID_allJoints()
+        self.sendCommand16(0xF7,0x0000,0x0000,True) #disable counter reset when microswitch is hit
+
 
     def search_Home_J1(self):
         '''
