@@ -39,13 +39,14 @@ class pyEDScorbotTool:
         '''
         #Initialize GUI: create root Tk object
         self.visible = visible
-        
+        self.root = tk.Tk()
         if self.visible:
         
-            self.root = tk.Tk()
+            #self.root = tk.Tk()
                 #Set the icon
             self.root.iconphoto(False,tk.PhotoImage(file="./atc.png"))
-
+        else:
+            self.root.withdraw()
         #Create dictionaries where the interface data will be stored
         self.d = {}
         self.d["Motor Config"] = {}
@@ -699,8 +700,7 @@ class pyEDScorbotTool:
 
     def update(self,ref=None):
 
-        if self.visible:
-            if self.checked.get():
+        if self.checked.get():
 
                 self.j1 = self.Read_J1_gui()
                 self.j2 = self.Read_J2_gui()
@@ -727,8 +727,8 @@ class pyEDScorbotTool:
                     self.array.append(aux)
                 
 
-            if self.updating:
-                self.root.after(1,self.update)
+        if self.updating:
+            self.root.after(1,self.update)
         
             
             
@@ -752,6 +752,7 @@ class pyEDScorbotTool:
             
             if self.checked.get():
                 for i in range(0,6):
+                    self.sendCommand16(0xF7,0x0000,0x0000,True) #
                     #Motor 1
                     self.sendCommand16(0x00,0x00,0x03,True) #Leds M1
                     self.sendCommand16(0x01,0x00,0x01,True) #spike gen freq divider
