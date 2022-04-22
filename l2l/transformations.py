@@ -13,10 +13,10 @@ def w_to_angles(omegas):
     # return  angles
     return np.cumsum(omegas * 0.001,axis=0)*( 180 / np.pi)
 
-if __name__== '__main__':
-    omegas = np.load("./test_output.p",allow_pickle=True)
-    arr = w_to_angles(omegas)
-    plt.plot(arr)
-    plt.show()
-    a = 1
-    pass
+# if __name__== '__main__':
+#     omegas = np.load("./test_output.p",allow_pickle=True)
+#     arr = w_to_angles(omegas)
+#     plt.plot(arr)
+#     plt.show()
+#     a = 1
+#     pass
