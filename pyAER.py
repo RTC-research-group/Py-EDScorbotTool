@@ -2108,14 +2108,14 @@ class pyEDScorbotTool:
         pos = self.Read_J1_pos()
         self.d["Joints"]["J1_sensor_value"].set(pos)
         #self.d["Joints"]["J1_sensor_value_hex"].set(hex(pos))
-        self.d["Joints"]["J1_sensor_value_hex"].set(self.count_to_angle(pos))
+        self.d["Joints"]["J1_sensor_value_hex"].set(self.count_to_angle(1,pos))
         return pos
 
     def Read_J2_gui(self):
         pos = self.Read_J2_pos()
         self.d["Joints"]["J2_sensor_value"].set(pos)
         #self.d["Joints"]["J2_sensor_value_hex"].set(hex(pos))
-        self.d["Joints"]["J2_sensor_value_hex"].set(self.count_to_angle(pos))
+        self.d["Joints"]["J2_sensor_value_hex"].set(self.count_to_angle(2,pos))
 
         return pos
 
@@ -2123,28 +2123,28 @@ class pyEDScorbotTool:
         pos = self.Read_J3_pos()
         self.d["Joints"]["J3_sensor_value"].set(pos)
         #self.d["Joints"]["J3_sensor_value_hex"].set(hex(pos))
-        self.d["Joints"]["J3_sensor_value_hex"].set(self.count_to_angle(pos))
+        self.d["Joints"]["J3_sensor_value_hex"].set(self.count_to_angle(3,pos))
         return pos
 
     def Read_J4_gui(self):
         pos = self.Read_J4_pos()
         self.d["Joints"]["J4_sensor_value"].set(pos)
         #self.d["Joints"]["J4_sensor_value_hex"].set(hex(pos))
-        self.d["Joints"]["J4_sensor_value_hex"].set(self.count_to_angle(pos))
+        self.d["Joints"]["J4_sensor_value_hex"].set(self.count_to_angle(4,pos))
         return pos
 
     def Read_J5_gui(self):
         pos = self.Read_J5_pos()
         self.d["Joints"]["J5_sensor_value"].set(pos)
         #self.d["Joints"]["J5_sensor_value_hex"].set(hex(pos))
-        self.d["Joints"]["J5_sensor_value_hex"].set(self.count_to_angle(pos))
+        self.d["Joints"]["J5_sensor_value_hex"].set(self.count_to_angle(5,pos))
         return pos
 
     def Read_J6_gui(self):
         pos = self.Read_J6_pos()
         self.d["Joints"]["J6_sensor_value"].set(pos)
         #self.d["Joints"]["J6_sensor_value_hex"].set(hex(pos))
-        self.d["Joints"]["J6_sensor_value_hex"].set(self.count_to_angle(pos))
+        self.d["Joints"]["J6_sensor_value_hex"].set(self.count_to_angle(6,pos))
         return pos
 
 
@@ -3567,7 +3567,7 @@ class pyEDScorbotTool:
         elif motor ==4:
             f = lambda x:0.012391573729863692*(x-32768)
         else:
-            return 0
+            f = lambda x:x
 
         
         
