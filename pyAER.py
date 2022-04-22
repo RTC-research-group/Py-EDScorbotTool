@@ -702,14 +702,14 @@ class pyEDScorbotTool:
         if self.visible:
             if self.checked.get():
 
-                j1 = self.Read_J1_gui()
-                j2 = self.Read_J2_gui()
-                j3 = self.Read_J3_gui()
-                j4 = self.Read_J4_gui()
-                j5 = self.Read_J5_gui()
-                j6 = self.Read_J6_gui()
-                xyz = self.CalculateXYZ()
-                self.d["Joints"]["XYZ coordinates"].set(xyz)
+                self.j1 = self.Read_J1_gui()
+                self.j2 = self.Read_J2_gui()
+                self.j3 = self.Read_J3_gui()
+                self.j4 = self.Read_J4_gui()
+                self.j5 = self.Read_J5_gui()
+                self.j6 = self.Read_J6_gui()
+                #xyz = self.CalculateXYZ()
+                #self.d["Joints"]["XYZ coordinates"].set(xyz)
                 
                 if self.record:
                     motors = self.d["Motor Config"]
