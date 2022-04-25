@@ -363,6 +363,12 @@ class pyEDScorbotTool:
             ttk.Button(labelframe,text="Reset J6 counter",command=self.Reset_J6_pos).grid(column=3,row=15,sticky=(tk.W,tk.E))
             ttk.Button(labelframe,text="Start/Stop recording",command=self.toggle_record).grid(column=1,row=16,sticky=(tk.W,tk.E))
             ttk.Button(labelframe,text="DYNAPSE2",command=self.send_dynapse2).grid(column=2,row=16,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Reset J1 SPID",command=self.sendJ1FPGAReset).grid(column=1,row=17,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Reset J2 SPID",command=self.sendJ2FPGAReset).grid(column=2,row=17,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Reset J3 SPID",command=self.sendJ3FPGAReset).grid(column=3,row=17,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Reset J4 SPID",command=self.sendJ4FPGAReset).grid(column=1,row=18,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Reset J5 SPID",command=self.sendJ5FPGAReset).grid(column=2,row=18,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Reset J6 SPID",command=self.sendJ6FPGAReset).grid(column=3,row=18,sticky=(tk.W,tk.E))
 
     def render_usbEnable(self,row,col):
         '''
@@ -714,7 +720,7 @@ class pyEDScorbotTool:
                 if self.record:
                     motors = self.d["Motor Config"]
                     ts = self.millis_now()
-                    positions = [j1,j2,j3,j4,j5,j6]
+                    positions = [self.j1,self.j2,self.j3,self.j4,self.j5,self.j6]
                     aux = []
                     for i in range(6):
                         label = "ref_M"+str(i+1)
@@ -2351,6 +2357,24 @@ class pyEDScorbotTool:
                         self.sendCommand16( 0xb2,  ((self.d["Motor Config"]["spike_expansor_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M6"].get()) & 0xFF), True) #spike expansor M6
                         self.SendCommandJoint6(0)
 
+    def sendJ1FPGAReset(self):
+        self.SendFPGAReset_joint(1)
+    
+    def sendJ2FPGAReset(self):
+        self.SendFPGAReset_joint(2)
+    
+    def sendJ3FPGAReset(self):
+        self.SendFPGAReset_joint(3)
+    
+    def sendJ4FPGAReset(self):
+        self.SendFPGAReset_joint(4)
+
+    def sendJ5FPGAReset(self):
+        self.SendFPGAReset_joint(5)
+
+    def sendJ6FPGAReset(self):
+        self.SendFPGAReset_joint(6)
+    
 
     def ScanAllMotor(self):
         # '''
@@ -3274,7 +3298,7 @@ class pyEDScorbotTool:
 
         return ret
             
-    def angle_to_ref(self,motor,angle,strict=True):
+    def angle_to_ref(self,motor,angle,strict=False):
         """
         Convert angle of motor to reference
 
@@ -3325,8 +3349,8 @@ class pyEDScorbotTool:
             return 0
 
         ret = f(angle)
-        if not(ret < bounds[motor-1][0] and ret > bounds[motor-1][1]) and strict:
-            ret = bounds[motor-1][0]*np.sign(ret)
+        # if not(ret < bounds[motor-1][0] and ret > bounds[motor-1][1]) and strict:
+        #     ret = bounds[motor-1][0]*np.sign(ret)
 
         return ret
 
