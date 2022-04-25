@@ -30,12 +30,21 @@ if __name__== '__main__':
     #Ejecucion de la trayectoria
     match_steps = []
     handler = pyEDScorbotTool(visible=False)
+    handler.render_gui()
+    handler.init_config()
+    handler.checked.set(True)
+    handler.checkUSB()
     sleep = 0.25
     handler.toggle_record()
-    for j1,j2 in traj:
+    tj1 = handler.angle_to_ref(1,traj[:,0])
+    tj2 = handler.angle_to_ref(2,traj[:,1])
+    
+    for j1,j2 in zip(tj1,tj2):
         match_steps.append([handler.Read_J1_pos(),handler.Read_J2_pos(),handler.Read_J3_pos(),handler.Read_J4_pos()])
-        handler.SendCommandJoint1_lite(j1)
-        handler.SendCommandJoint2_lite(j2)
+        handler.d["Motor Config"]["ref_M1"].set(j1)
+        handler.d["Motor Config"]["ref_M2"].set(j2)
+        handler.SendCommandJoint1_lite()
+        handler.SendCommandJoint2_lite()
        
         t1 = handler.millis_now()
         t2 = t1
@@ -50,9 +59,9 @@ if __name__== '__main__':
 
     xyz_steps = []
     for j1,j2,j3,j4 in match_steps:
-        a1 = handler.count_to_angle(j1)
-        a2 = handler.count_to_angle(j2)
-        xyz = direct_kinematics_position(j1,j2,0,0)
+        a1 = handler.count_to_angle(1,j1)
+        a2 = handler.count_to_angle(2,j2)
+        xyz = direct_kinematics_position(a1*(np.pi/180),a2*(np.pi/180),0,0)
         xyz_steps.append(xyz)
 
     print(xyz_steps)
