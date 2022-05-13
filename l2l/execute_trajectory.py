@@ -8,7 +8,7 @@ from pyAER import pyEDScorbotTool
 import argparse
 from transformations import w_to_angles
 import numpy as np
-from scorbot_direct_kinematics import direct_kinematics_position
+from DirecKinScorbot import DirecKinScorbot
 
 if __name__== '__main__':
 
@@ -61,11 +61,11 @@ if __name__== '__main__':
     for j1,j2,j3,j4 in match_steps:
         a1 = handler.count_to_angle(1,j1)
         a2 = handler.count_to_angle(2,j2)
-        xyz = direct_kinematics_position(a1*(np.pi/180),a2*(np.pi/180),0,0)
+        xyz = DirecKinScorbot(a1*(np.pi/180),a2*(np.pi/180),0,0)
         xyz_steps.append(xyz)
 
-    print(xyz_steps)
-    print(match_steps)
+    # print(xyz_steps)
+    # print(match_steps)
 
     match_steps = np.array(match_steps)
     xyz_steps = np.array(xyz_steps)
