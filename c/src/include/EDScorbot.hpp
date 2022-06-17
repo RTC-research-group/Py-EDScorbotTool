@@ -97,6 +97,13 @@ public:
     void loadConfig(std::string);
     void dumpConfig(std::string);
     void resetJPos(EDScorbotJoint);
+    float count_to_angle(int,int);
+    int angle_to_count(int,float);
+    int ref_to_count(int,int);
+    int count_to_ref(int,int);
+    int angle_to_ref(int,float);
+    float ref_to_angle(int,int);
+
 #ifdef THREADED
     void EDScorbot::readJoints();
     bool exec;
