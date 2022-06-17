@@ -14,6 +14,7 @@
 
 int fprintJson(const char *json);
 int fprintTrajectory(const char *tray, int len);
+int write_file(const char* fname, unsigned char* fdata);
 
 int main(int argc, char *argv[])
 {
@@ -21,6 +22,7 @@ int main(int argc, char *argv[])
     // Buffer for incoming data
     unsigned char file_name_buf[MAX_BYTES];
     unsigned char file_buf[MAX_BYTES];
+    char command_buf[10];
     // We will store return values of functions in n
     int n;
     // Server socket
@@ -60,18 +62,35 @@ int main(int argc, char *argv[])
             // cout << "Server received:  " << buffer << endl;
 
             // Añadir maquina de estados
-            n = read(clientSock, file_name_buf, MAX_BYTES);
             char w_buffer[10] = "[OK]";
+            int n_filename = read(clientSock, file_name_buf, MAX_BYTES);
             int n_send = write(clientSock, w_buffer, strlen(w_buffer));
-            usleep(10000);
-            n = read(clientSock, file_buf, MAX_BYTES);
-            n_send = write(clientSock, w_buffer, strlen(w_buffer));
             
-            FILE *f = fopen((const char*)file_name_buf, "wb");
-            fwrite((const void *)(file_buf), 1, n, f);
+            usleep(10000);
+            int n_file = read(clientSock, file_buf, MAX_BYTES);
+            n_send = write(clientSock, w_buffer, strlen(w_buffer));
 
-            printf("%s escrito\n",file_name_buf);
-            fclose(f);
+            usleep(10000);
+            int n_command = read(clientSock, command_buf, 10);
+            n_send = write(clientSock, w_buffer, strlen(w_buffer));
+
+            int command = atoi(command_buf);
+
+            switch(command){
+                //Receive file and end
+                case 1: break;
+                //Receive trajectory and execute it
+                case 2: write_file(file_name_buf,file_buf,n_file);
+                        char cmd[256];
+                        sprintf(cmd,"bash ./exec %s",file_name_buf);
+                        system(cmd);
+                        
+                        break;
+                
+                default: break;
+            }
+
+            
             // Seguir probando
             // Ref de 1 en 1 --> [3] ; [j,ref]
 
@@ -130,3 +149,12 @@ int fprintTrajectory(const char *tray, int len)
     int a = 1;
     return 0;
 };
+
+int write_file(const char* fname, unsigned char* fdata,int flen){
+    FILE *f = fopen((const char*)file_name_buf, "wb");
+            int len = fwrite((const void *)(file_buf), 1, flen, f);
+
+            //printf("%s writen\n",file_name_buf);
+            printf("Writen %d bytes to file %s\n",len,file_name_buf);
+            fclose(f);
+}
