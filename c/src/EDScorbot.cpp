@@ -176,7 +176,7 @@ void EDScorbot::initJoints()//Equivalente a configurespid sin las referencias
         printf("J%d spike expansor: %08x\n", i + 1, data);
 
 #endif
-        sendRef(0,joints[i]);
+        
         
         // send ref = 0 to stay put
         //data = base | REF_ADDR << 16;
@@ -280,7 +280,7 @@ void EDScorbot::searchHome(EDScorbotJoint j)
         usleep(2000000);
         old_sj = sj;
         sj = this->bram_ptr[j.jnum];
-        if (abs)(sj-old_sj<0x5))
+        if (abs(sj-old_sj<0x5))
         break;
     }
 
@@ -329,7 +329,7 @@ void EDScorbot::configureInitJoint(EDScorbotJoint j)//configure init pero por jo
         data = base | PI_FD_ENABLE_ADDR << 16 | 0x03; //|0x00 << 8
         this->bram_ptr[0] = data;
 
-        data = base | PI_FD_ADDR << 16 | ((joints[i]->controller["PI_FD_bank3_18bits"] >> 8) & 0xFF) << 8 | (joints[i]->controller["PI_FD_bank3_18bits"] & 0xFF);
+        data = base | PI_FD_ADDR << 16 | ((j.controller["PI_FD_bank3_18bits"] >> 8) & 0xFF) << 8 | (j.controller["PI_FD_bank3_18bits"] & 0xFF);
         this->bram_ptr[0] = data;
 #ifdef EDS_VERBOSE
         printf("J%d PI_FD: %08x\n", j.jnum, data);
@@ -339,7 +339,7 @@ void EDScorbot::configureInitJoint(EDScorbotJoint j)//configure init pero por jo
         data = base | PD_FD_ENABLE_ADDR << 16 | 0x03; //|0x00 << 8
         this->bram_ptr[0] = data;
         
-        data = base | PD_FD_ADDR << 16 | ((joints[i]->controller["PD_FD_bank3_22bits"] >> 8) & 0xFF) << 8 | (joints[i]->controller["PD_FD_bank3_22bits"] & 0xFF);
+        data = base | PD_FD_ADDR << 16 | ((j.controller["PD_FD_bank3_22bits"] >> 8) & 0xFF) << 8 | (j.controller["PD_FD_bank3_22bits"] & 0xFF);
         this->bram_ptr[0] = data;
 #ifdef EDS_VERBOSE
         printf("J%d PD_FD: %08x\n", j.jnum, data);
@@ -352,13 +352,13 @@ void EDScorbot::configureInitJoint(EDScorbotJoint j)//configure init pero por jo
         this->bram_ptr[0] = data;
 
 
-        data = base | EI_FD_ADDR << 16 | ((joints[i]->controller["EI_FD_bank3_18bits"] >> 8) & 0xFF) << 8 | (joints[i]->controller["EI_FD_bank3_18bits"] & 0xFF);
+        data = base | EI_FD_ADDR << 16 | ((j.controller["EI_FD_bank3_18bits"] >> 8) & 0xFF) << 8 | (j.controller["EI_FD_bank3_18bits"] & 0xFF);
         this->bram_ptr[0] = data;
 
 #ifdef EDS_VERBOSE
         printf("J%d EI_FD: %08x\n", j.jnum, data);
 #endif
-        data = base | SPIKE_EXPANSOR_ADDR << 16 | ((joints[i]->controller["spike_expansor"] >> 8) & 0xFF) << 8 | (joints[i]->controller["spike_expansor"] & 0xFF);
+        data = base | SPIKE_EXPANSOR_ADDR << 16 | ((j.controller["spike_expansor"] >> 8) & 0xFF) << 8 | (j.controller["spike_expansor"] & 0xFF);
         this->bram_ptr[0] = data;
 
 #ifdef EDS_VERBOSE
@@ -368,10 +368,10 @@ void EDScorbot::configureInitJoint(EDScorbotJoint j)//configure init pero por jo
         sendRef(0,j);
         
     }
-}
 
 void EDScorbot::resetJPos(EDScorbotJoint j){
     int address = 0xF0 | j.jnum;
     sendCommand16(address,0x00,address,this->bram_ptr);
     
 }
+
