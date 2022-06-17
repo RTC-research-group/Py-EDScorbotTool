@@ -14,13 +14,13 @@
 
 int fprintJson(const char *json);
 int fprintTrajectory(const char *tray, int len);
-int write_file(const char* fname, unsigned char* fdata);
+int write_file(const char *fname, unsigned char *fdata, int flen);
 
 int main(int argc, char *argv[])
 {
 
     // Buffer for incoming data
-    unsigned char file_name_buf[MAX_BYTES];
+    char file_name_buf[100];
     unsigned char file_buf[MAX_BYTES];
     char command_buf[10];
     // We will store return values of functions in n
@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
 
         do
         {
-            bzero(file_buf, MAX_BYTES);
+            bzero(file_buf, 100);
             bzero(file_name_buf, MAX_BYTES);
 
             // receive a message from a client
@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
             char w_buffer[10] = "[OK]";
             int n_filename = read(clientSock, file_name_buf, MAX_BYTES);
             int n_send = write(clientSock, w_buffer, strlen(w_buffer));
-            
+
             usleep(10000);
             int n_file = read(clientSock, file_buf, MAX_BYTES);
             n_send = write(clientSock, w_buffer, strlen(w_buffer));
@@ -76,21 +76,24 @@ int main(int argc, char *argv[])
 
             int command = atoi(command_buf);
 
-            switch(command){
-                //Receive file and end
-                case 1: break;
-                //Receive trajectory and execute it
-                case 2: write_file(file_name_buf,file_buf,n_file);
-                        char cmd[256];
-                        sprintf(cmd,"bash ./exec %s",file_name_buf);
-                        system(cmd);
-                        
-                        break;
-                
-                default: break;
+            switch (command)
+            {
+            // Receive file and end
+            case 1:
+                break;
+            // Receive trajectory and execute it
+            case 2:
+                write_file(file_name_buf, file_buf, n_file);
+                char cmd[256];
+                sprintf(cmd, "bash ./exec %s", file_name_buf);
+                system(cmd);
+
+                break;
+
+            default:
+                break;
             }
 
-            
             // Seguir probando
             // Ref de 1 en 1 --> [3] ; [j,ref]
 
@@ -150,11 +153,13 @@ int fprintTrajectory(const char *tray, int len)
     return 0;
 };
 
-int write_file(const char* fname, unsigned char* fdata,int flen){
-    FILE *f = fopen((const char*)file_name_buf, "wb");
-            int len = fwrite((const void *)(file_buf), 1, flen, f);
+int write_file(const char *fname, unsigned char *fdata, int flen)
+{
+    FILE *f = fopen((const char *)fname, "wb");
+    int len = fwrite((const void *)(fdata), 1, flen, f);
 
-            //printf("%s writen\n",file_name_buf);
-            printf("Writen %d bytes to file %s\n",len,file_name_buf);
-            fclose(f);
+    // printf("%s writen\n",file_name_buf);
+    printf("Writen %d bytes to file %s\n", len, fname);
+    fclose(f);
+    return len;
 }
