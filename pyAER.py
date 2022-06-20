@@ -681,10 +681,13 @@ class pyEDScorbotTool:
                 cv2.destroyWindow('side')
             except:
                 pass
-    def toggle_record(self):
+    def toggle_record(self,filename=None):
         if self.record:
             date = datetime.datetime.now()
-            timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
+            if filename == None:
+                timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
+            else:
+                timeStamp=filename
             
             P.dump(self.array,open(timeStamp + '.pkl','wb'))
             self.array = []

@@ -123,7 +123,7 @@ int EDScorbot::sendRef(int ref, EDScorbotJoint j)
     return 0;
 }
 
-void EDScorbot::initJoints()//Equivalente a configurespid sin las referencias
+void EDScorbot::initJoints() // Equivalente a configurespid sin las referencias
 {
 
     EDScorbotJoint *joints[6] = {&j1, &j2, &j3, &j4, &j5, &j6};
@@ -150,7 +150,7 @@ void EDScorbot::initJoints()//Equivalente a configurespid sin las referencias
 
         data = base | PD_FD_ENABLE_ADDR << 16 | 0x03; //|0x00 << 8
         this->bram_ptr[0] = data;
-        
+
         data = base | PD_FD_ADDR << 16 | ((joints[i]->controller["PD_FD_bank3_22bits"] >> 8) & 0xFF) << 8 | (joints[i]->controller["PD_FD_bank3_22bits"] & 0xFF);
         this->bram_ptr[0] = data;
 #ifdef EDS_VERBOSE
@@ -176,13 +176,11 @@ void EDScorbot::initJoints()//Equivalente a configurespid sin las referencias
         printf("J%d spike expansor: %08x\n", i + 1, data);
 
 #endif
-        sendRef(0,joints[i]);
-        
+
         // send ref = 0 to stay put
-        //data = base | REF_ADDR << 16;
+        // data = base | REF_ADDR << 16;
     }
 };
-
 
 #ifdef THREADED
 
@@ -249,21 +247,20 @@ void EDScorbot::readJoints(int *ret)
 
 #endif
 
-//Un poco mas bonito
-// static std::map<std::string, int> polarities = {
-//         {1, 1},
-//         {2, -1},
-//         {3, -1},
-//         {4, -1},
-//         {5, -1},
-//         {6, -1}};
+// Un poco mas bonito
+//  static std::map<std::string, int> polarities = {
+//          {1, 1},
+//          {2, -1},
+//          {3, -1},
+//          {4, -1},
+//          {5, -1},
+//          {6, -1}};
 
-        
-//Polarities per joint are: 1,-1,-1,-1,-1,-1
+// Polarities per joint are: 1,-1,-1,-1,-1,-1
 void EDScorbot::searchHome(EDScorbotJoint j)
-{   
-    //Un poco mas rapido
-    int pol = (j.jnum==1?1:-1);
+{
+    // Un poco mas rapido
+    int pol = (j.jnum == 1 ? 1 : -1);
     int old_sj = 0x20000 / 4; // 32768
     int sj = 0x20000 / 4;     // 32768
     int addr_j = 0x02;        // 2
@@ -280,98 +277,160 @@ void EDScorbot::searchHome(EDScorbotJoint j)
         usleep(2000000);
         old_sj = sj;
         sj = this->bram_ptr[j.jnum];
-        if (abs)(sj-old_sj<0x5))
-        break;
+        if (abs(sj - old_sj < 0x5))
+            break;
     }
 
-    configureInitJoint(j);//En java y python la llamada es a SendFPGAReset_joint
-    switch(j.jnum){
-        case 1: inc_j = 350*pol;sendRef(inc_j,j1);
-        case 2:inc_j = 400*pol;sendRef(inc_j,j2);
-        case 3:inc_j = 200*pol;sendRef(inc_j,j3);
-        case 4:inc_j = 10*pol;sendRef(inc_j,j4);
-        default: break;sendRef(inc_j,j);
+    configureInitJoint(j); // En java y python la llamada es a SendFPGAReset_joint
+    switch (j.jnum)
+    {
+    case 1:
+        inc_j = 350 * pol;
+        sendRef(inc_j, j1);
+    case 2:
+        inc_j = 400 * pol;
+        sendRef(inc_j, j2);
+    case 3:
+        inc_j = 200 * pol;
+        sendRef(inc_j, j3);
+    case 4:
+        inc_j = 10 * pol;
+        sendRef(inc_j, j4);
+    default:
+        break;
+        sendRef(inc_j, j);
     }
     usleep(2000000);
     sj = this->bram_ptr[j.jnum];
-    old_sj = sj+1000;
+    old_sj = sj + 1000;
 
-    while(abs(old_sj - sj)>200){
+    while (abs(old_sj - sj) > 200)
+    {
         old_sj = sj;
         sj = this->bram_ptr[j.jnum];
     }
-    while(abs(sj-(0x20000/4))>0x400){
-        inc_j = inc_j + (10*pol);
-        sendRef(inc_j,j);
+    while (abs(sj - (0x20000 / 4)) > 0x400)
+    {
+        inc_j = inc_j + (10 * pol);
+        sendRef(inc_j, j);
         usleep(1500000);
         old_sj = sj;
         sj = this->bram_ptr[j.jnum];
-        if((abs(sj - (0x20000/4))<0x400) && abs(old_sj -sj)>0x300){
+        if ((abs(sj - (0x20000 / 4)) < 0x400) && abs(old_sj - sj) > 0x300)
+        {
             configureInitJoint(j);
-
         }
     }
 }
 
-
-
-void EDScorbot::configureInitJoint(EDScorbotJoint j)//configure init pero por joint
+void EDScorbot::configureInitJoint(EDScorbotJoint j) // configure init pero por joint
 {
     // Comprobar que hace que los contadores se reseteen
     EDScorbotJoint *joints[6] = {&j1, &j2, &j3, &j4, &j5, &j6};
     int data, base;
 
-        base = 0x00000000 | ((j.address-1) * JOINT_STEP) << 16;
+    base = 0x00000000 | ((j.address - 1) * JOINT_STEP) << 16;
 
-        data = base | PI_FD_ENABLE_ADDR << 16 | 0x0f; //|0x00 << 8
-        this->bram_ptr[0] = data;
+    data = base | PI_FD_ENABLE_ADDR << 16 | 0x0f; //|0x00 << 8
+    this->bram_ptr[0] = data;
 
-        data = base | PI_FD_ENABLE_ADDR << 16 | 0x03; //|0x00 << 8
-        this->bram_ptr[0] = data;
+    data = base | PI_FD_ENABLE_ADDR << 16 | 0x03; //|0x00 << 8
+    this->bram_ptr[0] = data;
 
-        data = base | PI_FD_ADDR << 16 | ((joints[i]->controller["PI_FD_bank3_18bits"] >> 8) & 0xFF) << 8 | (joints[i]->controller["PI_FD_bank3_18bits"] & 0xFF);
-        this->bram_ptr[0] = data;
+    data = base | PI_FD_ADDR << 16 | ((j.controller["PI_FD_bank3_18bits"] >> 8) & 0xFF) << 8 | (j.controller["PI_FD_bank3_18bits"] & 0xFF);
+    this->bram_ptr[0] = data;
 #ifdef EDS_VERBOSE
-        printf("J%d PI_FD: %08x\n", j.jnum, data);
+    printf("J%d PI_FD: %08x\n", j.jnum, data);
 #endif
-        data = base | PD_FD_ENABLE_ADDR << 16 | 0x0f; //|0x00 << 8
-        this->bram_ptr[0] = data;
-        data = base | PD_FD_ENABLE_ADDR << 16 | 0x03; //|0x00 << 8
-        this->bram_ptr[0] = data;
-        
-        data = base | PD_FD_ADDR << 16 | ((joints[i]->controller["PD_FD_bank3_22bits"] >> 8) & 0xFF) << 8 | (joints[i]->controller["PD_FD_bank3_22bits"] & 0xFF);
-        this->bram_ptr[0] = data;
+    data = base | PD_FD_ENABLE_ADDR << 16 | 0x0f; //|0x00 << 8
+    this->bram_ptr[0] = data;
+    data = base | PD_FD_ENABLE_ADDR << 16 | 0x03; //|0x00 << 8
+    this->bram_ptr[0] = data;
+
+    data = base | PD_FD_ADDR << 16 | ((j.controller["PD_FD_bank3_22bits"] >> 8) & 0xFF) << 8 | (j.controller["PD_FD_bank3_22bits"] & 0xFF);
+    this->bram_ptr[0] = data;
 #ifdef EDS_VERBOSE
-        printf("J%d PD_FD: %08x\n", j.jnum, data);
+    printf("J%d PD_FD: %08x\n", j.jnum, data);
 #endif
 
-        data = base | EI_FD_ENABLE_ADDR << 16 | 0x0f; //|0x00 << 8
-        this->bram_ptr[0] = data;
+    data = base | EI_FD_ENABLE_ADDR << 16 | 0x0f; //|0x00 << 8
+    this->bram_ptr[0] = data;
 
-        data = base | EI_FD_ENABLE_ADDR << 16 | 0x03; //|0x00 << 8
-        this->bram_ptr[0] = data;
+    data = base | EI_FD_ENABLE_ADDR << 16 | 0x03; //|0x00 << 8
+    this->bram_ptr[0] = data;
 
-
-        data = base | EI_FD_ADDR << 16 | ((joints[i]->controller["EI_FD_bank3_18bits"] >> 8) & 0xFF) << 8 | (joints[i]->controller["EI_FD_bank3_18bits"] & 0xFF);
-        this->bram_ptr[0] = data;
-
-#ifdef EDS_VERBOSE
-        printf("J%d EI_FD: %08x\n", j.jnum, data);
-#endif
-        data = base | SPIKE_EXPANSOR_ADDR << 16 | ((joints[i]->controller["spike_expansor"] >> 8) & 0xFF) << 8 | (joints[i]->controller["spike_expansor"] & 0xFF);
-        this->bram_ptr[0] = data;
+    data = base | EI_FD_ADDR << 16 | ((j.controller["EI_FD_bank3_18bits"] >> 8) & 0xFF) << 8 | (j.controller["EI_FD_bank3_18bits"] & 0xFF);
+    this->bram_ptr[0] = data;
 
 #ifdef EDS_VERBOSE
-        printf("J%d spike expansor: %08x\n", j.jnum, data);
+    printf("J%d EI_FD: %08x\n", j.jnum, data);
+#endif
+    data = base | SPIKE_EXPANSOR_ADDR << 16 | ((j.controller["spike_expansor"] >> 8) & 0xFF) << 8 | (j.controller["spike_expansor"] & 0xFF);
+    this->bram_ptr[0] = data;
+
+#ifdef EDS_VERBOSE
+    printf("J%d spike expansor: %08x\n", j.jnum, data);
 
 #endif
-        sendRef(0,j);
-        
-    }
+    sendRef(0, j);
 }
 
-void EDScorbot::resetJPos(EDScorbotJoint j){
+void EDScorbot::resetJPos(EDScorbotJoint j)
+{
     int address = 0xF0 | j.jnum;
-    sendCommand16(address,0x00,address,this->bram_ptr);
-    
+    sendCommand16(address, 0x00, address, this->bram_ptr);
+}
+
+float EDScorbot::count_to_angle(int motor, int count){
+    switch(motor){
+        case 1:return (1/125.5)*(count-32768);break;
+        case 2:return; (1/131)*(count-32768);break;
+        case 3:return; (1/127.7)*(count-32768);break;
+        case 4:return; (0.012391573729863692)*(count-32768);break;
+        default:puts("Maximum actionable joint is J4 for them moment");break;
+    }
+    return 0;
+}
+int EDScorbot::ref_to_count(int motor, int ref){
+    switch(motor){
+        case 1:return (40.35269645959781*ref)+32768;break;
+        case 2:return (14.770677455806219*ref)+32768;break;
+        case 3:return (41.6752813118148*ref)+32768;break;
+        case 4:return (4.582209206643176*ref)+32768;break;
+        default:puts("Maximum actionable joint is J4 for them moment");break;
+    }
+    return 0;
+}
+
+int EDScorbot::count_to_ref(int motor, int count){
+    switch(motor){
+        case 1:return (0.02478)*(count-32768);break;
+        case 2:return; (0.0677)*(count-32768);break;
+        case 3:return; (0.02399)*(count-32768);break;
+        case 4:return; (0.2182353)*(count-32768);break;
+        default:puts("Maximum actionable joint is J4 for them moment");break;
+    }
+    return 0;
+}
+
+int angle_to_ref(int motor, float angle){
+    switch(motor){
+        case 1:return (-3*angle);
+        case 2:return (-9.4*angle);
+        case 3:return (-3.1*angle);
+        case 4:return (-17.61158871*angle);
+        default:puts("Maximum actionable joint is J4 for them moment");break;
+    }
+    return 0;
+}
+
+float ref_to_angle(int motor, int ref){
+    switch(motor){
+        case 1:return ((-1/3)*ref);
+        case 2:return ((-1/9.4)*ref);
+        case 3:return ((-1/3.1)*ref);
+        case 4:return (-0.056780795*ref);
+        default:puts("Maximum actionable joint is J4 for them moment");break;
+    }
+    return 0;
 }

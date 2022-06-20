@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -13,7 +14,7 @@
 #define SERVER_PORT htons(9999)
 
 int fprintJson(const char *json);
-int fprintTrajectory(const char *tray);
+int fprintTrajectory(const char *tray, int len);
 
 int main(int argc, char *argv[])
 {
@@ -106,8 +107,9 @@ int main(int argc, char *argv[])
                 char w_buffer[10] = "[OK]";
                 n = write(clientSock, w_buffer, strlen(w_buffer));
                 usleep(10000);
+                char len_buffer[20];
                 n = read(clientSock, buffer, MAX_BYTES);
-                fprintTrajectory(buffer);
+                fprintTrajectory(buffer, n);
                 // Probar que esto funciona y que se abre el .npy correctamente
             }
 
@@ -138,10 +140,19 @@ int fprintJson(const char *json)
     return written;
 };
 
-int fprintTrajectory(const char *tray)
+int fprintTrajectory(const char *tray, int len)
 {
-    FILE *f = fopen("./tmp_tray.npy", "wb");
-    int written = fprintf(f, "%s", tray);
-    fclose(f);
-    return written;
+    // FILE *f = fopen("./tmp_tray.npy", "wb");
+    // int written = fprintf(f, "%s", tray);
+    // fclose(f);
+    // return written;
+
+    std::ofstream f;
+    f.open("./tmp_tray.npy",std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
+    std::string str(tray, len);
+
+    f << str;
+    f.close();
+    int a = 1;
+    return 0;
 };
