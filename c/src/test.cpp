@@ -25,7 +25,12 @@ int main(int argc, char* argv[])
     if(init)
         handler.initJoints();
 
-    handler.sendRef(ref,*joint);
+
+    handler.searchHome(handler.j1);
+    handler.searchHome(handler.j2);
+    handler.searchHome(handler.j3);
+    handler.searchHome(handler.j4);
+    
     int reads[6];
     handler.readJoints(reads);
 
