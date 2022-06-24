@@ -17,9 +17,15 @@ SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fPIC --static -D_GLIBCXX_DEBUG -DEDS_V
 
 # Compile this module (standard C++ file, no additional dependencies)
 #add_library(test_target SHARED src/testModule.cpp)
-add_executable(test_edscorbot src/EDScorbot.cpp src/test.cpp src/devmem.cpp)
+add_executable(test_edscorbot src/EDScorbot.cpp src/test_joints.cpp src/devmem.cpp)
 add_executable(server src/server.cpp src/EDScorbot.cpp src/devmem.cpp)
+<<<<<<< HEAD
 add_executable(test_read src/EDScorbot.cpp src/read_joints.cpp src/devmem.cpp)
+=======
+add_executable(receive_server src/receive_server.cpp)
+add_executable(test_json src/test_json.cpp)
+
+>>>>>>> 28ef56f61e3d8a8f107c3aec08c3e50fa31515a2
 #add_library(image_generator SHARED src/Image_generator.cpp)
 
 
@@ -32,19 +38,31 @@ add_executable(test_read src/EDScorbot.cpp src/read_joints.cpp src/devmem.cpp)
 target_include_directories(test_edscorbot PUBLIC "c/json/single_include/")
 target_include_directories(test_edscorbot PUBLIC "c/src/include")
 
+<<<<<<< HEAD
 target_include_directories(test_read PUBLIC "c/json/single_include/")
 target_include_directories(test_read PUBLIC "c/src/include")
+=======
+target_include_directories(test_json PUBLIC "c/json/single_include/")
+target_include_directories(test_json PUBLIC "c/src/include")
+>>>>>>> 28ef56f61e3d8a8f107c3aec08c3e50fa31515a2
 
 target_include_directories(server PUBLIC "c/json/single_include/")
 target_include_directories(server PUBLIC "c/src/")
 
+target_include_directories(receive_server PUBLIC "c/json/single_include/")
+target_include_directories(receive_server PUBLIC "c/src/")
 
 #TARGET_LINK_LIBRARIES(test_target PRIVATE ${DV_LIBRARIES})
 TARGET_LINK_LIBRARIES(test_edscorbot PRIVATE nlohmann_json::nlohmann_json)
+<<<<<<< HEAD
 TARGET_LINK_LIBRARIES(test_read PRIVATE nlohmann_json::nlohmann_json)
+=======
+TARGET_LINK_LIBRARIES(test_json PRIVATE nlohmann_json::nlohmann_json)
+>>>>>>> 28ef56f61e3d8a8f107c3aec08c3e50fa31515a2
 
 SET(CMAKE_BUILD_TYPE "Debug")
 TARGET_LINK_LIBRARIES(server PRIVATE nlohmann_json::nlohmann_json)
+
 
 #INSTALL(TARGETS test_edscorbot DESTINATION "/usr/share/dv/modules")
 #INSTALL(TARGETS image_generator DESTINATION "/usr/share/dv/modules")
