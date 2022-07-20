@@ -3,16 +3,35 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <unistd.h>
+#include <sys/time.h>
 #include "include/EDScorbot.hpp"
 #define PI 3.141592653589793
 using json = nlohmann::json;
-#define SLEEP 0.25
+#define SLEEP 250000
 
 // Function to parse numpy array in json format
 void parse_jsonnp_array(char *filename, float *j1, float *j2);
 
 // Function to transform a trajectory from angular velocities (w, omega) to angles
 void w_to_angles(float *j1_angles, float *j2_angles, float *j1, float *j2);
+/*
+int main()
+{
+    struct timeval stop, start;
+    gettimeofday(&start, NULL);
+    // do stuff
+    gettimeofday(&stop, NULL);
+    //printf("took %lu us\n", (stop.tv_sec - start.tv_sec) * 1000000 + stop.tv_usec - start.tv_usec);
+    int i;
+    for (i = 0; i < 1000; i++)
+    {
+        printf("i: %d, start: %li, end: %li, elapsed: %li\n", i, start.tv_usec, stop.tv_usec, stop.tv_usec - start.tv_usec);
+        gettimeofday(&stop,NULL);
+        //usleep(1000);
+    }
+}
+*/
 
 int main(int argc, char *argv[])
 {
@@ -28,50 +47,60 @@ int main(int argc, char *argv[])
     // argv[2] --> initial_config.json
     char *config_file = argv[2];
     EDScorbot handler(config_file);
-    
-    std::vector<int> j1_vector,j2_vector;
-    int j1_pos[500],j2_pos[500];
+
+    std::vector<int> j1_vector, j2_vector;
+    int j1_pos[500], j2_pos[500];
 
     handler.initJoints();
     int i;
     for (i = 0; i < 500; i++)
     {
         int refj1, refj2;
-        refj1 = handler.angle_to_ref(1,j1_angles[i]);
-        refj2 = handler.angle_to_ref(2,j2_angles[i]);
-        printf("It: %d, J1: %d, J2: %d\n",i,refj1,refj2);
-        //handler.sendRef(refj1, handler.j1);
-        //handler.sendRef(refj2, handler.j2);
-        clock_t start = clock();
-        clock_t end = clock();
-        float elapsed = (end-start)/CLOCKS_PER_SEC;
+        refj1 = handler.angle_to_ref(1, j1_angles[i]);
+        refj2 = handler.angle_to_ref(2, j2_angles[i]);
+        printf("It: %d, J1: %d, J2: %d\n", i, refj1, refj2);
+        handler.sendRef(refj1, handler.j1);
+        handler.sendRef(refj2, handler.j2);
+        struct timeval start, end;
+        gettimeofday(&start, NULL);
+        gettimeofday(&end, NULL);
+
+        // clock_t start = clock();
+        // clock_t end = clock();
+        
+        long int elapsed = ((end.tv_sec - start.tv_sec) * 1000000) + end.tv_usec - start.tv_usec; 
         while (elapsed < SLEEP)
         {
-            /*Do something*/
-            end = clock();
-            elapsed = (end-start)/CLOCKS_PER_SEC;
+            // Do something
+            //printf("start: %li, stop:%li, elapsed: %li\n",start.tv_usec,end.tv_usec,elapsed);
             int joints[6];
             handler.readJoints(joints);
             j1_vector.push_back(joints[0]);
             j2_vector.push_back(joints[1]);
-
+            (gettimeofday(&end, NULL));
+            // while (!ret){
+            //     ret = (gettimeofday(&end, NULL));
+            // }
+            elapsed = ((end.tv_sec - start.tv_sec) * 1000000) + end.tv_usec - start.tv_usec; 
         }
-        j1_pos[i]=j1_vector.back();
-        j2_pos[i]=j2_vector.back();
+        j1_pos[i] = j1_vector.back();
+        j2_pos[i] = j2_vector.back();
     }
 
-    for (i = 0; i < 500; i++){
-        printf("i: %d, j1: %d, j2: %d\n",i,j1_pos[i],j2_pos[i]);
-
+    for (i = 0; i < 500; i++)
+    {
+        printf("i: %d, j1: %d, j2: %d\n", i, j1_pos[i], j2_pos[i]);
     }
 
-    for (int e:j1_vector){
-        std::cout <<' ' <<e << ' ';
+    for (int e : j1_vector)
+    {
+        std::cout << ' ' << e << ' ';
     }
     std::cout << std::endl;
-    
-    for (int e:j2_vector){
-        std::cout <<' ' <<e << ' ';
+
+    for (int e : j2_vector)
+    {
+        std::cout << ' ' << e << ' ';
     }
     std::cout << std::endl;
     // Ejecucion de la trayectoria con j1 y j2
