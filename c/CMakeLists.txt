@@ -24,6 +24,7 @@ add_executable(receive_server src/receive_server.cpp)
 add_executable(test_json src/test_json.cpp)
 add_executable(test_home src/test_home.cpp src/EDScorbot.cpp src/devmem.cpp)
 add_executable(reset src/reset_all.cpp src/EDScorbot.cpp src/devmem.cpp)
+add_executable(trajectory src/trajectory.cpp src/EDScorbot.cpp src/devmem.cpp)
 
 #add_library(image_generator SHARED src/Image_generator.cpp)
 
@@ -39,6 +40,7 @@ target_include_directories(test_edscorbot PUBLIC "c/src/include")
 
 target_include_directories(test_read PUBLIC "c/json/single_include/")
 target_include_directories(test_read PUBLIC "c/src/include")
+
 target_include_directories(test_json PUBLIC "c/json/single_include/")
 target_include_directories(test_json PUBLIC "c/src/include")
 
@@ -55,6 +57,10 @@ target_include_directories(server PUBLIC "c/src/")
 target_include_directories(receive_server PUBLIC "c/json/single_include/")
 target_include_directories(receive_server PUBLIC "c/src/")
 
+target_include_directories(trajectory PUBLIC "c/json/single_include/")
+target_include_directories(trajectory PUBLIC "c/src/")
+
+
 #TARGET_LINK_LIBRARIES(test_target PRIVATE ${DV_LIBRARIES})
 TARGET_LINK_LIBRARIES(test_edscorbot PRIVATE nlohmann_json::nlohmann_json)
 TARGET_LINK_LIBRARIES(test_read PRIVATE nlohmann_json::nlohmann_json)
@@ -66,6 +72,8 @@ TARGET_LINK_LIBRARIES(reset PRIVATE nlohmann_json::nlohmann_json)
 
 SET(CMAKE_BUILD_TYPE "Debug")
 TARGET_LINK_LIBRARIES(server PRIVATE nlohmann_json::nlohmann_json)
+TARGET_LINK_LIBRARIES(trajectory PRIVATE nlohmann_json::nlohmann_json)
+
 
 
 #INSTALL(TARGETS test_edscorbot DESTINATION "/usr/share/dv/modules")
