@@ -1,5 +1,6 @@
 #include "include/EDScorbot.hpp"
-
+#include <time.h>
+#include <unistd.h>
 
 int main(int argc, char* argv[])
 {   
@@ -27,13 +28,20 @@ int main(int argc, char* argv[])
 
     puts("J1");
     handler.searchHome(handler.j1);
-    // puts("J2");
-    // handler.searchHome(handler.j2);
-    // puts("J3");
-    // handler.searchHome(handler.j3);
-    // puts("J4");
-    // handler.searchHome(handler.j4);
-    
+    puts("J2");
+    handler.searchHome(handler.j2);
+    puts("J3");
+    handler.searchHome(handler.j3);
+    puts("J4");
+    handler.searchHome(handler.j4);
+    puts("Waiting for PID to stabilize");
+    usleep(15000000);
+    EDScorbotJoint* joints[6] = {&handler.j1, &handler.j2, &handler.j3, &handler.j4, &handler.j5, &handler.j6};
+
+    int i;
+    for (i = 0; i< 4; i++){
+        handler.resetJPos(*joints[i]);
+    }
     // int reads[6];
     // handler.readJoints(reads);
 
