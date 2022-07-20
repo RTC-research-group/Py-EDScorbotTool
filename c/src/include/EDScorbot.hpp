@@ -2,6 +2,7 @@
 #include "nlohmann/json.hpp"
 #include <map>
 #include <thread>
+#define SPIKE_GEN_FREQ_DIVIDER 0x01
 #define REF_ADDR 0x02   
 #define PI_FD_ENABLE_ADDR 0x03
 #define PI_FD_ADDR 0x07

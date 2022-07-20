@@ -1,11 +1,11 @@
 extern "C"{
 #include "include/devmem.hpp"
-
+#define BASE_ADDRESS 0x40000000 //Possible to be overwritten with defines
 
 int sendCommand16(uchar addr, uchar b1, uchar b2, int *mem)
 {
     int data = 0x000000 | addr << 16 | b1 << 8 | b2;
-#ifdef EDS_VERBOSE
+#ifdef DEVMEM_VERBOSE
     {
         printf("Datos: %08x\n", data);
     }
@@ -17,7 +17,7 @@ int sendCommand16(uchar addr, uchar b1, uchar b2, int *mem)
 int *open_devmem()
 {
     unsigned int bram_size = 0xFF;
-    off_t bram_pbase = 0x44000000; // physical base address
+    off_t bram_pbase = BASE_ADDRESS; // physical base address
     int *bram_ptr;
     int fd;
 
