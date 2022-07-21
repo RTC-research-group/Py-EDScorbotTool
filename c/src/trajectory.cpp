@@ -5,16 +5,23 @@
 #include <vector>
 #include <unistd.h>
 #include <sys/time.h>
+#include <mosquitto.h>
 #include "include/EDScorbot.hpp"
+
 #define PI 3.141592653589793
 using json = nlohmann::json;
 #define SLEEP 250000
+#define MAX_MQTT_MSG 200
 
 // Function to parse numpy array in json format
 void parse_jsonnp_array(char *filename, float *j1, float *j2);
 
 // Function to transform a trajectory from angular velocities (w, omega) to angles
 void w_to_angles(float *j1_angles, float *j2_angles, float *j1, float *j2);
+
+void init_mqtt_client(mosquitto *mosq, char *broker_ip);
+int publish(mosquitto *mosq, char *msg, int msg_len, char *topic)
+void end_mqtt_client(mosquitto *mosq);
 /*
 int main()
 {
@@ -52,6 +59,11 @@ int main(int argc, char *argv[])
     int j1_pos[500], j2_pos[500];
 
     handler.initJoints();
+
+    struct mosquitto *mosq;
+    init_mqtt_client(mosq, "192.168.0.149");
+    char mqtt_msg[MAX_MQTT_MSG];
+
     int i;
     for (i = 0; i < 500; i++)
     {
@@ -67,13 +79,13 @@ int main(int argc, char *argv[])
 
         // clock_t start = clock();
         // clock_t end = clock();
-        
-        long int elapsed = ((end.tv_sec - start.tv_sec) * 1000000) + end.tv_usec - start.tv_usec; 
+        int joints[6];
+
+        long int elapsed = ((end.tv_sec - start.tv_sec) * 1000000) + end.tv_usec - start.tv_usec;
         while (elapsed < SLEEP)
         {
             // Do something
-            //printf("start: %li, stop:%li, elapsed: %li\n",start.tv_usec,end.tv_usec,elapsed);
-            int joints[6];
+            // printf("start: %li, stop:%li, elapsed: %li\n",start.tv_usec,end.tv_usec,elapsed);
             handler.readJoints(joints);
             j1_vector.push_back(joints[0]);
             j2_vector.push_back(joints[1]);
@@ -81,28 +93,23 @@ int main(int argc, char *argv[])
             // while (!ret){
             //     ret = (gettimeofday(&end, NULL));
             // }
-            elapsed = ((end.tv_sec - start.tv_sec) * 1000000) + end.tv_usec - start.tv_usec; 
+            elapsed = ((end.tv_sec - start.tv_sec) * 1000000) + end.tv_usec - start.tv_usec;
         }
+
+        snprintf(mqtt_msg, MAX_MQTT_MSG, "[%d,%d,%d,%d,%d,%d,%d]",joints[0],joints[1],joints[2],joints[3],joints[4],joints[5], i);
+        publish(mosq,mqtt_msg,strlen(mqtt_msg),"EDScorbot/trajectory");
         j1_pos[i] = j1_vector.back();
         j2_pos[i] = j2_vector.back();
     }
 
-    for (i = 0; i < 500; i++)
-    {
-        printf("i: %d, j1: %d, j2: %d\n", i, j1_pos[i], j2_pos[i]);
-    }
-
-    for (int e : j1_vector)
-    {
-        std::cout << ' ' << e << ' ';
-    }
-    std::cout << std::endl;
-
-    for (int e : j2_vector)
-    {
-        std::cout << ' ' << e << ' ';
-    }
-    std::cout << std::endl;
+    FILE* fj1 = fopen("./j1_counters_output","wb");
+    int* pv = &j1_vector[0];
+    fwrite((const void*)pv,4,j1_vector.size(),fj1);
+    fclose(fj1);
+    FILE* fj2 = fopen("./j2_counters_output","wb");
+    pv = &j2_vector[0];
+    fwrite((const void*)pv,4,j2_vector.size(),fj2);
+    fclose(fj2);
     // Ejecucion de la trayectoria con j1 y j2
 
     // Recogida de resultados? Listas de c++ o arrays de c?
@@ -145,4 +152,35 @@ void w_to_angles(float *j1_angles, float *j2_angles, float *j1, float *j2)
         printf("[%f\t%f ]\n", j1_angles[i], j2_angles[i]);
 #endif
     }
+}
+
+void init_mqtt_client(mosquitto *mosq, char *broker_ip)
+{
+    int rc;
+    rc = mosquitto_connect(mosq, "localhost", 1883, 60);
+    while (rc != 0)
+    {
+        printf("Client could not connect to broker! Error Code: %d\nTrying to reconnect...\n", rc);
+        rc = mosquitto_connect(mosq, "localhost", 1883, 60);
+
+        // mosquitto_destroy(mosq);
+        // return -1;
+    }
+    printf("We are now connected to the broker!\n");
+
+    // SUBSCRIBE!
+}
+
+int publish(mosquitto *mosq, char *msg, int msg_len, char *topic)
+{
+    int ret = mosquitto_publish(mosq, NULL, topic, msg_len, topic, 0, false);
+    return ret;
+}
+
+void end_mqtt_client(mosquitto *mosq)
+{
+    mosquitto_disconnect(mosq);
+    mosquitto_destroy(mosq);
+
+    mosquitto_lib_cleanup();
 }
