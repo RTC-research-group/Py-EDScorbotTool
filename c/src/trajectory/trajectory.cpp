@@ -20,7 +20,7 @@ void parse_jsonnp_array(char *filename, float *j1, float *j2);
 void w_to_angles(float *j1_angles, float *j2_angles, float *j1, float *j2);
 
 void init_mqtt_client(mosquitto *mosq, char *broker_ip);
-int publish(mosquitto *mosq, char *msg, int msg_len, char *topic)
+int publish(mosquitto *mosq, char *msg, int msg_len, char *topic);
 void end_mqtt_client(mosquitto *mosq);
 /*
 int main()

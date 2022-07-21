@@ -1,17 +1,23 @@
 cmake_minimum_required(VERSION 3.10)
 project(edscorbot_runtime)
 
+
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(Mosquitto IMPORTED_TARGET libmosquitto REQUIRED)
+
+
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++17)
 
 add_subdirectory("json")
+add_subdirectory("src/trajectory")
 #set(nlohmann_json_DIR "/home/enrique/Trabajo/Py-EDScorbotTool/c/src/json/cmake")
 #find_package(nlohmann_json 3.10.5 REQUIRED)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 
-SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fPIC --static -D_GLIBCXX_DEBUG -DEDS_VERBOSE")
+SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fPIC --static  -DEDS_VERBOSE")
 
 # Custom CMake base module
 
@@ -24,7 +30,10 @@ add_executable(receive_server src/receive_server.cpp)
 add_executable(test_json src/test_json.cpp)
 add_executable(test_home src/test_home.cpp src/EDScorbot.cpp src/devmem.cpp)
 add_executable(reset src/reset_all.cpp src/EDScorbot.cpp src/devmem.cpp)
-add_executable(trajectory src/trajectory.cpp src/EDScorbot.cpp src/devmem.cpp)
+#add_executable(trajectory src/trajectory.cpp src/EDScorbot.cpp src/devmem.cpp)
+#add_executable(mqtt_client src/mqtt_client.c)
+
+
 
 #add_library(image_generator SHARED src/Image_generator.cpp)
 
@@ -72,9 +81,9 @@ TARGET_LINK_LIBRARIES(reset PRIVATE nlohmann_json::nlohmann_json)
 
 SET(CMAKE_BUILD_TYPE "Debug")
 TARGET_LINK_LIBRARIES(server PRIVATE nlohmann_json::nlohmann_json)
-TARGET_LINK_LIBRARIES(trajectory PRIVATE nlohmann_json::nlohmann_json)
+#TARGET_LINK_LIBRARIES(trajectory PRIVATE nlohmann_json::nlohmann_json)
 
-
+#target_link_libraries(trajectory PRIVATE PkgConfig::Mosquitto)
 
 #INSTALL(TARGETS test_edscorbot DESTINATION "/usr/share/dv/modules")
 #INSTALL(TARGETS image_generator DESTINATION "/usr/share/dv/modules")
