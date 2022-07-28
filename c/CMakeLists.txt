@@ -66,8 +66,7 @@ target_include_directories(server PUBLIC "c/src/")
 target_include_directories(receive_server PUBLIC "c/json/single_include/")
 target_include_directories(receive_server PUBLIC "c/src/")
 
-target_include_directories(trajectory PUBLIC "c/json/single_include/")
-target_include_directories(trajectory PUBLIC "c/src/")
+
 
 
 #TARGET_LINK_LIBRARIES(test_target PRIVATE ${DV_LIBRARIES})

@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
     handler.initJoints();
 
     struct mosquitto *mosq;
-    init_mqtt_client(mosq, "192.168.0.149");
+    init_mqtt_client(mosq, "192.168.1.104");
     char mqtt_msg[MAX_MQTT_MSG];
 
     int i;
@@ -157,11 +157,11 @@ void w_to_angles(float *j1_angles, float *j2_angles, float *j1, float *j2)
 void init_mqtt_client(mosquitto *mosq, char *broker_ip)
 {
     int rc;
-    rc = mosquitto_connect(mosq, "localhost", 1883, 60);
+    rc = mosquitto_connect(mosq, broker_ip, 1883, 60);
     while (rc != 0)
     {
         printf("Client could not connect to broker! Error Code: %d\nTrying to reconnect...\n", rc);
-        rc = mosquitto_connect(mosq, "localhost", 1883, 60);
+        rc = mosquitto_connect(mosq, broker_ip, 1883, 60);
 
         // mosquitto_destroy(mosq);
         // return -1;
