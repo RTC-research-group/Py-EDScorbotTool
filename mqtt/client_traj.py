@@ -15,17 +15,17 @@ def on_connect(client, userdata, flags, rc):
 
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
-    parsed = msg.payload.lstrip('[').rstrip(']').split(',')
-    print(parsed)
+    parsed = msg.payload.decode('utf8').lstrip('[').rstrip(']').split(',')
+    #print(parsed)
     t.update()
-    print(msg.topic+" "+str(msg.payload))
+    #print(msg.topic+" "+str(msg.payload))
 
 client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
 
 client.connect("192.168.0.92", 1883, 60)
-t = tqdm.tqdm(total=1000)
+t = tqdm.tqdm(total=500)
 # Blocking call that processes network traffic, dispatches callbacks and
 # handles reconnecting.
 # Other loop*() functions are available that give a threaded interface and a

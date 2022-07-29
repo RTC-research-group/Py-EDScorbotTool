@@ -55,6 +55,7 @@ void message_callback(struct mosquitto *mosq, void *obj, const struct mosquitto_
 		progress.mode = mode;
 		progress.payload = url;
 		progress.last = 1;
+		system("/home/root/mqtt_client &");
 	}
 }
 
@@ -98,17 +99,7 @@ void ftp_trajectory(char *url)
 	// system("execute_trajectory ....");
 	// pthread_t pub_thread;
 
-	// int i = 0;
-	// char buf[100];
-	// for (i = 0; i < 1000; i++)
-	// {
-	// 	snprintf(buf, 100, "[1,2,3,4,5,6,%d]", i);
-	// 	printf("%s\n", buf);
-
-	// 	int t = pthread_create(&pub_thread, NULL, &pub_progress, buf);
-	// 	pthread_join(pub_thread, NULL);
-	// 	usleep(100000);
-	// }
+	
 }
 
 int main(int argc, char *argv[])
