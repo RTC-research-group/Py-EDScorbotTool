@@ -261,7 +261,7 @@ void EDScorbot::readJoints(int *ret)
 void EDScorbot::searchHome(EDScorbotJoint j)
 {
     // Un poco mas rapido
-    int pol = (j.jnum < 3 ? 1 : -1);
+    int pol = (j.jnum < 4 ? 1 : -1);
     
     int old_sj = 0x20000 / 4; // 32768
     int sj = 0x20000 / 4;     // 32768
@@ -279,7 +279,7 @@ void EDScorbot::searchHome(EDScorbotJoint j)
     puts("while1");
     while (abs(sj - old_sj) != 0)
     {
-        inc_j = inc_j - 50 * pol;
+        inc_j = inc_j - 75 * pol;
         sendRef(inc_j, j);
         usleep(2000000);
         old_sj = sj;
