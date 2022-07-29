@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.10)
 project(edscorbot_runtime)
 
 
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(Mosquitto IMPORTED_TARGET libmosquitto REQUIRED)
+#find_package(PkgConfig REQUIRED)
+#pkg_check_modules(Mosquitto IMPORTED_TARGET libmosquitto REQUIRED)
 
 
 ## Compile as C++11, supported in ROS Kinetic and newer
@@ -18,6 +18,7 @@ add_subdirectory("src/trajectory")
 ## is used, also find other catkin packages
 
 SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fPIC --static  -DEDS_VERBOSE")
+SET(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -DEDS_VERBOSE")
 
 # Custom CMake base module
 
@@ -31,7 +32,7 @@ add_executable(test_json src/test_json.cpp)
 add_executable(test_home src/test_home.cpp src/EDScorbot.cpp src/devmem.cpp)
 add_executable(reset src/reset_all.cpp src/EDScorbot.cpp src/devmem.cpp)
 #add_executable(trajectory src/trajectory.cpp src/EDScorbot.cpp src/devmem.cpp)
-#add_executable(mqtt_client src/mqtt_client.c)
+add_executable(mqtt_client src/mqtt_client.c)
 
 
 
@@ -69,6 +70,10 @@ target_include_directories(receive_server PUBLIC "c/src/")
 target_include_directories(trajectory PUBLIC "c/json/single_include/")
 target_include_directories(trajectory PUBLIC "c/src/")
 
+target_include_directories(mqtt_client PUBLIC "c/json/single_include/")
+target_include_directories(mqtt_client PUBLIC "c/src/")
+target_include_directories(mqtt_client PUBLIC "/home/enrique/mosquitto-2.0.14/include")
+
 
 #TARGET_LINK_LIBRARIES(test_target PRIVATE ${DV_LIBRARIES})
 TARGET_LINK_LIBRARIES(test_edscorbot PRIVATE nlohmann_json::nlohmann_json)
@@ -82,6 +87,9 @@ TARGET_LINK_LIBRARIES(reset PRIVATE nlohmann_json::nlohmann_json)
 SET(CMAKE_BUILD_TYPE "Debug")
 TARGET_LINK_LIBRARIES(server PRIVATE nlohmann_json::nlohmann_json)
 #TARGET_LINK_LIBRARIES(trajectory PRIVATE nlohmann_json::nlohmann_json)
+TARGET_LINK_LIBRARIES(mqtt_client /home/enrique/Trabajo/Py-EDScorbotTool/c/compiled_libs_armhf/libmosquitto.a -lpthread)
+
+
 
 #target_link_libraries(trajectory PRIVATE PkgConfig::Mosquitto)
 
@@ -99,7 +107,6 @@ SET(CMAKE_BUILD_TYPE "Debug")
 #add_executable(movement src/spinning.cpp)
 
 
-
 #add_library(movclas src/RosConnection.cpp)
 
 #add_executable(helloros src/helloro.cpp)
@@ -114,5 +121,3 @@ SET(CMAKE_BUILD_TYPE "Debug")
 
 #target_link_libraries(example PUBLIC movclass)
 #target_link_libraries(example PUBLIC ${catkin_LIBRARIES})
-#target_link_libraries(example PUBLIC -lpthread)
-
