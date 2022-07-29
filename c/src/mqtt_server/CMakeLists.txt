@@ -16,7 +16,7 @@ add_compile_options(-std=c++17)
 ## is used, also find other catkin packages
 SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS_INIT}")
 SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fPIC -DEDS_VERBOSE")
-
+set(LANGUAGE C_STANDARD)
 # Custom CMake base module
 
 # Compile this module (standard C++ file, no additional dependencies)
@@ -24,6 +24,7 @@ SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fPIC -DEDS_VERBOSE")
 
 add_executable(mqtt_server mqtt_server.cpp ../EDScorbot.cpp ../devmem.cpp)
 #add_executable(mqtt_client src/mqtt_client.c)
+
 
 
 
@@ -39,13 +40,13 @@ add_executable(mqtt_server mqtt_server.cpp ../EDScorbot.cpp ../devmem.cpp)
 
 target_include_directories(mqtt_server PUBLIC "../../json/single_include/")
 target_include_directories(mqtt_server PUBLIC "../")
-
+target_include_directories(mqtt_server PUBLIC "/home/enrique/mosquitto-2.0.14/include")
 
 #TARGET_LINK_LIBRARIES(test_target PRIVATE ${DV_LIBRARIES})
 
-TARGET_LINK_LIBRARIES(mqtt_server PRIVATE nlohmann_json::nlohmann_json)
+TARGET_LINK_LIBRARIES(mqtt_server PRIVATE nlohmann_json::nlohmann_json /home/enrique/Trabajo/Py-EDScorbotTool/c/compiled_libs_armhf/libmosquitto.a -lpthread)
 
-target_link_libraries(mqtt_server PRIVATE PkgConfig::Mosquitto)
+#TARGET_LINK_LIBRARIES(mqtt_server )
 
 #INSTALL(TARGETS test_edscorbot DESTINATION "/usr/share/dv/modules")
 #INSTALL(TARGETS image_generator DESTINATION "/usr/share/dv/modules")

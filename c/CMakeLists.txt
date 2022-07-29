@@ -11,6 +11,7 @@ add_compile_options(-std=c++17)
 
 add_subdirectory("json")
 add_subdirectory("src/trajectory")
+add_subdirectory("src/mqtt_server")
 #set(nlohmann_json_DIR "/home/enrique/Trabajo/Py-EDScorbotTool/c/src/json/cmake")
 #find_package(nlohmann_json 3.10.5 REQUIRED)
 ## Find catkin macros and libraries
