@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.10)
 project(edscorbot_runtime)
 
 
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(Mosquitto IMPORTED_TARGET libmosquitto REQUIRED)
 
 
 ## Compile as C++11, supported in ROS Kinetic and newer
@@ -39,13 +37,12 @@ add_executable(trajectory trajectory.cpp ../EDScorbot.cpp ../devmem.cpp)
 
 target_include_directories(trajectory PUBLIC "../../json/single_include/")
 target_include_directories(trajectory PUBLIC "../")
+target_include_directories(trajectory PUBLIC "/home/enrique/mosquitto-2.0.14/include")
 
 
 #TARGET_LINK_LIBRARIES(test_target PRIVATE ${DV_LIBRARIES})
 
-TARGET_LINK_LIBRARIES(trajectory PRIVATE nlohmann_json::nlohmann_json)
-
-target_link_libraries(trajectory PRIVATE PkgConfig::Mosquitto)
+TARGET_LINK_LIBRARIES(trajectory PRIVATE nlohmann_json::nlohmann_json /home/enrique/Trabajo/Proyectos/SMALL/Py-EDScorbotTool/c/compiled_libs_armhf/libmosquitto.a -lpthread)
 
 #INSTALL(TARGETS test_edscorbot DESTINATION "/usr/share/dv/modules")
 #INSTALL(TARGETS image_generator DESTINATION "/usr/share/dv/modules")
