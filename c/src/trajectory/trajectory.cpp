@@ -5,7 +5,7 @@
 #include <vector>
 #include <unistd.h>
 #include <sys/time.h>
-#include <mosquitto.h>
+#include "mosquitto.h"
 #include "include/EDScorbot.hpp"
 
 #define PI 3.141592653589793
@@ -60,7 +60,11 @@ int main(int argc, char *argv[])
 
     handler.initJoints();
 
+    mosquitto_lib_init();
+
     struct mosquitto *mosq;
+    mosq = mosquitto_new(NULL, true, 0);
+
     init_mqtt_client(mosq, "192.168.1.104");
     char mqtt_msg[MAX_MQTT_MSG];
 
@@ -96,19 +100,19 @@ int main(int argc, char *argv[])
             elapsed = ((end.tv_sec - start.tv_sec) * 1000000) + end.tv_usec - start.tv_usec;
         }
 
-        snprintf(mqtt_msg, MAX_MQTT_MSG, "[%d,%d,%d,%d,%d,%d,%d]",joints[0],joints[1],joints[2],joints[3],joints[4],joints[5], i);
-        publish(mosq,mqtt_msg,strlen(mqtt_msg),"EDScorbot/trajectory");
+        snprintf(mqtt_msg, MAX_MQTT_MSG, "[%d,%d,%d,%d,%d,%d,%d]", joints[0], joints[1], joints[2], joints[3], joints[4], joints[5], i);
+        publish(mosq, mqtt_msg, strlen(mqtt_msg), "EDScorbot/trajectory");
         j1_pos[i] = j1_vector.back();
         j2_pos[i] = j2_vector.back();
     }
 
-    FILE* fj1 = fopen("./j1_counters_output","wb");
-    int* pv = &j1_vector[0];
-    fwrite((const void*)pv,4,j1_vector.size(),fj1);
+    FILE *fj1 = fopen("./j1_counters_output", "wb");
+    int *pv = &j1_vector[0];
+    fwrite((const void *)pv, 4, j1_vector.size(), fj1);
     fclose(fj1);
-    FILE* fj2 = fopen("./j2_counters_output","wb");
+    FILE *fj2 = fopen("./j2_counters_output", "wb");
     pv = &j2_vector[0];
-    fwrite((const void*)pv,4,j2_vector.size(),fj2);
+    fwrite((const void *)pv, 4, j2_vector.size(), fj2);
     fclose(fj2);
     // Ejecucion de la trayectoria con j1 y j2
 
@@ -157,6 +161,7 @@ void w_to_angles(float *j1_angles, float *j2_angles, float *j1, float *j2)
 void init_mqtt_client(mosquitto *mosq, char *broker_ip)
 {
     int rc;
+    
     rc = mosquitto_connect(mosq, broker_ip, 1883, 60);
     while (rc != 0)
     {
@@ -184,3 +189,5 @@ void end_mqtt_client(mosquitto *mosq)
 
     mosquitto_lib_cleanup();
 }
+
+
