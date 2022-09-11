@@ -7,7 +7,7 @@
 #include <pthread.h>
 #include "mosquitto.h"
 
-#define mqtt_host "192.168.0.92"
+#define mqtt_host "192.168.1.104"
 #define mqtt_port 1883
 
 static int run = 1;
@@ -55,7 +55,7 @@ void message_callback(struct mosquitto *mosq, void *obj, const struct mosquitto_
 		progress.mode = mode;
 		progress.payload = url;
 		progress.last = 1;
-		system("/home/root/mqtt_client &");
+		system("/home/root/trajectory /home/root/test.json /home/root/initial_config.json &");
 	}
 }
 
