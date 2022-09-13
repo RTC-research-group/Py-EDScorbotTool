@@ -55,7 +55,18 @@ void message_callback(struct mosquitto *mosq, void *obj, const struct mosquitto_
 		progress.mode = mode;
 		progress.payload = url;
 		progress.last = 1;
-		system("/home/root/trajectory /home/root/test.json /home/root/initial_config.json &");
+		
+		if(progress.type == 1){
+			if(progress.mode == 'S'){
+				char cmd[300];
+				snprintf(cmd,300,"/home/root/trajectory %s /home/root/initial_config.json &",progress.payload);
+				//printf("%s",cmd);
+				system(cmd);
+			}
+		}
+
+		
+		
 	}
 }
 
