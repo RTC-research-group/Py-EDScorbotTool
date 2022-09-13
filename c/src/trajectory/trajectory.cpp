@@ -55,8 +55,13 @@ int main(int argc, char *argv[])
     char *config_file = argv[2];
     EDScorbot handler(config_file);
 
+    //Arbitrary size vectors, for collecting data while we wait for the robot to reach a position
     std::vector<int> j1_vector, j2_vector;
+    //
+    std::vector<timeval> timestamp_vector;
+    //500 point arrays, to send data back to the l2l model
     int j1_pos[500], j2_pos[500];
+    struct timeval timestamp_arr[500];
 
     handler.initJoints();
 
@@ -93,6 +98,7 @@ int main(int argc, char *argv[])
             handler.readJoints(joints);
             j1_vector.push_back(joints[0]);
             j2_vector.push_back(joints[1]);
+            timestamp_vector.push_back(end);
             (gettimeofday(&end, NULL));
             // while (!ret){
             //     ret = (gettimeofday(&end, NULL));
@@ -104,21 +110,31 @@ int main(int argc, char *argv[])
         publish(mosq, mqtt_msg, strlen(mqtt_msg), "EDScorbot/trajectory");
         j1_pos[i] = j1_vector.back();
         j2_pos[i] = j2_vector.back();
+        timestamp_arr[i]=timestamp_vector.back();
     }
 
     FILE *fj1 = fopen("./j1_counters_output", "wb");
     int *pv = &j1_vector[0];
     fwrite((const void *)pv, 4, j1_vector.size(), fj1);
     fclose(fj1);
+
     FILE *fj2 = fopen("./j2_counters_output", "wb");
     pv = &j2_vector[0];
     fwrite((const void *)pv, 4, j2_vector.size(), fj2);
     fclose(fj2);
+
+    FILE *ts = fopen("./timestamp_output", "wb");
+    pv = &timestamp_vector[0];
+    fwrite((const void *)pv, 4, timestamp_vector.size(), ts);
+    fclose(ts);
+
     // Ejecucion de la trayectoria con j1 y j2
 
     // Recogida de resultados? Listas de c++ o arrays de c?
 
     // Conversion y envío de resultados en json
+    publish(mosq, "[-1,-1,-1,-1,-1,-1,-1]", strlen("[-1,-1,-1,-1,-1,-1,-1]"), "EDScorbot/trajectory");
+
     return 0;
 }
 

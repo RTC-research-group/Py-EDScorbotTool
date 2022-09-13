@@ -27,8 +27,20 @@ def on_message(client, userdata, msg):
     t.update()
     global i
     i+=1
+
+    j1 = parsed[0]
+    j2 = parsed[1]
+    j3 = parsed[2]
+    j4 = parsed[3]
+    j5 = parsed[4]
+    j6 = parsed[5]
+    iter = parsed[6]
     
-    if i >499:
+    global pos_data
+    pos_data.append([j1,j2,j3,j4,j5,j6])
+
+    if iter < 0:
+        
         sys.exit()
    
     #print(msg.topic+" "+str(msg.payload))
@@ -40,6 +52,8 @@ parser.add_argument("-t","--trajectory",type=str,help="Name of the trajectory fi
 args = parser.parse_args()
 global traj_name
 global i
+global pos_data
+pos_data = []
 i = 0
 traj_name = args.trajectory
 
