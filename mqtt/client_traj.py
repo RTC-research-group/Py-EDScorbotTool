@@ -1,4 +1,5 @@
 import sys
+import numpy as np
 import paho.mqtt.client as mqtt
 from argparse import ArgumentParser
 from tqdm import  tqdm
@@ -39,8 +40,10 @@ def on_message(client, userdata, msg):
     global pos_data
     pos_data.append([j1,j2,j3,j4,j5,j6])
 
-    if iter < 0:
+    if int(iter) < 0:
+        arr = np.array(pos_data)
         
+        np.save("output_data.npy",arr)
         sys.exit()
    
     #print(msg.topic+" "+str(msg.payload))

@@ -124,9 +124,14 @@ int main(int argc, char *argv[])
     fclose(fj2);
 
     FILE *ts = fopen("./timestamp_output", "wb");
-    pv = &timestamp_vector[0];
-    fwrite((const void *)pv, 4, timestamp_vector.size(), ts);
+    struct timeval* pts = &timestamp_vector[0];
+    fwrite((const void *)pts, 8, timestamp_vector.size(), ts);
     fclose(ts);
+
+    FILE *fj1_500 = fopen("./j1_counters_output_500", "wb");
+    pv = &j1_pos[0];
+    fwrite((const void *)pv, 4,500, fj1_500);
+    fclose(fj1_500);
 
     // Ejecucion de la trayectoria con j1 y j2
 
@@ -194,7 +199,7 @@ void init_mqtt_client(mosquitto *mosq, char *broker_ip)
 
 int publish(mosquitto *mosq, char *msg, int msg_len, char *topic)
 {
-    int ret = mosquitto_publish(mosq, NULL, topic, msg_len, topic, 0, false);
+    int ret = mosquitto_publish(mosq, NULL, topic, msg_len, msg, 0, false);
     return ret;
 }
 
