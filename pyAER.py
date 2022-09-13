@@ -1,7 +1,9 @@
 from datetime import time
 from os import read
+import os
 import tkinter as tk
 from tkinter import ttk,messagebox
+from tkinter.ttk import Progressbar
 from tkinter.constants import X
 import usb.core
 import usb.util
@@ -80,6 +82,10 @@ class pyEDScorbotTool:
         #Variable to check if we keep updating the recordings
         self.updating = True
         logging.basicConfig(filemode='w',level=logging.INFO)
+
+        #Progress bar
+        #self.pb = None
+
 
         return
   
@@ -369,6 +375,39 @@ class pyEDScorbotTool:
             ttk.Button(labelframe,text="Reset J4 SPID",command=self.sendJ4FPGAReset).grid(row=1,column=6,sticky=(tk.W,tk.E))
             ttk.Button(labelframe,text="Reset J5 SPID",command=self.sendJ5FPGAReset).grid(row=2,column=6,sticky=(tk.W,tk.E))
             ttk.Button(labelframe,text="Reset J6 SPID",command=self.sendJ6FPGAReset).grid(row=3,column=6,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Trajectory",command=self.send_trajectory).grid(row=4,column=6,sticky=(tk.W,tk.E))
+            
+    def send_trajectory(self):
+        
+        filename = filedialog.askopenfile(mode="r")
+        real_name = filename.name.split("/")[-1]
+        cmd = "scp {} root@192.168.1.115:/home/root/{}".format(filename.name,real_name)
+        os.system(cmd)
+        cmd = "python3 mqtt/client_traj.py -t {} &".format(real_name)
+        os.system(cmd)
+
+        
+        
+
+    def render_progressbar(self,row,col):
+        '''
+        Create the progress bar to indicate trajectory execution %
+        
+        Args:
+            row (int): Row of the grid in which the buttons will be displayed
+            col (int): Column of the grid in which the buttons will be displayed
+        '''
+        if self.visible:
+            labelframe = ttk.LabelFrame(self.root, text="Trajectory Execution")
+            labelframe.grid(column=col, row=row, sticky=(
+                tk.N, tk.W), padx=5, pady=5,rowspan=2)
+            
+            pb = Progressbar(labelframe, orient='horizontal',mode='determinate',length=280,maximum=500).grid(row=1,column=1)
+            start_button = ttk.Button(
+            labelframe,
+            text='Start',
+            command=pb.start).grid(row=2,column=1)
+            
 
     def render_usbEnable(self,row,col):
         '''
@@ -647,6 +686,7 @@ class pyEDScorbotTool:
         self.render_usbEnable(5,1)
         self.render_dynapse2(3,3)
         #self.render_cameras(4,2)
+        #self.render_progressbar(3,4)
         self.init_config()
         self.update()
         #And call mainloop to display GUI
