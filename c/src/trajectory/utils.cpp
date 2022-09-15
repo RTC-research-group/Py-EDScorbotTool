@@ -1,0 +1,85 @@
+#include "utils.h"
+using json = nlohmann::json;
+
+void parse_jsonnp_array(char *filename, float *j1, float *j2)
+{
+    std::ifstream arr_stream(filename, std::ios::in);
+    json array = json::parse(arr_stream);
+
+    for (const auto &[k, v] : array.items())
+    {
+        int i = atoi(k.c_str());
+        j1[i] = v[0];
+        j2[i] = v[1];
+        // std::cout << "Key: " << k << std::endl;
+        // std::cout << "Value: " << v[1] << std::endl;
+    }
+    return;
+}
+
+void w_to_angles(float *j1_angles, float *j2_angles, float *j1, float *j2)
+{
+    j1_angles[0] = (j1[0] * 0.001) * (180 / PI);
+    j2_angles[0] = (j2[0] * 0.001) * (180 / PI);
+    int i = 0;
+#ifdef DEBUG
+    printf("[%f\t%f ]\n", j1_angles[i], j2_angles[i]);
+#endif
+
+    for (i = 1; i < 500; i++)
+    {
+        // np.cumsum(omegas * 0.001,axis=0)*( 180 / np.pi)
+        j1_angles[i] = (j1[i] * (0.001) * (180 / PI)) + j1_angles[i - 1];
+        j2_angles[i] = (j2[i] * (0.001) * (180 / PI)) + j2_angles[i - 1];
+#ifdef DEBUG
+        printf("[%f\t%f ]\n", j1_angles[i], j2_angles[i]);
+#endif
+    }
+}
+
+void init_mqtt_client(mosquitto *mosq, char *broker_ip)
+{
+    int rc;
+
+    rc = mosquitto_connect(mosq, broker_ip, 1883, 60);
+    while (rc != 0)
+    {
+        printf("Client could not connect to broker! Error Code: %d\nTrying to reconnect...\n", rc);
+        rc = mosquitto_connect(mosq, broker_ip, 1883, 60);
+
+        // mosquitto_destroy(mosq);
+        // return -1;
+    }
+    printf("We are now connected to the broker!\n");
+
+    // SUBSCRIBE!
+}
+
+int publish(mosquitto *mosq, char *msg, int msg_len, char *topic)
+{
+    int ret = mosquitto_publish(mosq, NULL, topic, msg_len, msg, 0, false);
+    return ret;
+}
+
+void end_mqtt_client(mosquitto *mosq)
+{
+    mosquitto_disconnect(mosq);
+    mosquitto_destroy(mosq);
+
+    mosquitto_lib_cleanup();
+}
+
+long int time_in_micros(timeval t)
+{
+    long int time_in_microseconds = ((t.tv_sec * 1000000) + t.tv_usec);
+    return time_in_microseconds;
+}
+
+void write_array(char *fname, void* data, int size, int n)
+{
+    FILE *f = fopen(fname, "wb");
+    //Aqui data ya es pv
+    //int *pv = &j1_vector[0];
+    fwrite((const void *)data, size, n, f);
+    fclose(f);
+}

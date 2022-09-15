@@ -20,7 +20,7 @@ SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fPIC -DEDS_VERBOSE")
 # Compile this module (standard C++ file, no additional dependencies)
 #add_library(test_target SHARED src/testModule.cpp)
 
-add_executable(trajectory trajectory.cpp ../EDScorbot.cpp ../devmem.cpp)
+add_executable(trajectory trajectory.cpp utils.cpp ../EDScorbot.cpp ../devmem.cpp)
 #add_executable(mqtt_client src/mqtt_client.c)
 
 
