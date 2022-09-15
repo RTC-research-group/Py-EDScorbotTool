@@ -1,44 +1,6 @@
-#include "nlohmann/json.hpp"
-#include <map>
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <unistd.h>
-#include <sys/time.h>
-#include "mosquitto.h"
-#include "include/EDScorbot.hpp"
-
-#define PI 3.141592653589793
+#include "utils.h"
 using json = nlohmann::json;
-#define SLEEP 250000
-#define MAX_MQTT_MSG 200
 
-// Function to parse numpy array in json format
-void parse_jsonnp_array(char *filename, float *j1, float *j2);
-
-// Function to transform a trajectory from angular velocities (w, omega) to angles
-void w_to_angles(float *j1_angles, float *j2_angles, float *j1, float *j2);
-
-void init_mqtt_client(mosquitto *mosq, char *broker_ip);
-int publish(mosquitto *mosq, char *msg, int msg_len, char *topic);
-void end_mqtt_client(mosquitto *mosq);
-/*
-int main()
-{
-    struct timeval stop, start;
-    gettimeofday(&start, NULL);
-    // do stuff
-    gettimeofday(&stop, NULL);
-    //printf("took %lu us\n", (stop.tv_sec - start.tv_sec) * 1000000 + stop.tv_usec - start.tv_usec);
-    int i;
-    for (i = 0; i < 1000; i++)
-    {
-        printf("i: %d, start: %li, end: %li, elapsed: %li\n", i, start.tv_usec, stop.tv_usec, stop.tv_usec - start.tv_usec);
-        gettimeofday(&stop,NULL);
-        //usleep(1000);
-    }
-}
-*/
 
 int main(int argc, char *argv[])
 {
@@ -59,9 +21,14 @@ int main(int argc, char *argv[])
     std::vector<int> j1_vector, j2_vector;
     //
     std::vector<timeval> timestamp_vector;
+    std::vector<robot_state> state_vector;
+
+
+
     //500 point arrays, to send data back to the l2l model
     int j1_pos[500], j2_pos[500];
     struct timeval timestamp_arr[500];
+    
 
     handler.initJoints();
 
@@ -90,7 +57,7 @@ int main(int argc, char *argv[])
         // clock_t end = clock();
         int joints[6];
 
-        long int elapsed = ((end.tv_sec - start.tv_sec) * 1000000) + end.tv_usec - start.tv_usec;
+        long int elapsed = time_in_micros(end) - time_in_micros(start);
         while (elapsed < SLEEP)
         {
             // Do something
@@ -103,7 +70,7 @@ int main(int argc, char *argv[])
             // while (!ret){
             //     ret = (gettimeofday(&end, NULL));
             // }
-            elapsed = ((end.tv_sec - start.tv_sec) * 1000000) + end.tv_usec - start.tv_usec;
+            elapsed = time_in_micros(end) - time_in_micros(start);
         }
 
         snprintf(mqtt_msg, MAX_MQTT_MSG, "[%d,%d,%d,%d,%d,%d,%d]", joints[0], joints[1], joints[2], joints[3], joints[4], joints[5], i);
@@ -141,74 +108,6 @@ int main(int argc, char *argv[])
     publish(mosq, "[-1,-1,-1,-1,-1,-1,-1]", strlen("[-1,-1,-1,-1,-1,-1,-1]"), "EDScorbot/trajectory");
 
     return 0;
-}
-
-void parse_jsonnp_array(char *filename, float *j1, float *j2)
-{
-    std::ifstream arr_stream(filename, std::ios::in);
-    json array = json::parse(arr_stream);
-
-    for (const auto &[k, v] : array.items())
-    {
-        int i = atoi(k.c_str());
-        j1[i] = v[0];
-        j2[i] = v[1];
-        // std::cout << "Key: " << k << std::endl;
-        // std::cout << "Value: " << v[1] << std::endl;
-    }
-    return;
-}
-
-void w_to_angles(float *j1_angles, float *j2_angles, float *j1, float *j2)
-{
-    j1_angles[0] = (j1[0] * 0.001) * (180 / PI);
-    j2_angles[0] = (j2[0] * 0.001) * (180 / PI);
-    int i = 0;
-#ifdef DEBUG
-    printf("[%f\t%f ]\n", j1_angles[i], j2_angles[i]);
-#endif
-
-    for (i = 1; i < 500; i++)
-    {
-        // np.cumsum(omegas * 0.001,axis=0)*( 180 / np.pi)
-        j1_angles[i] = (j1[i] * (0.001) * (180 / PI)) + j1_angles[i - 1];
-        j2_angles[i] = (j2[i] * (0.001) * (180 / PI)) + j2_angles[i - 1];
-#ifdef DEBUG
-        printf("[%f\t%f ]\n", j1_angles[i], j2_angles[i]);
-#endif
-    }
-}
-
-void init_mqtt_client(mosquitto *mosq, char *broker_ip)
-{
-    int rc;
-    
-    rc = mosquitto_connect(mosq, broker_ip, 1883, 60);
-    while (rc != 0)
-    {
-        printf("Client could not connect to broker! Error Code: %d\nTrying to reconnect...\n", rc);
-        rc = mosquitto_connect(mosq, broker_ip, 1883, 60);
-
-        // mosquitto_destroy(mosq);
-        // return -1;
-    }
-    printf("We are now connected to the broker!\n");
-
-    // SUBSCRIBE!
-}
-
-int publish(mosquitto *mosq, char *msg, int msg_len, char *topic)
-{
-    int ret = mosquitto_publish(mosq, NULL, topic, msg_len, msg, 0, false);
-    return ret;
-}
-
-void end_mqtt_client(mosquitto *mosq)
-{
-    mosquitto_disconnect(mosq);
-    mosquitto_destroy(mosq);
-
-    mosquitto_lib_cleanup();
 }
 
 
