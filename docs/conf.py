@@ -70,7 +70,7 @@ html_favicon = "../atc.png"
 
 import subprocess
 subprocess.call('make clean', shell=True)
-subprocess.call('cd doxygen ; doxygen', shell=True)
+subprocess.call('cd doxy; doxygen', shell=True)
 
 breathe_projects = { "EDScorbot": "doxy/xml/" }
 breathe_default_project = "EDScorbot"
