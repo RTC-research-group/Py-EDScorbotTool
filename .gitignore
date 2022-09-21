@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+#Documentation build
+docs/build/
+docs/doxy/html
+docs/doxy/latex
+docs/doxy/xml
