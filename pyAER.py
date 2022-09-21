@@ -1,7 +1,10 @@
 from datetime import time
 from os import read
+import os
 import tkinter as tk
 from tkinter import ttk,messagebox
+from tkinter.ttk import Progressbar
+from tkinter.constants import X
 import usb.core
 import usb.util
 import usb.backend.libusb1
@@ -11,6 +14,7 @@ import datetime
 import time
 import logging
 import numpy as np
+import pickle as P
 # import cv2
 import subprocess
 
@@ -40,16 +44,24 @@ class pyEDScorbotTool:
         self.root = tk.Tk()
         if self.visible:
         
-
+            #self.root = tk.Tk()
                 #Set the icon
             self.root.iconphoto(False,tk.PhotoImage(file="./atc.png"))
-
+        else:
+            self.root.withdraw()
         #Create dictionaries where the interface data will be stored
         self.d = {}
         self.d["Motor Config"] = {}
         self.d["Joints"] = {}
         self.d["Scan Parameters"] = {}
+        self.d["Dynapse2"] = {}
         
+        self.j1 = -1
+        self.j2 = -1
+        self.j3 = -1
+        self.j4 = -1
+        self.j5 = -1
+        self.j6 = -1
         #Standalone variable to control if USB is enabled
         self.checked = False
 
@@ -59,12 +71,22 @@ class pyEDScorbotTool:
         self.ENDPOINT_OUT = 0x02
         self.ENDPOINT_IN = 0x81
         self.PACKET_LENGTH = 64
-
+        
         #Handle for USB connection
         self.dev = None
 
-        self.camera1 = None
-        self.camera2 = None
+        #Array for storing data
+        self.array = []
+        #Variable to record data or not
+        self.record = False
+        #Variable to check if we keep updating the recordings
+        self.updating = True
+        logging.basicConfig(filemode='w',level=logging.INFO)
+
+        #Progress bar
+        #self.pb = None
+
+
         return
   
     def millis_now(self):
@@ -89,7 +111,7 @@ class pyEDScorbotTool:
             messagebox.showinfo(message=text)
         else:
             print(text)
-
+    
     def render_motor(self, motor_number, row, col):
         '''
         Create the inputs for 1 motor
@@ -107,22 +129,23 @@ class pyEDScorbotTool:
 
         '''
         labels = ["EI_FD_bank3_18bits", "PD_FD_bank3_22bits",
-                  "PI_FD_bank3_18bits", "leds", "ref", "spike_expansor"]
+                  "PI_FD_bank3_18bits", "leds", "ref", "spike_expansor","ref_freq_divider"]
         labelframe = None
-        if self.visible:
-            labelframe = ttk.LabelFrame(
-                self.root, text="Motor " + str(motor_number))
-            labelframe.grid(
-                column=col, row=row, sticky=(tk.N, tk.W), padx=5, pady=5)
+        
+        labelframe = ttk.LabelFrame(
+            self.root, text="Motor " + str(motor_number))
+        labelframe.grid(
+            column=col, row=row, sticky=(tk.N, tk.W), padx=5, pady=5)
         EI_FD_bank3_18bits = tk.IntVar()
         PF_FD_bank3_22bits = tk.IntVar()
         PI_FD_bank3_18bits = tk.IntVar()
         leds = tk.IntVar()
         ref = tk.IntVar()
         spike_expansor = tk.IntVar()
+        spike_freq_divider = tk.IntVar()
         
         variables = [EI_FD_bank3_18bits, PF_FD_bank3_22bits,
-                        PI_FD_bank3_18bits, leds, ref, spike_expansor, labelframe]
+                        PI_FD_bank3_18bits, leds, ref, spike_expansor, spike_freq_divider,labelframe]
 
         for var, row_, label in zip(variables, range(1, len(variables)), labels):
 
@@ -166,12 +189,12 @@ class pyEDScorbotTool:
         j4 = tk.IntVar()
         j5 = tk.IntVar()
         j6 = tk.IntVar()
-        j1_hex = tk.StringVar()
-        j2_hex = tk.StringVar()
-        j3_hex = tk.StringVar()
-        j4_hex = tk.StringVar()
-        j5_hex = tk.StringVar()
-        j6_hex = tk.StringVar()
+        j1_hex = tk.DoubleVar()
+        j2_hex = tk.DoubleVar()
+        j3_hex = tk.DoubleVar()
+        j4_hex = tk.DoubleVar()
+        j5_hex = tk.DoubleVar()
+        j6_hex = tk.DoubleVar()
 
         variables = [j1, j2, j3, j4, j5, j6]
         variables_hex = [j1_hex,j2_hex,j3_hex,j4_hex,j5_hex,j6_hex]
@@ -194,7 +217,16 @@ class pyEDScorbotTool:
                 text_hex.config(state="readonly")
                 
             i += 1
+        xyz_row = len(variables)+1
+        xyz = tk.StringVar()
+        text = ttk.Entry(labelframe, width=7, textvariable=xyz)
+        text.grid(column=2, row=xyz_row, sticky=tk.W)
+        text.config(state="readonly")
+        ttk.Label(labelframe, text="XYZ coordinates").grid(
+        column=1, row=xyz_row, sticky=tk.W)
+        self.d["Joints"]["XYZ coordinates"] = xyz
 
+        
         return labelframe
         
     
@@ -238,6 +270,45 @@ class pyEDScorbotTool:
 
         return labelframe
 
+    def render_dynapse2(self, row, col):
+        '''
+        Create the Threshold and Reset counters paramters
+
+        Each variable created is stored in the "Dynapse2" dictionary 
+        and can be accessed directly using the name that appears on the graphical interface
+
+        Args:
+            row (int): Row of the grid in which the inputs will be displayed
+            col (int): Column of the grid in which the inputs will be displayed
+
+        Returns:
+            Labelframe in which the inputs are rendered
+        '''
+        labels = ["Threshold1", "Reset1", "Threshold2", "Reset2"]
+        labelframe=None
+        if self.visible:
+            labelframe = ttk.LabelFrame(self.root, text="Dynapse2")
+            labelframe.grid(column=col, row=row, sticky=(
+                tk.N, tk.W), padx=5, pady=5)
+        th1_value = tk.IntVar()
+        rst1_value = tk.IntVar()
+        th2_value = tk.IntVar()
+        rst2_time = tk.IntVar()
+
+        variables = [th1_value, rst1_value, th2_value, rst2_time]
+        for var, row_, label in zip(variables, range(1, len(variables)+1), labels):
+            labeltext = label
+            self.d["Dynapse2"][labeltext] = var
+            if self.visible:
+                ttk.Entry(labelframe, width=7, textvariable=var).grid(
+                    column=2, row=row_, sticky=tk.W)
+                
+                ttk.Label(labelframe, text=labeltext).grid(
+                    column=1, row=row_, sticky=tk.W)
+            
+
+        return labelframe
+
     def render_buttons(self, row, col):
         '''
         Create the buttons that will be bounded to  all different usable actions
@@ -249,54 +320,94 @@ class pyEDScorbotTool:
         if self.visible:
             labelframe = ttk.LabelFrame(self.root, text="Actions")
             labelframe.grid(column=col, row=row, sticky=(
-                tk.N, tk.W), padx=5, pady=5)
+                tk.N, tk.W), padx=5, pady=5,rowspan=2)
             
-            ttk.Button(labelframe,text="ConfigureInit",command=self.ConfigureInit).grid(column=1,row=1,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="ConfigureLeds",command=self.ConfigureLeds).grid(column=2,row=1,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="ConfigureSPID",command=self.ConfigureSPID).grid(column=3,row=1,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Draw8xy",command=self.Draw8xy).grid(column=1,row=2,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Example",command=lambda x: "").grid(column=2,row=2,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="ScanAllMotor",command=self.ScanAllMotor).grid(column=3,row=2,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="ScanMotor1",command=self.scanMotor1).grid(column=1,row=3,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="ScanMotor2",command=self.scanMotor2).grid(column=2,row=3,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="ScanMotor3",command=self.scanMotor3).grid(column=3,row=3,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="ScanMotor4",command=self.scanMotor4).grid(column=1,row=4,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="ScanMotor5",command=self.scanMotor5).grid(column=2,row=4,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="ScanMotor6",command=self.scanMotor6).grid(column=3,row=4,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Search_Home",command=self.search_Home_all).grid(column=1,row=5,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Send_Home",command=self.send_Home_all).grid(column=2,row=5,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="SendFPGAReset",command=self.SendFPGAReset).grid(column=3,row=5,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="SetAERIN_ref",command=self.SetAERIN_ref).grid(column=1,row=6,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="SetUSBSPI_ref",command=self.SetUSBSPI_ref).grid(column=2,row=6,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="SwitchOffLEDS",command=self.SwitchOffLEDS).grid(column=3,row=6,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="DumpConfig",command=self.dumpConfig).grid(column=1,row=7,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="LoadConfig",command=self.loadConfig).grid(column=2,row=7,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="ResetUSB",command=self.resetUSB).grid(column=3,row=7,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Send J1 Home",command=self.send_Home_J1).grid(column=1,row=8,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Send J2 Home",command=self.send_Home_J2).grid(column=2,row=8,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Send J3 Home",command=self.send_Home_J3).grid(column=3,row=8,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Send J4 Home",command=self.send_Home_J4).grid(column=1,row=9,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Send J5 Home",command=self.send_Home_J5).grid(column=2,row=9,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Send J6 Home",command=self.send_Home_J6).grid(column=3,row=9,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Search J1 Home",command=self.search_Home_J1).grid(column=1,row=10,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Search J2 Home",command=self.search_Home_J2).grid(column=2,row=10,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Search J3 Home",command=self.search_Home_J3).grid(column=3,row=10,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Search J4 Home",command=self.search_Home_J4).grid(column=1,row=11,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Search J5 Home",command=self.search_Home_J5).grid(column=2,row=11,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Search J6 Home",command=self.search_Home_J6).grid(column=3,row=11,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Send J1 ref",command=self.SendCommandJoint1_lite).grid(column=1,row=12,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Send J2 ref",command=self.SendCommandJoint2_lite).grid(column=2,row=12,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Send J3 ref",command=self.SendCommandJoint3_lite).grid(column=3,row=12,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Send J4 ref",command=self.SendCommandJoint4_lite).grid(column=1,row=13,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Send J5 ref",command=self.SendCommandJoint5_lite).grid(column=2,row=13,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Send J6 ref",command=self.SendCommandJoint6_lite).grid(column=3,row=13,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Reset J1 counter",command=self.Reset_J1_pos).grid(column=1,row=14,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Reset J2 counter",command=self.Reset_J2_pos).grid(column=2,row=14,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Reset J3 counter",command=self.Reset_J3_pos).grid(column=3,row=14,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Reset J4 counter",command=self.Reset_J4_pos).grid(column=1,row=15,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Reset J5 counter",command=self.Reset_J5_pos).grid(column=2,row=15,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Reset J6 counter",command=self.Reset_J6_pos).grid(column=3,row=15,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="ConfigureInit",command=self.ConfigureInit).grid(row=1,column=1,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="ConfigureLeds",command=self.ConfigureLeds).grid(row=2,column=1,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="ConfigureSPID",command=self.ConfigureSPID).grid(row=3,column=1,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Draw8xy",command=self.Draw8xy).grid(row=4,column=1,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Example",command=lambda x: "").grid(row=5,column=1,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="ScanAllMotor",command=self.ScanAllMotor).grid(row=6,column=1,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="ScanMotor1",command=self.scanMotor1).grid(row=7,column=1,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="ScanMotor2",command=self.scanMotor2).grid(row=8,column=1,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="ScanMotor3",command=self.scanMotor3).grid(row=9,column=1,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="ScanMotor4",command=self.scanMotor4).grid(row=10,column=1,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="ScanMotor5",command=self.scanMotor5).grid(row=1,column=2,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="ScanMotor6",command=self.scanMotor6).grid(row=2,column=2,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Search_Home",command=self.search_Home_all).grid(row=3,column=2,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Send_Home",command=self.send_Home_all).grid(row=4,column=2,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="SendFPGAReset",command=self.SendFPGAReset).grid(row=5,column=2,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="SetAERIN_ref",command=self.SetAERIN_ref).grid(row=6,column=2,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="SetUSBSPI_ref",command=self.SetUSBSPI_ref).grid(row=7,column=2,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="SwitchOffLEDS",command=self.SwitchOffLEDS).grid(row=8,column=2,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="DumpConfig",command=self.dumpConfig).grid(row=9,column=2,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="LoadConfig",command=self.loadConfig).grid(row=10,column=2,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="ResetUSB",command=self.resetUSB).grid(row=1,column=3,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Send J1 Home",command=self.send_Home_J1).grid(row=2,column=3,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Send J2 Home",command=self.send_Home_J2).grid(row=3,column=3,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Send J3 Home",command=self.send_Home_J3).grid(row=4,column=3,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Send J4 Home",command=self.send_Home_J4).grid(row=5,column=3,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Send J5 Home",command=self.send_Home_J5).grid(row=6,column=3,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Send J6 Home",command=self.send_Home_J6).grid(row=7,column=3,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Search J1 Home",command=self.search_Home_J1).grid(row=8,column=3,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Search J2 Home",command=self.search_Home_J2).grid(row=9,column=3,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Search J3 Home",command=self.search_Home_J3).grid(row=10,column=3,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Search J4 Home",command=self.search_Home_J4).grid(row=1,column=4,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Search J5 Home",command=self.search_Home_J5).grid(row=2,column=4,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Search J6 Home",command=self.search_Home_J6).grid(row=3,column=4,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Send J1 ref",command=self.SendCommandJoint1_lite).grid(row=4,column=4,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Send J2 ref",command=self.SendCommandJoint2_lite).grid(row=5,column=4,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Send J3 ref",command=self.SendCommandJoint3_lite).grid(row=6,column=4,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Send J4 ref",command=self.SendCommandJoint4_lite).grid(row=7,column=4,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Send J5 ref",command=self.SendCommandJoint5_lite).grid(row=8,column=4,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Send J6 ref",command=self.SendCommandJoint6_lite).grid(row=9,column=4,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Reset J1 counter",command=self.Reset_J1_pos).grid(row=10,column=4,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Reset J2 counter",command=self.Reset_J2_pos).grid(row=1,column=5,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Reset J3 counter",command=self.Reset_J3_pos).grid(row=2,column=5,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Reset J4 counter",command=self.Reset_J4_pos).grid(row=3,column=5,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Reset J5 counter",command=self.Reset_J5_pos).grid(row=4,column=5,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Reset J6 counter",command=self.Reset_J6_pos).grid(row=5,column=5,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Start/Stop recording",command=self.toggle_record).grid(row=6,column=5,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="DYNAPSE2",command=self.send_dynapse2).grid(row=7,column=5,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Reset J1 SPID",command=self.sendJ1FPGAReset).grid(row=8,column=5,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Reset J2 SPID",command=self.sendJ2FPGAReset).grid(row=9,column=5,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Reset J3 SPID",command=self.sendJ3FPGAReset).grid(row=10,column=5,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Reset J4 SPID",command=self.sendJ4FPGAReset).grid(row=1,column=6,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Reset J5 SPID",command=self.sendJ5FPGAReset).grid(row=2,column=6,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Reset J6 SPID",command=self.sendJ6FPGAReset).grid(row=3,column=6,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Trajectory",command=self.send_trajectory).grid(row=4,column=6,sticky=(tk.W,tk.E))
+            
+    def send_trajectory(self):
+        
+        filename = filedialog.askopenfile(mode="r")
+        real_name = filename.name.split("/")[-1]
+        cmd = "scp {} root@192.168.1.115:/home/root/{}".format(filename.name,real_name)
+        os.system(cmd)
+        cmd = "python3 mqtt/client_traj.py -t {} &".format(real_name)
+        os.system(cmd)
 
+        
+        
+
+    def render_progressbar(self,row,col):
+        '''
+        Create the progress bar to indicate trajectory execution %
+        
+        Args:
+            row (int): Row of the grid in which the buttons will be displayed
+            col (int): Column of the grid in which the buttons will be displayed
+        '''
+        if self.visible:
+            labelframe = ttk.LabelFrame(self.root, text="Trajectory Execution")
+            labelframe.grid(column=col, row=row, sticky=(
+                tk.N, tk.W), padx=5, pady=5,rowspan=2)
+            
+            pb = Progressbar(labelframe, orient='horizontal',mode='determinate',length=280,maximum=500).grid(row=1,column=1)
+            start_button = ttk.Button(
+            labelframe,
+            text='Start',
+            command=pb.start).grid(row=2,column=1)
+            
 
     def render_usbEnable(self,row,col):
         '''
@@ -414,12 +525,16 @@ class pyEDScorbotTool:
         d["Motor Config"] = {}
         d["Joints"] = {}
         d["Scan Parameters"] = {}
+        d["Dynapse2"] = {}
 
         for key in self.d["Motor Config"].keys():
             d["Motor Config"][key] =  self.d["Motor Config"][key].get()
         
         for key in self.d["Scan Parameters"].keys():
             d["Scan Parameters"][key] = self.d["Scan Parameters"][key].get()
+
+        for key in self.d["Dynapse2"].keys():
+            d["Dynapse2"][key] = self.d["Dynapse2"][key].get()
 
         #Once we've collected all variables, dump dictionary d as json to config.json
         with open('config.json','w') as f:
@@ -428,7 +543,55 @@ class pyEDScorbotTool:
             jsondict = json.dumps(d,indent=2)
             print("Settings generated: \n"+jsondict)
                 
-    def loadConfig(self):
+    def loadConfig(self,visible=True):
+        '''
+        Load configuration in an extern .json file
+
+        This function allows users to load a json file containing
+        a valid configuration file, just as the ones generated with 
+        the dumpConfig function
+
+        Also works without gui, just pass the correspondent argument
+        to the --config option
+        '''
+        
+         #Open file dialog to select config file
+        filename = filedialog.askopenfile(mode="r")
+        #Read file contents and parse as JSON
+        obj = filename.read()
+        j = json.loads(obj)
+
+        if visible:
+            #Then try to fit said JSON in the app variables
+            try:
+                for key in self.d["Motor Config"].keys():
+                    self.d["Motor Config"][key].set(j["Motor Config"][key])
+                
+                for key in self.d["Scan Parameters"].keys():
+                    self.d["Scan Parameters"][key].set(j["Scan Parameters"][key])
+                
+                return
+            #If we catch a KeyError, the config is invalid, so alert the user and end execution
+            except KeyError:
+                self.alert("Invalid config file")
+                return
+        else:
+            
+            d = {}
+            d["Motor Config"] = {}
+            d["Joints"] = {}
+            d["Scan Parameters"] = {}
+
+            for config,configdict in j.items():
+                for k,v in configdict.items():
+                    d[config][k] = v
+
+                
+            self.d = d
+
+
+            
+    def test_load(self,visible=False):
         '''
         Load configuration in an extern .json file
 
@@ -443,19 +606,37 @@ class pyEDScorbotTool:
         obj = filename.read()
         j = json.loads(obj)
 
-        #Then try to fit said JSON in the app variables
-        try:
-            for key in self.d["Motor Config"].keys():
-                self.d["Motor Config"][key].set(j["Motor Config"][key])
+        if visible:
+            #Then try to fit said JSON in the app variables
+            try:
+                for key in self.d["Motor Config"].keys():
+                    self.d["Motor Config"][key].set(j["Motor Config"][key])
+                
+                for key in self.d["Scan Parameters"].keys():
+                    self.d["Scan Parameters"][key].set(j["Scan Parameters"][key])
+                
+                return
+            #If we catch a KeyError, the config is invalid, so alert the user and end execution
+            except KeyError:
+                self.alert("Invalid config file")
+                return
+        else:
             
-            for key in self.d["Scan Parameters"].keys():
-                self.d["Scan Parameters"][key].set(j["Scan Parameters"][key])
-            
-            return
-        #If we catch a KeyError, the config is invalid, so alert the user and end execution
-        except KeyError:
-            self.alert("Invalid config file")
-            return
+            d = {}
+            d["Motor Config"] = {}
+            d["Joints"] = {}
+            d["Scan Parameters"] = {}
+
+            for config,configdict in j.items():
+                for k,v in configdict.items():
+                    d[config][k] = v
+
+                
+            self.d = d
+
+
+    
+
     
     def render_cameras(self,row,col):
         
@@ -501,14 +682,17 @@ class pyEDScorbotTool:
         self.frame_list.append(self.render_joints(3, 1))
         self.frame_list.append(self.render_scan_parameters(3, 2))
         #self.render_joints_hex(4,1)
-        self.render_buttons(3, 3)
+        self.render_buttons(1, 4)
         self.render_usbEnable(5,1)
+        self.render_dynapse2(3,3)
         #self.render_cameras(4,2)
+        #self.render_progressbar(3,4)
         self.init_config()
         self.update()
         #And call mainloop to display GUI
         if self.visible:
             self.root.mainloop()
+        
 
     def openCamera1(self):
 
@@ -537,19 +721,67 @@ class pyEDScorbotTool:
                 cv2.destroyWindow('side')
             except:
                 pass
+    def toggle_record(self,filename=None):
+        if self.record:
+            date = datetime.datetime.now()
+            if filename == None:
+                timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
+            else:
+                timeStamp=filename
+            
+            P.dump(self.array,open(timeStamp + '.pkl','wb'))
+            self.array = []
+        self.record = not self.record
 
-    def update(self):
+    def print_updates(self,):
+        
+        self.j1 = self.execute_script("bash/readJoint.bash 1")
+        self.j2 = self.execute_script("bash/readJoint.bash 2")
+        self.j3 = self.execute_script("bash/readJoint.bash 3")
+        self.j4 = self.execute_script("bash/readJoint.bash 4")
+        self.j5 = self.execute_script("bash/readJoint.bash 5")
+        self.j6 = self.execute_script("bash/readJoint.bash 6")
+
+        print("Joint\tPosition\tHex\nJ1\t{}\t{}\nJ2\t{}\t{}\nJ3\t{}\t{}\nJ4\t{}\t{}\nJ5\t{}\t{}\nJ6\t{}\t{}\n"
+        .format(self.j1,hex(self.j1),self.j2,hex(self.j2),self.j3,hex(self.j3),self.j4,hex(self.j4),self.j5,hex(self.j5),self.j6,hex(self.j6))
+        ,end='/r')
+
+
+    def update(self,ref=None):
 
         if self.checked.get():
-            self.Read_J1_gui()
-            self.Read_J2_gui()
-            self.Read_J3_gui()
-            self.Read_J4_gui()
-            self.Read_J5_gui()
-            self.Read_J6_gui()
-            
-        if self.visible:
+
+                self.j1 = self.Read_J1_gui()
+                self.j2 = self.Read_J2_gui()
+                self.j3 = self.Read_J3_gui()
+                self.j4 = self.Read_J4_gui()
+                self.j5 = self.Read_J5_gui()
+                self.j6 = self.Read_J6_gui()
+                #xyz = self.CalculateXYZ()
+                #self.d["Joints"]["XYZ coordinates"].set(xyz)
+                
+                if self.record:
+                    motors = self.d["Motor Config"]
+                    ts = self.millis_now()
+                    positions = [self.j1,self.j2,self.j3,self.j4,self.j5,self.j6]
+                    aux = []
+                    for i in range(6):
+                        label = "ref_M"+str(i+1)
+                        if ref == None:
+                            data = [motors[label].get(),positions[i]]
+                        else:
+                            data = [motors[label].get(),positions[i],ref[i]]
+                        aux.append(data)
+                    aux.append(ts)
+                    self.array.append(aux)
+                
+
+        if self.updating:
             self.root.after(1,self.update)
+        
+            
+            
+            
 
     def ConfigureInit(self):
         
@@ -569,21 +801,27 @@ class pyEDScorbotTool:
             
             if self.checked.get():
                 for i in range(0,6):
+                    self.sendCommand16(0xF7,0x0000,0x0000,True) #
                     #Motor 1
                     self.sendCommand16(0x00,0x00,0x03,True) #Leds M1
-                    self.sendCommand16(0x02,0x00,0x00,True) #Ref M1 0
+                    self.sendCommand16(0x01,0x00,0x01,True) #spike gen freq divider
                     self.sendCommand16(0x03,0x00,0x0f,True) #I banks disabled M1
+                    self.sendCommand16(0x03,0x00,0x03,True) #I banks enabled Bank3 M1
+                    self.sendCommand16(0x02,0x00,0x00,True) #Ref M1 0
                     self.sendCommand16(0x04,((512>>8) & 0xFF),512 & 0xFF,True) #FD I&G bank 0 M1
                     self.sendCommand16(0x05,((512>>8) & 0xFF),512 & 0xFF,True) #FD I&G bank 1 M1
                     self.sendCommand16(0x06,((512>>8) & 0xFF),512 & 0xFF,True) #FD I&G bank 2 M1
                     self.sendCommand16(0x07,((self.d["Motor Config"]["PI_FD_bank3_18bits_M1"].get()>>8) & 0xFF),self.d["Motor Config"]["PI_FD_bank3_18bits_M1"].get() & 0xFF,True) #FD I&G bank 3 M1
                     self.sendCommand16(0x08,(0x00),(0x0f), True) #d banks disabled M1
+                    self.sendCommand16(0x08,0x00,0x03,True) #I banks enabled Bank3 M1
                     self.sendCommand16(0x09, ((512 >> 8) & 0xFF),((512) & 0xFF), True) #FD I&G bank 0 M1
                     self.sendCommand16(0x0A, ((512 >> 8) & 0xFF), ((512) & 0xFF), True) #FD I&G bank 1 M1
                     self.sendCommand16(0x0B, ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M1
                     self.sendCommand16(0x0C, ((self.d["Motor Config"]["PD_FD_bank3_22bits_M1"].get() >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 3 M1
                     self.sendCommand16(0x12, (0x00),  (0x0), True); #spike expansor M1
+                    self.sendCommand16( 0x12,  ((self.d["Motor Config"]["spike_expansor_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M1"].get()) & 0xFF), True) #spike expansor M1
                     self.sendCommand16(0x13, (0x00),  (0x0f), True); #d banks disabled M1
+                    self.sendCommand16(0x13,0x00,0x03,True) #I banks enabled Bank3 M1
                     self.sendCommand16(0x14, ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M1
                     self.sendCommand16(0x15, ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 1 M1
                     self.sendCommand16(0x16, ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 2 M1
@@ -599,19 +837,24 @@ class pyEDScorbotTool:
                     
                     #Motor 2
                     self.sendCommand16( 0x20,  (0x00), (0x03), True); #LEDs M2
-                    self.sendCommand16( 0x22,  (0x00),  (0x00), True); #Ref M2 0
+                    self.sendCommand16( 0x21,  0x00,   0x01   ,True) #spike gen freq divider
                     self.sendCommand16( 0x23,  (0x00),  (0x0f), True); #I banks disabled M2
+                    self.sendCommand16( 0x23,0x00,0x03,True) #I banks enabled Bank3 M1
+                    self.sendCommand16( 0x22,  (0x00),  (0x00), True); #Ref M2 0
                     self.sendCommand16( 0x24,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M2
                     self.sendCommand16( 0x25,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 1 M2
                     self.sendCommand16( 0x26,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 2 M2
                     self.sendCommand16( 0x27,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M2"].get()) & 0xFF), True); #FD I&G bank 3 M2
                     self.sendCommand16( 0x28,  (0x00),  (0x0f), True); #I banks disabled M2
+                    self.sendCommand16( 0x28,0x00,0x03,True) #I banks enabled Bank3 M1
                     self.sendCommand16( 0x29,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M2
                     self.sendCommand16( 0x2A,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 1 M2
                     self.sendCommand16( 0x2B,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 2 M2
                     self.sendCommand16( 0x2C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M2"].get()) & 0xFF), True); #FD I&G bank 3 M2
                     self.sendCommand16( 0x32,  (0x00),  (0x0), True); #spike expansor M2
+                    self.sendCommand16( 0x32,  ((self.d["Motor Config"]["spike_expansor_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M2"].get()) & 0xFF), True) #spike expansor M2
                     self.sendCommand16( 0x33,  (0x00),  (0x0f), True); #d banks disabled M1
+                    self.sendCommand16( 0x33,0x00,0x03,True) #I banks enabled Bank3 M1
                     self.sendCommand16( 0x34,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M1
                     self.sendCommand16( 0x35,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 1 M1
                     self.sendCommand16( 0x36,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 2 M1
@@ -626,19 +869,24 @@ class pyEDScorbotTool:
                     #Motor 3
 
                     self.sendCommand16( 0x40,  (0x00), (0x03), True); #LEDs M3
-                    self.sendCommand16( 0x42,  (0x00),  (0x00), True); #Ref M3 0
+                    self.sendCommand16( 0x41,  0x00,   0x01   ,True) #spike gen freq divider
                     self.sendCommand16( 0x43,  (0x00),  (0x0f), True); #I banks disabled M3
+                    self.sendCommand16( 0x43,0x00,0x03,True) #I banks enabled Bank3 M1
+                    self.sendCommand16( 0x42,  (0x00),  (0x00), True); #Ref M3 0
                     self.sendCommand16( 0x44,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M3
                     self.sendCommand16( 0x45,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 1 M3
                     self.sendCommand16( 0x46,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 2 M3
                     self.sendCommand16( 0x47,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M3"].get()) & 0xFF), True); #FD I&G bank 3 M3
                     self.sendCommand16( 0x48,  (0x00),  (0x0f), True); #I banks disabled M3
+                    self.sendCommand16( 0x48,0x00,0x03,True) #I banks enabled Bank3 M1
                     self.sendCommand16( 0x49,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M3
                     self.sendCommand16( 0x4A,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 1 M3
                     self.sendCommand16( 0x4B,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 2 M3
                     self.sendCommand16( 0x4C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M3"].get()) & 0xFF), True); #FD I&G bank 3 M3
                     self.sendCommand16( 0x52,  (0x00),  (0x0), True); #spike expansor M3
+                    self.sendCommand16( 0x52,  ((self.d["Motor Config"]["spike_expansor_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M3"].get()) & 0xFF), True) #spike expansor M3
                     self.sendCommand16( 0x53,  (0x00),  (0x0f), True); #d banks disabled M1
+                    self.sendCommand16( 0x53,0x00,0x03,True) #I banks enabled Bank3 M1
                     self.sendCommand16( 0x54,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M1
                     self.sendCommand16( 0x55,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 1 M1
                     self.sendCommand16( 0x56,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 2 M1
@@ -654,6 +902,7 @@ class pyEDScorbotTool:
                     #Motor 4
 
                     self.sendCommand16( 0x60,  (0x00), (0x03), True); #LEDs M4
+                    self.sendCommand16( 0x61,  0x00,   0x01   ,True) #spike gen freq divider
                     self.sendCommand16( 0x62,  (0x00),  (0x00), True); #Ref M4 0
                     self.sendCommand16( 0x63,  (0x00),  (0x0f), True); #I banks disabled M4
                     self.sendCommand16( 0x64,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M4
@@ -682,6 +931,7 @@ class pyEDScorbotTool:
                     #Motor 5
 
                     self.sendCommand16( 0x80,  (0x00), (0x03), True); #LEDs M5
+                    self.sendCommand16( 0x81,  0x00,   0x01   ,True) #spike gen freq divider
                     self.sendCommand16( 0x82,  (0x00),  (0x00), True); #Ref M5 0
                     self.sendCommand16( 0x83,  (0x00),  (0x0f), True); #I banks disabled M5
                     self.sendCommand16( 0x84,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M5
@@ -710,6 +960,7 @@ class pyEDScorbotTool:
                     #Motor 6
 
                     self.sendCommand16( 0xA0,  (0x00), (0x03), True); #LEDs M6
+                    self.sendCommand16( 0xA1,  0x00,   0x01   ,True) #spike gen freq divider
                     self.sendCommand16( 0xA2,  (0x00),  (0x00), True); #Ref M6 0
                     self.sendCommand16( 0xA3,  (0x00),  (0x0f), True); #I banks disabled M6
                     self.sendCommand16( 0xA4,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True); #FD I&G bank 0 M6
@@ -756,21 +1007,22 @@ class pyEDScorbotTool:
         #PI_FD_bank0_14bits_M1 = 512
         #PI_FD_bank0_16bits_M1 = 512
         self.sendCommand16( 0,  (0x00), ((self.d["Motor Config"]["leds_M1"].get()) & 0xFF), True) #LEDs M1
+        self.sendCommand16(0x01,((self.d["Motor Config"]["ref_freq_divider_M1"].get() >> 8) & 0xFF),(self.d["Motor Config"]["ref_freq_divider_M1"].get() & 0xFF),True) #spike gen freq divider
         self.sendCommand16( 0x03,  (0x00),  ((3)&0xFF), True) #I banks disabled M1
-        self.sendCommand16( 0x04,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M1
-        self.sendCommand16( 0x05,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M1
-        self.sendCommand16( 0x06,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M1
+#        self.sendCommand16( 0x04,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M1
+#        self.sendCommand16( 0x05,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M1
+#        self.sendCommand16( 0x06,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M1
         self.sendCommand16( 0x07,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
-        self.sendCommand16( 0x08,  (0x00),  ((512)&0xFF), True) #D banks disabled M1
-        self.sendCommand16( 0x09,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M1
-        self.sendCommand16( 0x0A,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M1
-        self.sendCommand16( 0x0B,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M1
+        self.sendCommand16( 0x08,  (0x00),  ((3)&0xFF), True) #D banks disabled M1 #it was (512)
+#        self.sendCommand16( 0x09,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M1
+#        self.sendCommand16( 0x0A,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M1
+#        self.sendCommand16( 0x0B,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M1
         self.sendCommand16( 0x0C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
         self.sendCommand16( 0x12,  ((self.d["Motor Config"]["spike_expansor_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M1"].get()) & 0xFF), True) #spike expansor M1
         self.sendCommand16( 0x13,  (0x00),  ((3)&0xFF), True) #EI bank enabled M1 EI_bank_select_M1 = 3
-        self.sendCommand16( 0x14,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M1
-        self.sendCommand16( 0x15,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M1
-        self.sendCommand16( 0x16,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M1
+#        self.sendCommand16( 0x14,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M1
+#        self.sendCommand16( 0x15,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M1
+#        self.sendCommand16( 0x16,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M1
         self.sendCommand16( 0x17,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
         #self.sendCommand16( 0,  0,  0, false) #LEDs M1 off
         self.sendCommand16( 0x02,  ((ref >> 8) & 0xFF),  ((ref) & 0xFF), True) #Ref M1 0
@@ -793,21 +1045,22 @@ class pyEDScorbotTool:
         #PI_FD_bank0_14bits_M2 = 512
         #PI_FD_bank0_16bits_M2 = 512
         self.sendCommand16( 0x20,  (0x00), ((self.d["Motor Config"]["leds_M2"].get()) & 0xFF), True) #LEDs M2
+        self.sendCommand16( 0x21,  ((self.d["Motor Config"]["ref_freq_divider_M1"].get() >> 8) & 0xFF),(self.d["Motor Config"]["ref_freq_divider_M1"].get() & 0xFF),True) #spike gen freq divider
         self.sendCommand16( 0x23,  (0x00),  ((3)&0xFF), True) #I banks disabled M2
-        self.sendCommand16( 0x24,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M2
-        self.sendCommand16( 0x25,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M2
-        self.sendCommand16( 0x26,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M2
+#        self.sendCommand16( 0x24,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M2
+#        self.sendCommand16( 0x25,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M2
+#        self.sendCommand16( 0x26,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M2
         self.sendCommand16( 0x27,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M2
-        self.sendCommand16( 0x28,  (0x00),  ((512)&0xFF), True) #D banks disabled M2
-        self.sendCommand16( 0x29,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M2
-        self.sendCommand16( 0x2A,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M2
-        self.sendCommand16( 0x2B,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M2
+        self.sendCommand16( 0x28,  (0x00),  ((3)&0xFF), True) #D banks disabled M2 #it was (512)
+#        self.sendCommand16( 0x29,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M2
+#        self.sendCommand16( 0x2A,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M2
+#        self.sendCommand16( 0x2B,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M2
         self.sendCommand16( 0x2C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M2
         self.sendCommand16( 0x32,  ((self.d["Motor Config"]["spike_expansor_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M2"].get()) & 0xFF), True) #spike expansor M2
         self.sendCommand16( 0x33,  (0x00),  ((3)&0xFF), True) #EI bank enabled M2 EI_bank_select_M2 = 3
-        self.sendCommand16( 0x34,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M2
-        self.sendCommand16( 0x35,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M2
-        self.sendCommand16( 0x36,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M2
+#        self.sendCommand16( 0x34,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M2
+#        self.sendCommand16( 0x35,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M2
+#        self.sendCommand16( 0x36,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M2
         self.sendCommand16( 0x37,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M2
         #self.sendCommand16( 0,  0,  0, false) #LEDs M2 off
         self.sendCommand16( 0x22,  ((ref >> 8) & 0xFF),  ((ref) & 0xFF), True) #Ref M2 0
@@ -830,21 +1083,22 @@ class pyEDScorbotTool:
         #PI_FD_bank0_14bits_M3 = 512
         #PI_FD_bank0_16bits_M3 = 512
         self.sendCommand16( 0x40,  (0x00), ((self.d["Motor Config"]["leds_M3"].get()) & 0xFF), True) #LEDs M3
+        self.sendCommand16( 0x41,  ((self.d["Motor Config"]["ref_freq_divider_M1"].get() >> 8) & 0xFF),(self.d["Motor Config"]["ref_freq_divider_M1"].get() & 0xFF),True) #spike gen freq divider
         self.sendCommand16( 0x43,  (0x00),  ((3)&0xFF), True) #I banks disabled M3
-        self.sendCommand16( 0x44,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M3
-        self.sendCommand16( 0x45,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M3
-        self.sendCommand16( 0x46,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M3
+#        self.sendCommand16( 0x44,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M3
+#        self.sendCommand16( 0x45,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M3
+#        self.sendCommand16( 0x46,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M3
         self.sendCommand16( 0x47,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M3
-        self.sendCommand16( 0x48,  (0x00),  ((512)&0xFF), True) #D banks disabled M3
-        self.sendCommand16( 0x49,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M3
-        self.sendCommand16( 0x4A,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M3
-        self.sendCommand16( 0x4B,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M3
+        self.sendCommand16( 0x48,  (0x00),  ((3)&0xFF), True) #D banks disabled M3 #it was (512)
+#        self.sendCommand16( 0x49,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M3
+#        self.sendCommand16( 0x4A,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M3
+#        self.sendCommand16( 0x4B,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M3
         self.sendCommand16( 0x4C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M3
         self.sendCommand16( 0x52,  ((self.d["Motor Config"]["spike_expansor_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M3"].get()) & 0xFF), True) #spike expansor M3
         self.sendCommand16( 0x53,  (0x00),  ((3)&0xFF), True) #EI bank enabled M3 EI_bank_select_M3 = 3
-        self.sendCommand16( 0x54,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M3
-        self.sendCommand16( 0x55,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M3
-        self.sendCommand16( 0x56,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M3
+#        self.sendCommand16( 0x54,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M3
+#        self.sendCommand16( 0x55,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M3
+#        self.sendCommand16( 0x56,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M3
         self.sendCommand16( 0x57,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M3
         #self.sendCommand16( 0,  0,  0, false) #LEDs M3 off
         self.sendCommand16( 0x42,  ((ref >> 8) & 0xFF),  ((ref) & 0xFF), True) #Ref M3 0
@@ -867,21 +1121,22 @@ class pyEDScorbotTool:
         #PI_FD_bank0_14bits_M4 = 512
         #PI_FD_bank0_16bits_M4 = 512
         self.sendCommand16( 0x60,  (0x00), ((self.d["Motor Config"]["leds_M4"].get()) & 0xFF), True) #LEDs M4
+        self.sendCommand16( 0x61,  ((self.d["Motor Config"]["ref_freq_divider_M1"].get() >> 8) & 0xFF),(self.d["Motor Config"]["ref_freq_divider_M1"].get() & 0xFF),True) #spike gen freq divider
         self.sendCommand16( 0x63,  (0x00),  ((3)&0xFF), True) #I banks disabled M4
-        self.sendCommand16( 0x64,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M4
-        self.sendCommand16( 0x65,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M4
-        self.sendCommand16( 0x66,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M4
+#        self.sendCommand16( 0x64,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M4
+#        self.sendCommand16( 0x65,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M4
+#        self.sendCommand16( 0x66,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M4
         self.sendCommand16( 0x67,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
-        self.sendCommand16( 0x68,  (0x00),  ((512)&0xFF), True) #D banks disabled M4
-        self.sendCommand16( 0x69,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M4
-        self.sendCommand16( 0x6A,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M4
-        self.sendCommand16( 0x6B,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M4
-        self.sendCommand16( 0x6C,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 3 M4
+        self.sendCommand16( 0x68,  (0x00),  ((3)&0xFF), True) #D banks disabled M4
+#        self.sendCommand16( 0x69,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M4
+#        self.sendCommand16( 0x6A,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M4
+#        self.sendCommand16( 0x6B,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M4
+        self.sendCommand16( 0x6C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M5
         self.sendCommand16( 0x72,  ((self.d["Motor Config"]["spike_expansor_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M4"].get()) & 0xFF), True) #spike expansor M4
         self.sendCommand16( 0x73,  (0x00),  ((3)&0xFF), True) #EI bank enabled M4 EI_bank_select_M4 = 3
-        self.sendCommand16( 0x74,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M4
-        self.sendCommand16( 0x75,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M4
-        self.sendCommand16( 0x76,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M4
+#        self.sendCommand16( 0x74,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M4
+#        self.sendCommand16( 0x75,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M4
+#        self.sendCommand16( 0x76,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M4
         self.sendCommand16( 0x77,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
         #self.sendCommand16( 0,  0,  0, false) #LEDs M4 off
         self.sendCommand16( 0x62,  ((ref >> 8) & 0xFF),  ((ref) & 0xFF), True) #Ref M4 0
@@ -904,21 +1159,22 @@ class pyEDScorbotTool:
         #PI_FD_bank0_14bits_M5 = 512
         #PI_FD_bank0_16bits_M5 = 512
         self.sendCommand16( 0x80,  (0x00), ((self.d["Motor Config"]["leds_M5"].get()) & 0xFF), True) #LEDs M5
+        self.sendCommand16( 0x81,  ((self.d["Motor Config"]["ref_freq_divider_M1"].get() >> 8) & 0xFF),(self.d["Motor Config"]["ref_freq_divider_M1"].get() & 0xFF),True) #spike gen freq divider
         self.sendCommand16( 0x83,  (0x00),  ((3)&0xFF), True) #I banks disabled M5
-        self.sendCommand16( 0x84,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M5
-        self.sendCommand16( 0x85,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M5
-        self.sendCommand16( 0x86,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M5
+#        self.sendCommand16( 0x84,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M5
+#        self.sendCommand16( 0x85,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M5
+#        self.sendCommand16( 0x86,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M5
         self.sendCommand16( 0x87,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M5"].get()) & 0xFF), True) #FD I&G bank 3 M5
-        self.sendCommand16( 0x88,  (0x00),  ((512)&0xFF), True) #D banks disabled M5
-        self.sendCommand16( 0x89,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M5
-        self.sendCommand16( 0x8A,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M5
-        self.sendCommand16( 0x8B,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M5
+        self.sendCommand16( 0x88,  (0x00),  ((3)&0xFF), True) #D banks disabled M5
+#        self.sendCommand16( 0x89,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M5
+#        self.sendCommand16( 0x8A,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M5
+#        self.sendCommand16( 0x8B,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M5
         self.sendCommand16( 0x8C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M5"].get()) & 0xFF), True) #FD I&G bank 3 M5
         self.sendCommand16( 0x92,  ((self.d["Motor Config"]["spike_expansor_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M5"].get()) & 0xFF), True) #spike expansor M5
         self.sendCommand16( 0x93,  (0x00),  ((3)&0xFF), True) #EI bank enabled M5 EI_bank_select_M5 = 3
-        self.sendCommand16( 0x94,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M5
-        self.sendCommand16( 0x95,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M5
-        self.sendCommand16( 0x96,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M5
+#        self.sendCommand16( 0x94,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M5
+#        self.sendCommand16( 0x95,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M5
+#        self.sendCommand16( 0x96,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M5
         self.sendCommand16( 0x97,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M5"].get()) & 0xFF), True) #FD I&G bank 3 M5
         #self.sendCommand16( 0,  0,  0, false) #LEDs M5 off
         self.sendCommand16( 0x82,  ((ref >> 8) & 0xFF),  ((ref) & 0xFF), True) #Ref M5 0
@@ -941,21 +1197,22 @@ class pyEDScorbotTool:
         #PI_FD_bank0_14bits_M6 = 512
         #PI_FD_bank0_16bits_M6 = 512
         self.sendCommand16( 0xA0,  (0x00), ((self.d["Motor Config"]["leds_M6"].get()) & 0xFF), True) #LEDs M6
+        self.sendCommand16( 0xA1,  ((self.d["Motor Config"]["ref_freq_divider_M1"].get() >> 8) & 0xFF),(self.d["Motor Config"]["ref_freq_divider_M1"].get() & 0xFF),True) #spike gen freq divider
         self.sendCommand16( 0xA3,  (0x00),  ((3)&0xFF), True) #I banks disabled M6
-        self.sendCommand16( 0xA4,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M6
-        self.sendCommand16( 0xA5,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M6
-        self.sendCommand16( 0xA6,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M6
+#        self.sendCommand16( 0xA4,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M6
+#        self.sendCommand16( 0xA5,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M6
+#        self.sendCommand16( 0xA6,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M6
         self.sendCommand16( 0xA7,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M6"].get()) & 0xFF), True) #FD I&G bank 3 M6
-        self.sendCommand16( 0xA8,  (0x00),  ((512)&0xFF), True) #D banks disabled M6
-        self.sendCommand16( 0xA9,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M6
-        self.sendCommand16( 0xAA,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M6
-        self.sendCommand16( 0xAB,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M6
+        self.sendCommand16( 0xA8,  (0x00),  ((3)&0xFF), True) #D banks disabled M6
+#        self.sendCommand16( 0xA9,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M6
+#        self.sendCommand16( 0xAA,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M6
+#        self.sendCommand16( 0xAB,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M6
         self.sendCommand16( 0xAC,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M6"].get()) & 0xFF), True) #FD I&G bank 3 M6
         self.sendCommand16( 0xB2,  ((self.d["Motor Config"]["spike_expansor_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M6"].get()) & 0xFF), True) #spike expansor M6
         self.sendCommand16( 0xB3,  (0x00),  ((3)&0xFF), True) #EI bank enabled M6 EI_bank_select_M6 = 3
-        self.sendCommand16( 0xB4,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M6
-        self.sendCommand16( 0xB5,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M6
-        self.sendCommand16( 0xB6,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M6
+#        self.sendCommand16( 0xB4,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 0 M6
+#        self.sendCommand16( 0xB5,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 1 M6
+#        self.sendCommand16( 0xB6,  ((512 >> 8) & 0xFF),  ((512) & 0xFF), True) #FD I&G bank 2 M6
         self.sendCommand16( 0xB7,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M6"].get()) & 0xFF), True) #FD I&G bank 3 M6
         #self.sendCommand16( 0,  0,  0, false) #LEDs M6 off
         self.sendCommand16( 0xA2,  ((ref >> 8) & 0xFF),  ((ref) & 0xFF), True) #Ref M6 0
@@ -1186,7 +1443,7 @@ class pyEDScorbotTool:
         scan_Final_Value = self.d["Scan Parameters"]["scan_Final_Value"].get()
         scan_Step_Value = self.d["Scan Parameters"]["scan_Step_Value"].get()
         scan_Wait_Time = self.d["Scan Parameters"]["scan_Wait_Time"].get()
-
+        motor = 1
         if self.checked.get():
             
             #Fecha en str, formato: yyyy_MM_dd_HH_mm_ss
@@ -1194,8 +1451,11 @@ class pyEDScorbotTool:
             date = datetime.datetime.now()
             timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
             #Abrir archivo de log con el nombre de la fecha
-            logging.basicConfig(filename='./logs/Scan1_' + timeStamp + '.log',filemode='w')
-            logging.info("SMALL ED-Scorbot Joint1 Scan Log file")
+            filename='./logs/Scan1_' + timeStamp + '.log'
+            logger_file = logging.FileHandler(filename)
+            logger = logging.getLogger("logger_J{}".format(motor))
+            logger.addHandler(logger_file)
+            logger.info("SMALL ED-Scorbot Joint1 Scan Log file")
 
             #
             self.sendCommand16( 0x03,  (0x00),  ((3)&0xFF), True) #I banks disabled M1 PI_bank_select_M1 = 3
@@ -1208,7 +1468,7 @@ class pyEDScorbotTool:
             self.sendCommand16( 0x02,  ((scan_Init_Value >> 8) & 0xFF),  ((scan_Init_Value) & 0xFF), True) #Ref M1 0
 
 
-            logging.info("Time\tM1 Ref\tJ1 Pos\tM2 Ref\tJ2 Pos\tM3 Ref\tJ3 Pos\tM4 Ref\tJ4 Pos\tM5 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
+            logger.info("Time\tM1 Ref\tJ1 Pos\tM2 Ref\tJ2 Pos\tM3 Ref\tJ3 Pos\tM4 Ref\tJ4 Pos\tM5 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
 
             start = self.millis_now()
             now = self.millis_now()
@@ -1216,7 +1476,7 @@ class pyEDScorbotTool:
                 lap = self.millis_now()
                 while(abs(now-lap) < 100):
                     now = self.millis_now()
-                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),scan_Init_Value,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),scan_Init_Value,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                 now = self.millis_now()
 
 
@@ -1232,7 +1492,7 @@ class pyEDScorbotTool:
                         lap = self.millis_now()
                         while((now-lap) < 100):
                             now = self.millis_now()
-                        logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                        logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                         now = self.millis_now()
                     i = i + scan_Step_Value
                 
@@ -1247,7 +1507,7 @@ class pyEDScorbotTool:
                         lap = self.millis_now()
                         while((now-lap) < 100):
                             now = self.millis_now()
-                        logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                        logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                         now = self.millis_now()
                     
                     i = i - scan_Step_Value
@@ -1273,7 +1533,7 @@ class pyEDScorbotTool:
         scan_Final_Value = self.d["Scan Parameters"]["scan_Final_Value"].get()
         scan_Step_Value = self.d["Scan Parameters"]["scan_Step_Value"].get()
         scan_Wait_Time = self.d["Scan Parameters"]["scan_Wait_Time"].get()
-
+        motor = 2
         if self.checked.get():
             
             #Fecha en str, formato: yyyy_MM_dd_HH_mm_ss
@@ -1281,8 +1541,10 @@ class pyEDScorbotTool:
             date = datetime.datetime.now()
             timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
             #Abrir archivo de log con el nombre de la fecha
-            logging.basicConfig(filename='./logs/Scan2_' + timeStamp + '.log',filemode='w')
-            logging.info("SMALL ED-Scorbot Joint2 Scan Log file")
+            filename='./logs/Scan2_' + timeStamp + '.log'
+            logger_file = logging.FileHandler(filename)
+            logger = logging.getLogger("logger_J{}".format(motor))
+            logger.addHandler(logger_file)
 
             #
             self.sendCommand16( 0x23,  (0x00),  ((3)&0xFF), True) #I banks disabled M2 PI_bank_select_M2 = 3
@@ -1295,7 +1557,7 @@ class pyEDScorbotTool:
             self.sendCommand16( 0x22,  ((scan_Init_Value >> 8) & 0xFF),  ((scan_Init_Value) & 0xFF), True) #Ref M2 0
 
 
-            logging.info("Time\tM2 Ref\tJ1 Pos\tM2 Ref\tJ2 Pos\tM3 Ref\tJ3 Pos\tM4 Ref\tJ4 Pos\tM5 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
+            logger.info("Time\tM2 Ref\tJ1 Pos\tM2 Ref\tJ2 Pos\tM3 Ref\tJ3 Pos\tM4 Ref\tJ4 Pos\tM5 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
 
             start = self.millis_now()
             now = self.millis_now()
@@ -1303,7 +1565,7 @@ class pyEDScorbotTool:
                 lap = self.millis_now()
                 while(abs(now-lap) < 100):
                     now = self.millis_now()
-                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),scan_Init_Value,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),scan_Init_Value,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                 now = self.millis_now()
 
 
@@ -1319,7 +1581,7 @@ class pyEDScorbotTool:
                         lap = self.millis_now()
                         while((now-lap) < 100):
                             now = self.millis_now()
-                        logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                        logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                         now = self.millis_now()
                     i = i + scan_Step_Value
                 
@@ -1334,7 +1596,7 @@ class pyEDScorbotTool:
                         lap = self.millis_now()
                         while((now-lap) < 100):
                             now = self.millis_now()
-                        logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                        logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                         now = self.millis_now()
                     
                     i = i - scan_Step_Value
@@ -1360,7 +1622,7 @@ class pyEDScorbotTool:
         scan_Final_Value = self.d["Scan Parameters"]["scan_Final_Value"].get()
         scan_Step_Value = self.d["Scan Parameters"]["scan_Step_Value"].get()
         scan_Wait_Time = self.d["Scan Parameters"]["scan_Wait_Time"].get()
-
+        motor = 3
         if self.checked.get():
             
             #Fecha en str, formato: yyyy_MM_dd_HH_mm_ss
@@ -1368,8 +1630,10 @@ class pyEDScorbotTool:
             date = datetime.datetime.now()
             timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
             #Abrir archivo de log con el nombre de la fecha
-            logging.basicConfig(filename='./logs/Scan3_' + timeStamp + '.log',filemode='w')
-            logging.info("SMALL ED-Scorbot Joint3 Scan Log file")
+            filename='./logs/Scan3_' + timeStamp + '.log'
+            logger_file = logging.FileHandler(filename)
+            logger = logging.getLogger("logger_J{}".format(motor))
+            logger.addHandler(logger_file)
 
             #
             self.sendCommand16( 0x43,  (0x00),  ((3)&0xFF), True) #I banks disabled M3 PI_bank_select_M3 = 3
@@ -1382,7 +1646,7 @@ class pyEDScorbotTool:
             self.sendCommand16( 0x42,  ((scan_Init_Value >> 8) & 0xFF),  ((scan_Init_Value) & 0xFF), True) #Ref M3 0
 
 
-            logging.info("Time\tM3 Ref\tJ1 Pos\tM3 Ref\tJ2 Pos\tM3 Ref\tJ3 Pos\tM4 Ref\tJ4 Pos\tM5 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
+            logger.info("Time\tM3 Ref\tJ1 Pos\tM3 Ref\tJ2 Pos\tM3 Ref\tJ3 Pos\tM4 Ref\tJ4 Pos\tM5 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
 
             start = self.millis_now()
             now = self.millis_now()
@@ -1390,7 +1654,7 @@ class pyEDScorbotTool:
                 lap = self.millis_now()
                 while(abs(now-lap) < 100):
                     now = self.millis_now()
-                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),scan_Init_Value,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),scan_Init_Value,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                 now = self.millis_now()
 
 
@@ -1406,7 +1670,7 @@ class pyEDScorbotTool:
                         lap = self.millis_now()
                         while((now-lap) < 100):
                             now = self.millis_now()
-                        logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                        logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                         now = self.millis_now()
                     i = i + scan_Step_Value
                 
@@ -1421,7 +1685,7 @@ class pyEDScorbotTool:
                         lap = self.millis_now()
                         while((now-lap) < 100):
                             now = self.millis_now()
-                        logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                        logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                         now = self.millis_now()
                     
                     i = i - scan_Step_Value
@@ -1447,7 +1711,7 @@ class pyEDScorbotTool:
         scan_Final_Value = self.d["Scan Parameters"]["scan_Final_Value"].get()
         scan_Step_Value = self.d["Scan Parameters"]["scan_Step_Value"].get()
         scan_Wait_Time = self.d["Scan Parameters"]["scan_Wait_Time"].get()
-
+        motor = 4
         if self.checked.get():
             
             #Fecha en str, formato: yyyy_MM_dd_HH_mm_ss
@@ -1455,8 +1719,10 @@ class pyEDScorbotTool:
             date = datetime.datetime.now()
             timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
             #Abrir archivo de log con el nombre de la fecha
-            logging.basicConfig(filename='./logs/Scan4_' + timeStamp + '.log',filemode='w')
-            logging.info("SMALL ED-Scorbot Joint4 Scan Log file")
+            filename='./logs/Scan4_' + timeStamp + '.log'
+            logger_file = logging.FileHandler(filename)
+            logger = logging.getLogger("logger_J{}".format(motor))
+            logger.addHandler(logger_file)
 
             #
             self.sendCommand16( 0x63,  (0x00),  ((3)&0xFF), True) #I banks disabled M4 PI_bank_select_M4 = 3
@@ -1469,7 +1735,7 @@ class pyEDScorbotTool:
             self.sendCommand16( 0x62,  ((scan_Init_Value >> 8) & 0xFF),  ((scan_Init_Value) & 0xFF), True) #Ref M4 0
 
 
-            logging.info("Time\tM4 Ref\tJ1 Pos\tM4 Ref\tJ2 Pos\tM4 Ref\tJ3 Pos\tM4 Ref\tJ4 Pos\tM5 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
+            logger.info("Time\tM4 Ref\tJ1 Pos\tM4 Ref\tJ2 Pos\tM4 Ref\tJ3 Pos\tM4 Ref\tJ4 Pos\tM5 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
 
             start = self.millis_now()
             now = self.millis_now()
@@ -1477,7 +1743,7 @@ class pyEDScorbotTool:
                 lap = self.millis_now()
                 while(abs(now-lap) < 100):
                     now = self.millis_now()
-                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),scan_Init_Value,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),scan_Init_Value,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                 now = self.millis_now()
 
 
@@ -1493,7 +1759,7 @@ class pyEDScorbotTool:
                         lap = self.millis_now()
                         while((now-lap) < 100):
                             now = self.millis_now()
-                        logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                        logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                         now = self.millis_now()
                     i = i + scan_Step_Value
                 
@@ -1508,7 +1774,7 @@ class pyEDScorbotTool:
                         lap = self.millis_now()
                         while((now-lap) < 100):
                             now = self.millis_now()
-                        logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                        logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                         now = self.millis_now()
                     
                     i = i - scan_Step_Value
@@ -1534,7 +1800,7 @@ class pyEDScorbotTool:
         scan_Final_Value = self.d["Scan Parameters"]["scan_Final_Value"].get()
         scan_Step_Value = self.d["Scan Parameters"]["scan_Step_Value"].get()
         scan_Wait_Time = self.d["Scan Parameters"]["scan_Wait_Time"].get()
-
+        motor = 5
         if self.checked.get():
             
             #Fecha en str, formato: yyyy_MM_dd_HH_mm_ss
@@ -1542,8 +1808,10 @@ class pyEDScorbotTool:
             date = datetime.datetime.now()
             timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
             #Abrir archivo de log con el nombre de la fecha
-            logging.basicConfig(filename='./logs/Scan5_' + timeStamp + '.log',filemode='w')
-            logging.info("SMALL ED-Scorbot Joint5 Scan Log file")
+            filename='./logs/Scan5_' + timeStamp + '.log'
+            logger_file = logging.FileHandler(filename)
+            logger = logging.getLogger("logger_J{}".format(motor))
+            logger.addHandler(logger_file)
 
             #
             self.sendCommand16( 0x83,  (0x00),  ((3)&0xFF), True) #I banks disabled M5 PI_bank_select_M5 = 3
@@ -1556,7 +1824,7 @@ class pyEDScorbotTool:
             self.sendCommand16( 0x82,  ((scan_Init_Value >> 8) & 0xFF),  ((scan_Init_Value) & 0xFF), True) #Ref M5 0
 
 
-            logging.info("Time\tM5 Ref\tJ1 Pos\tM5 Ref\tJ2 Pos\tM5 Ref\tJ3 Pos\tM5 Ref\tJ4 Pos\tM5 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
+            logger.info("Time\tM5 Ref\tJ1 Pos\tM5 Ref\tJ2 Pos\tM5 Ref\tJ3 Pos\tM5 Ref\tJ4 Pos\tM5 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
 
             start = self.millis_now()
             now = self.millis_now()
@@ -1564,7 +1832,7 @@ class pyEDScorbotTool:
                 lap = self.millis_now()
                 while(abs(now-lap) < 100):
                     now = self.millis_now()
-                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),scan_Init_Value,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),scan_Init_Value,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                 now = self.millis_now()
 
 
@@ -1580,7 +1848,7 @@ class pyEDScorbotTool:
                         lap = self.millis_now()
                         while((now-lap) < 100):
                             now = self.millis_now()
-                        logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                        logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                         now = self.millis_now()
                     i = i + scan_Step_Value
                 
@@ -1595,7 +1863,7 @@ class pyEDScorbotTool:
                         lap = self.millis_now()
                         while((now-lap) < 100):
                             now = self.millis_now()
-                        logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                        logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                         now = self.millis_now()
                     
                     i = i - scan_Step_Value
@@ -1621,7 +1889,7 @@ class pyEDScorbotTool:
         scan_Final_Value = self.d["Scan Parameters"]["scan_Final_Value"].get()
         scan_Step_Value = self.d["Scan Parameters"]["scan_Step_Value"].get()
         scan_Wait_Time = self.d["Scan Parameters"]["scan_Wait_Time"].get()
-
+        motor = 6
         if self.checked.get():
             
             #Fecha en str, formato: yyyy_MM_dd_HH_mm_ss
@@ -1629,8 +1897,10 @@ class pyEDScorbotTool:
             date = datetime.datetime.now()
             timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
             #Abrir archivo de log con el nombre de la fecha
-            logging.basicConfig(filename='./logs/Scan6_' + timeStamp + '.log',filemode='w')
-            logging.info("SMALL ED-Scorbot Joint6 Scan Log file")
+            filename='./logs/Scan6_' + timeStamp + '.log'
+            logger_file = logging.FileHandler(filename)
+            logger = logging.getLogger("logger_J{}".format(motor))
+            logger.addHandler(logger_file)
 
             #
             self.sendCommand16( 0xA3,  (0x00),  ((3)&0xFF), True) #I banks disabled M6 PI_bank_select_M6 = 3
@@ -1643,7 +1913,7 @@ class pyEDScorbotTool:
             self.sendCommand16( 0xA2,  ((scan_Init_Value >> 8) & 0xFF),  ((scan_Init_Value) & 0xFF), True) #Ref M6 0
 
 
-            logging.info("Time\tM6 Ref\tJ1 Pos\tM6 Ref\tJ2 Pos\tM6 Ref\tJ3 Pos\tM6 Ref\tJ4 Pos\tM6 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
+            logger.info("Time\tM6 Ref\tJ1 Pos\tM6 Ref\tJ2 Pos\tM6 Ref\tJ3 Pos\tM6 Ref\tJ4 Pos\tM6 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
 
             start = self.millis_now()
             now = self.millis_now()
@@ -1651,7 +1921,7 @@ class pyEDScorbotTool:
                 lap = self.millis_now()
                 while(abs(now-lap) < 100):
                     now = self.millis_now()
-                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),scan_Init_Value,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),scan_Init_Value,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                 now = self.millis_now()
 
 
@@ -1667,7 +1937,7 @@ class pyEDScorbotTool:
                         lap = self.millis_now()
                         while((now-lap) < 100):
                             now = self.millis_now()
-                        logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                        logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                         now = self.millis_now()
                     i = i + scan_Step_Value
                 
@@ -1682,7 +1952,7 @@ class pyEDScorbotTool:
                         lap = self.millis_now()
                         while((now-lap) < 100):
                             now = self.millis_now()
-                        logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
+                        logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),0,self.Read_J2_pos(),0,self.Read_J3_pos(),0,self.Read_J4_pos(),0,self.Read_J5_pos(),0,self.Read_J6_pos()))
                         now = self.millis_now()
                     
                     i = i - scan_Step_Value
@@ -1863,42 +2133,68 @@ class pyEDScorbotTool:
 
             return j6_pos
 
+    def CalculateXYZ(self,njoints=4):
+        j1 = self.count_to_angle(self.d["Joints"]["J1_sensor_value"].get())
+        j2 = self.count_to_angle(self.d["Joints"]["J2_sensor_value"].get())
+        j3 = self.count_to_angle(self.d["Joints"]["J3_sensor_value"].get())
+        j4 = self.count_to_angle(self.d["Joints"]["J4_sensor_value"].get())
+        j5 = self.count_to_angle(self.d["Joints"]["J5_sensor_value"].get())
+        j6 = self.count_to_angle(self.d["Joints"]["J6_sensor_value"].get())
+        l = [j1,j2,j3,j4,j5,j6]
+        l2 = []
+        for i in range(njoints):
+            l2.append(l[i])
+
+
+        xyz = inverse_kinematics(l2)
+
+
+
+        return xyz
+        
+
     def Read_J1_gui(self):
         pos = self.Read_J1_pos()
         self.d["Joints"]["J1_sensor_value"].set(pos)
-        self.d["Joints"]["J1_sensor_value_hex"].set(hex(pos))
-        return
+        #self.d["Joints"]["J1_sensor_value_hex"].set(hex(pos))
+        self.d["Joints"]["J1_sensor_value_hex"].set(self.count_to_angle(1,pos))
+        return pos
 
     def Read_J2_gui(self):
         pos = self.Read_J2_pos()
         self.d["Joints"]["J2_sensor_value"].set(pos)
-        self.d["Joints"]["J2_sensor_value_hex"].set(hex(pos))
+        #self.d["Joints"]["J2_sensor_value_hex"].set(hex(pos))
+        self.d["Joints"]["J2_sensor_value_hex"].set(self.count_to_angle(2,pos))
 
-        return
+        return pos
 
     def Read_J3_gui(self):
         pos = self.Read_J3_pos()
         self.d["Joints"]["J3_sensor_value"].set(pos)
-        self.d["Joints"]["J3_sensor_value_hex"].set(hex(pos))
-        return
+        #self.d["Joints"]["J3_sensor_value_hex"].set(hex(pos))
+        self.d["Joints"]["J3_sensor_value_hex"].set(self.count_to_angle(3,pos))
+        return pos
 
     def Read_J4_gui(self):
         pos = self.Read_J4_pos()
         self.d["Joints"]["J4_sensor_value"].set(pos)
-        self.d["Joints"]["J4_sensor_value_hex"].set(hex(pos))
-        return
+        #self.d["Joints"]["J4_sensor_value_hex"].set(hex(pos))
+        self.d["Joints"]["J4_sensor_value_hex"].set(self.count_to_angle(4,pos))
+        return pos
 
     def Read_J5_gui(self):
         pos = self.Read_J5_pos()
         self.d["Joints"]["J5_sensor_value"].set(pos)
-        self.d["Joints"]["J5_sensor_value_hex"].set(hex(pos))
-        return
+        #self.d["Joints"]["J5_sensor_value_hex"].set(hex(pos))
+        self.d["Joints"]["J5_sensor_value_hex"].set(self.count_to_angle(5,pos))
+        return pos
 
     def Read_J6_gui(self):
         pos = self.Read_J6_pos()
         self.d["Joints"]["J6_sensor_value"].set(pos)
-        self.d["Joints"]["J6_sensor_value_hex"].set(hex(pos))
-        return
+        #self.d["Joints"]["J6_sensor_value_hex"].set(hex(pos))
+        self.d["Joints"]["J6_sensor_value_hex"].set(self.count_to_angle(6,pos))
+        return pos
 
 
     def Reset_J1_pos(self):
@@ -1985,6 +2281,144 @@ class pyEDScorbotTool:
                         self.SendCommandJoint5(0)
                         self.SendCommandJoint6(0)
 
+
+    def SendFPGAReset_joint(self, joint):
+        '''
+        Command the FPGA to force an internal reset
+
+        This function tells the FPGA to reset, in order 
+        to restore its initial configuration in case
+        something is not working properly
+
+        '''
+        if self.dev==None:
+            self.alert("There is no opened device. Try opening one first")
+            return
+        else:
+            if self.checked.get():
+                for i in range(0,2):
+                    if(joint==1):
+                        self.sendCommand16( 0,  (0x00), (0x00), True) #LEDs M1
+                        self.sendCommand16( 0x03,  (0x00),  (0x0f), True) #I banks disabled M1
+                        self.sendCommand16( 0x08,  (0x00),  (0x0f), True) #d banks disabled M1
+                        self.sendCommand16( 0x12,  (0x00),  (0x0), True) #spike expansor M1
+                        self.sendCommand16( 0x13,  (0x00),  (0x0f), True) #d banks disabled M1
+                        self.sendCommand16( 0,  (0x00), (0xFF), True) #LEDs M1
+                        # self.sendCommand16( 0xff,  (0xFF),  (0xFF), True) #FPGA reset
+                        # self.sendCommand16( 0xfe,  (0xFF),  (0xFF), True) #FPGA reset
+                        # self.sendCommand16( 0xff,  (0x00),  (0x00), True) #FPGA reset
+                        # self.sendCommand16( 0xfe,  (0x00),  (0x00), True) #FPGA reset
+                        self.sendCommand16( 0x03,  (0x00),  (0x03), True) #I bank enabled M1
+                        self.sendCommand16( 0x08,  (0x00),  (0x03), True) #d bank enabled M1
+                        self.sendCommand16( 0x13,  (0x00),  (0x03), True) #d bank enabled M1
+                        self.sendCommand16( 0x12,  ((self.d["Motor Config"]["spike_expansor_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M1"].get()) & 0xFF), True) #spike expansor M1
+        
+                        self.SendCommandJoint1(0)
+
+                    if(joint==2):
+                        self.sendCommand16( 0x20,  (0x00), (0x00), True) #LEDs M2
+                        self.sendCommand16( 0x23,  (0x00),  (0x0f), True) #I banks disabled M2
+                        self.sendCommand16( 0x28,  (0x00),  (0x0f), True) #d banks disabled M2
+                        self.sendCommand16( 0x32,  (0x00),  (0x0), True) #spike expansor M2
+                        self.sendCommand16( 0x33,  (0x00),  (0x0f), True) #d banks disabled M2    
+                        self.sendCommand16( 0,  (0x00), (0xFF), True) #LEDs M1
+                        # self.sendCommand16( 0xff,  (0xFF),  (0xFF), True) #FPGA reset
+                        # self.sendCommand16( 0xfe,  (0xFF),  (0xFF), True) #FPGA reset
+                        # self.sendCommand16( 0xff,  (0x00),  (0x00), True) #FPGA reset
+                        # self.sendCommand16( 0xfe,  (0x00),  (0x00), True) #FPGA reset
+                        self.sendCommand16( 0x23,  (0x00),  (0x03), True) #I bank enable M2
+                        self.sendCommand16( 0x28,  (0x00),  (0x03), True) #d bank enable M2
+                        self.sendCommand16( 0x33,  (0x00),  (0x03), True) #d bank enable M2
+                        self.sendCommand16( 0x32,  ((self.d["Motor Config"]["spike_expansor_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M2"].get()) & 0xFF), True) #spike expansor M2
+                        self.SendCommandJoint2(0)
+
+                    if(joint==3):
+                        self.sendCommand16( 0x40,  (0x00), (0x00), True) #LEDs M3
+                        self.sendCommand16( 0x43,  (0x00),  (0x0f), True) #I banks disabled M3
+                        self.sendCommand16( 0x48,  (0x00),  (0x0f), True) #d banks disabled M3
+                        self.sendCommand16( 0x52,  (0x00),  (0x0), True) #spike expansor M3
+                        self.sendCommand16( 0x53,  (0x00),  (0x0f), True) #d banks disabled M3
+                        self.sendCommand16( 0,  (0x00), (0xFF), True) #LEDs M1        
+                        # self.sendCommand16( 0xff,  (0xFF),  (0xFF), True) #FPGA reset
+                        # self.sendCommand16( 0xfe,  (0xFF),  (0xFF), True) #FPGA reset
+                        # self.sendCommand16( 0xff,  (0x00),  (0x00), True) #FPGA reset
+                        # self.sendCommand16( 0xfe,  (0x00),  (0x00), True) #FPGA reset
+                        self.sendCommand16( 0x43,  (0x00),  (0x03), True) #I bank enable M3
+                        self.sendCommand16( 0x48,  (0x00),  (0x03), True) #d bank enable M3
+                        self.sendCommand16( 0x53,  (0x00),  (0x03), True) #d bank enable M3
+                        self.sendCommand16( 0x52,  ((self.d["Motor Config"]["spike_expansor_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M3"].get()) & 0xFF), True) #spike expansor M3
+                        self.SendCommandJoint3(0)
+
+                    if(joint==4):
+                        self.sendCommand16( 0x60,  (0x00), (0x00), True) #LEDs M4
+                        self.sendCommand16( 0x63,  (0x00),  (0x0f), True) #I banks disabled M4
+                        self.sendCommand16( 0x68,  (0x00),  (0x0f), True) #d banks disabled M4
+                        self.sendCommand16( 0x72,  (0x00),  (0x0), True) #spike expansor M4
+                        self.sendCommand16( 0x73,  (0x00),  (0x0f), True) #d banks disabled M4
+                        self.sendCommand16( 0,  (0x00), (0xFF), True) #LEDs M1
+                        # self.sendCommand16( 0xff,  (0xFF),  (0xFF), True) #FPGA reset
+                        # self.sendCommand16( 0xfe,  (0xFF),  (0xFF), True) #FPGA reset
+                        # self.sendCommand16( 0xff,  (0x00),  (0x00), True) #FPGA reset
+                        # self.sendCommand16( 0xfe,  (0x00),  (0x00), True) #FPGA reset
+                        self.sendCommand16( 0x63,  (0x00),  (0x03), True) #I bank enable M4
+                        self.sendCommand16( 0x68,  (0x00),  (0x03), True) #d bank enable M4
+                        self.sendCommand16( 0x73,  (0x00),  (0x03), True) #d bank enable M4
+                        self.sendCommand16( 0x72,  ((self.d["Motor Config"]["spike_expansor_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M4"].get()) & 0xFF), True) #spike expansor M4
+                        self.SendCommandJoint4(0)
+
+                    if(joint==5):
+                        self.sendCommand16( 0x80,  (0x00), (0x00), True) #LEDs M5
+                        self.sendCommand16( 0x83,  (0x00),  (0x0f), True) #I banks disabled M5
+                        self.sendCommand16( 0x88,  (0x00),  (0x0f), True) #d banks disabled M5
+                        self.sendCommand16( 0x92,  (0x00),  (0x0), True) #spike expansor M5
+                        self.sendCommand16( 0x93,  (0x00),  (0x0f), True) #d banks disabled M5
+                        self.sendCommand16( 0,  (0x00), (0xFF), True) #LEDs M1
+                        # self.sendCommand16( 0xff,  (0xFF),  (0xFF), True) #FPGA reset
+                        # self.sendCommand16( 0xfe,  (0xFF),  (0xFF), True) #FPGA reset
+                        # self.sendCommand16( 0xff,  (0x00),  (0x00), True) #FPGA reset
+                        # self.sendCommand16( 0xfe,  (0x00),  (0x00), True) #FPGA reset
+                        self.sendCommand16( 0x83,  (0x00),  (0x03), True) #I bank enable M5
+                        self.sendCommand16( 0x88,  (0x00),  (0x03), True) #d bank enable M5
+                        self.sendCommand16( 0x93,  (0x00),  (0x03), True) #d bank enable M5
+                        self.sendCommand16( 0x92,  ((self.d["Motor Config"]["spike_expansor_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M5"].get()) & 0xFF), True) #spike expansor M5
+                        self.SendCommandJoint5(0)
+
+                    if(joint==6):
+                        self.sendCommand16( 0xA0,  (0x00), (0x00), True) #LEDs M6
+                        self.sendCommand16( 0xA3,  (0x00),  (0x0f), True) #I banks disabled M6
+                        self.sendCommand16( 0xA8,  (0x00),  (0x0f), True) #d banks disabled M6
+                        self.sendCommand16( 0xB2,  (0x00),  (0x0), True) #spike expansor M6
+                        self.sendCommand16( 0xB3,  (0x00),  (0x0f), True) #d banks disabled M6
+                        self.sendCommand16( 0,  (0x00), (0xFF), True) #LEDs M1
+                        # self.sendCommand16( 0xff,  (0xFF),  (0xFF), True) #FPGA reset
+                        # self.sendCommand16( 0xfe,  (0xFF),  (0xFF), True) #FPGA reset
+                        # self.sendCommand16( 0xff,  (0x00),  (0x00), True) #FPGA reset
+                        # self.sendCommand16( 0xfe,  (0x00),  (0x00), True) #FPGA reset
+                        self.sendCommand16( 0xa3,  (0x00),  (0x03), True) #I bank enable M6
+                        self.sendCommand16( 0xa8,  (0x00),  (0x03), True) #d bank enable M6
+                        self.sendCommand16( 0xb3,  (0x00),  (0x03), True) #d bank enable M6
+                        self.sendCommand16( 0xb2,  ((self.d["Motor Config"]["spike_expansor_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M6"].get()) & 0xFF), True) #spike expansor M6
+                        self.SendCommandJoint6(0)
+
+    def sendJ1FPGAReset(self):
+        self.SendFPGAReset_joint(1)
+    
+    def sendJ2FPGAReset(self):
+        self.SendFPGAReset_joint(2)
+    
+    def sendJ3FPGAReset(self):
+        self.SendFPGAReset_joint(3)
+    
+    def sendJ4FPGAReset(self):
+        self.SendFPGAReset_joint(4)
+
+    def sendJ5FPGAReset(self):
+        self.SendFPGAReset_joint(5)
+
+    def sendJ6FPGAReset(self):
+        self.SendFPGAReset_joint(6)
+    
+
     def ScanAllMotor(self):
         # '''
         # Perform scan procedure on all 6 joints
@@ -2009,8 +2443,10 @@ class pyEDScorbotTool:
             date = datetime.datetime.now()
             timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
             #Abrir archivo de log con el nombre de la fecha
-            logging.basicConfig(filename='./logs/ScanAllMotor_' + timeStamp + '.log',filemode='w')
-            logging.info("SMALL ED-Scorbot Scan All Motors Log file")
+            filename='./logs/ScanAllmotor_' + timeStamp + '.log'
+            logger_file = logging.FileHandler(filename)
+            logger = logging.getLogger("logger_allmotors")
+            logger.addHandler(logger_file)
 
             iSIV = scan_Init_Value
             iSFV = scan_Final_Value
@@ -2086,7 +2522,7 @@ class pyEDScorbotTool:
             self.sendCommand16( 0xA2,  ((iSIV >> 8) & 0xFF),  ((iSIV) & 0xFF), True) #Ref M6 0
             '''
 
-            logging.info("Time\tM1 Ref\tJ1 Pos\tM2 Ref\tJ2 Pos\tM3 Ref\tJ3 Pos\tM4 Ref\tJ4 Pos\tM5 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
+            logger.info("Time\tM1 Ref\tJ1 Pos\tM2 Ref\tJ2 Pos\tM3 Ref\tJ3 Pos\tM4 Ref\tJ4 Pos\tM5 Ref\tJ5 Pos\tM6 Ref\tJ6 Pos\t")
 
             start = self.millis_now()
             now = self.millis_now()
@@ -2095,7 +2531,7 @@ class pyEDScorbotTool:
                 lap = self.millis_now()
                 while(abs(now-lap) < 100):
                     now = self.millis_now()
-                logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now() - start),scan_Init_Value,self.Read_J1_pos(),scan_Init_Value,self.Read_J2_pos(),scan_Init_Value,self.Read_J3_pos(),scan_Init_Value,self.Read_J4_pos(),scan_Init_Value,self.Read_J5_pos(),scan_Init_Value,self.Read_J6_pos()))
+                logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now() - start),scan_Init_Value,self.Read_J1_pos(),scan_Init_Value,self.Read_J2_pos(),scan_Init_Value,self.Read_J3_pos(),scan_Init_Value,self.Read_J4_pos(),scan_Init_Value,self.Read_J5_pos(),scan_Init_Value,self.Read_J6_pos()))
                 now = self.millis_now()
 
             for j in range(0,5):
@@ -2116,7 +2552,7 @@ class pyEDScorbotTool:
                         lap = self.millis_now()
                         while(abs(now-lap) < 100):
                             now = self.millis_now()
-                        logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),i,self.Read_J2_pos(),i,self.Read_J3_pos(),i,self.Read_J4_pos(),i,self.Read_J5_pos(),i,self.Read_J6_pos()))
+                        logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),i,self.Read_J2_pos(),i,self.Read_J3_pos(),i,self.Read_J4_pos(),i,self.Read_J5_pos(),i,self.Read_J6_pos()))
 
                     i = i + iSSV
 
@@ -2137,7 +2573,7 @@ class pyEDScorbotTool:
                         lap = self.millis_now()
                         while(abs(now-lap) < 100):
                             now = self.millis_now()
-                        logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),i,self.Read_J2_pos(),i,self.Read_J3_pos(),i,self.Read_J4_pos(),i,self.Read_J5_pos(),i,self.Read_J6_pos()))
+                        logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),i,self.Read_J1_pos(),i,self.Read_J2_pos(),i,self.Read_J3_pos(),i,self.Read_J4_pos(),i,self.Read_J5_pos(),i,self.Read_J6_pos()))
                         now = self.millis_now()
                     
                     i = i - iSSV
@@ -2163,7 +2599,7 @@ class pyEDScorbotTool:
             return
         else:
             if self.checked.get():
-                self.sendCommand16(0xF0,(0x00),(0x00), True);
+                self.sendCommand16(0xF0,(0x00),(0x00), True)
                 self.sendCommand16(0xF0,(0x00),(0x00), True)
 
     def resetUSB(self):
@@ -2223,12 +2659,15 @@ class pyEDScorbotTool:
                 refsM2 = [0,-50,0,-50,0]
                 refsM3 = [0, -200,    0, -200,    0]
                 refsM4 = [0, -200,    0, -200,    0]
-
+                
                 date = datetime.datetime.now()
                 timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
                 #Abrir archivo de log con el nombre de la fecha
-                logging.basicConfig(filename='./logs/Print8xy_' + timeStamp + '.log',filemode='w')
-                logging.info("CITEC ED-BioRob Print 8 x,y Log file") #Se usa esta funcion??
+                filename='./logs/8xy' + timeStamp + '.log'
+                logger_file = logging.FileHandler(filename)
+                logger = logging.getLogger("logger_8xy")
+                logger.addHandler(logger_file)  
+                logger.info("CITEC ED-BioRob Print 8 x,y Log file") #Se usa esta funcion??
 
                 self.sendCommand16( 0x03,  (0x00),  ((3)&0xFF), True) #I banks disabled M1
                 self.sendCommand16( 0x07,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
@@ -2266,7 +2705,7 @@ class pyEDScorbotTool:
                 self.sendCommand16( 0x77,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
                 self.sendCommand16( 0x62,  ((refsM4[0] >> 8) & 0xFF),  ((refsM4[0]) & 0xFF), True) #Ref M4 0
 
-                logging.info("Time\tM1 Ref\tJ1 Pos\tM2 Ref\tJ2 Pos\tM3 Ref\tJ3 Pos\tM4 Ref\tJ4 Pos\t")
+                logger.info("Time\tM1 Ref\tJ1 Pos\tM2 Ref\tJ2 Pos\tM3 Ref\tJ3 Pos\tM4 Ref\tJ4 Pos\t")
                 start = self.millis_now()
                 now = self.millis_now()
                 
@@ -2274,7 +2713,7 @@ class pyEDScorbotTool:
                     lap = self.millis_now()
                     while(abs(now-lap)<100):
                         now = self.millis_now()
-                    logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),refsM1[0],self.Read_J1_pos(),refsM2[0],self.Read_J2_pos(),refsM3[0],self.Read_J3_pos(),refsM4[0],self.Read_J4_pos()))
+                    logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),refsM1[0],self.Read_J1_pos(),refsM2[0],self.Read_J2_pos(),refsM3[0],self.Read_J3_pos(),refsM4[0],self.Read_J4_pos()))
                     now = self.millis_now()
                 
                 for j in range(0,2):
@@ -2290,7 +2729,7 @@ class pyEDScorbotTool:
                             lap = self.millis_now()
                             while(abs(now-lap) < 100):
                                 now = self.millis_now()
-                            logging.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),refsM1[i],self.Read_J1_pos(),refsM2[i],self.Read_J2_pos(),refsM3[i],self.Read_J3_pos(),refsM4[i],self.Read_J4_pos()))
+                            logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),refsM1[i],self.Read_J1_pos(),refsM2[i],self.Read_J2_pos(),refsM3[i],self.Read_J3_pos(),refsM4[i],self.Read_J4_pos()))
                             now = self.millis_now()
     
     def search_Joint_home(self,JOINTNUM,pol):
@@ -2310,11 +2749,13 @@ class pyEDScorbotTool:
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
             return 
-        
-        old_sj = 0x20000/4
-        sj = 0x20000/4
-        addr_j = 0x02
-        inc_j = -50*pol
+
+        self.sendCommand16(0xF7,0xff,0xff,True) #enable counter reset when microswitch is hit
+
+        old_sj = 0x20000/4 #32768
+        sj = 0x20000/4 #32768
+        addr_j = 0x02 #2
+        inc_j = -50*pol 
 
         if JOINTNUM == 1:
             self.SendCommandJoint1(inc_j)
@@ -2400,7 +2841,8 @@ class pyEDScorbotTool:
             if( abs(sj - old_sj) < 0x5):
                 break
             
-        self.SendFPGAReset()
+        #self.SendFPGAReset()
+        self.SendFPGAReset_joint(JOINTNUM)
 
         if JOINTNUM == 1:
             self.Reset_J1_pos()
@@ -2528,8 +2970,12 @@ class pyEDScorbotTool:
                 sj = self.Read_J6_pos()
 
             if (abs(sj - (0x20000/4)) < 0x400 and abs(old_sj - sj) > 0x300):
-                self.SendFPGAReset()
-                self.ConfigureSPID_allJoints()
+                self.SendFPGAReset_joint(JOINTNUM)
+               
+                #self.ConfigureInit()
+                #self.ConfigureSPID_allJoints()
+        self.sendCommand16(0xF7,0x00,0x00,True) #disable counter reset when microswitch is hit
+
 
     def search_Home_J1(self):
         '''
@@ -2833,6 +3279,9 @@ class pyEDScorbotTool:
             
             for key in self.d["Scan Parameters"].keys():
                 self.d["Scan Parameters"][key].set(j["Scan Parameters"][key])
+
+            for key in self.d["Dynapse2"].keys():
+                self.d["Dynapse2"][key].set(j["Dynapse2"][key])
             
             return
         #If we cacth a KeyError, the config is invalid, so alert the user and end execution
@@ -2877,22 +3326,22 @@ class pyEDScorbotTool:
         #     f = lambda x:((9/50)*x) + 2
         ########################################
 
-        if motor == 1: #BOUNDS TO ADDand (ref ):
-            f = lambda x:-0.3181828045*x
+        if motor == 1: 
+            f = lambda x:-(1/3)*x
         elif motor == 2:
-            f = lambda x:-0.113318364*x
+            f = lambda x:-(1/9.4)*x
         elif motor == 3:
-            f = lambda x:-0.2937357129*x
+            f = lambda x:-(1/-3.1)*x
         elif motor == 4:
             f = lambda x: -0.056780795*x
 
         ret = f(ref)
-        if not(ret < bounds[motor][0] and ret > bounds[motor][1]) and strict:
-            ret = bounds[motor][0]*np.sign(ret)
+        if not(ret < bounds[motor-1][0] and ret > bounds[motor-1][1]) and strict:
+            ret = bounds[motor-1][0]*np.sign(ret)
 
         return ret
             
-    def angle_to_ref(self,motor,angle,strict=True):
+    def angle_to_ref(self,motor,angle,strict=False):
         """
         Convert angle of motor to reference
 
@@ -2910,7 +3359,7 @@ class pyEDScorbotTool:
         """
         f = lambda x:x
 
-        bounds = [[485,-485],[748,-748],[380,-380],[1583,-1583]]
+        bounds = [[400,-400],[700,-900],[300,-400],[1583,-1583]]
         ##############DEPRECATED#############
         #These are the inverse of the functions that appear in ref_to_angle function
         
@@ -2929,19 +3378,22 @@ class pyEDScorbotTool:
         #####################################
 
         if motor == 1:
-            f = lambda x:-3.1428474*x
+            #f = lambda x:-3.1428474*x
+            f = lambda x:-3*x
         elif motor == 2:
-            f = lambda x:-8.824695*x
+            #f = lambda x:-8.824695*x
+            f = lambda x:-9.4*x
         elif motor == 3:
-            f = lambda x:-3.4044209*x
+            #f = lambda x:-3.4044209*x
+            f = lambda x:-3.1*x
         elif motor ==4:
             f = lambda x:-17.61158871*x
         else:
             return 0
 
         ret = f(angle)
-        if not(ret < bounds[motor][0] and ret > bounds[motor][1]) and strict:
-            ret = bounds[motor][0]*np.sign(ret)
+        # if not(ret < bounds[motor-1][0] and ret > bounds[motor-1][1]) and strict:
+        #     ret = bounds[motor-1][0]*np.sign(ret)
 
         return ret
 
@@ -3036,6 +3488,22 @@ class pyEDScorbotTool:
         self.sendCommand16( 0xA2,  ((self.d["Motor Config"]["ref_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M6"].get()) & 0xFF), True) #Ref M6 0
         # pass
 
+    def send_dynapse2(self):
+        '''
+        Sends dynapse2 filter threshold and reset for joint1 now.
+
+        '''
+        
+        self.sendCommand16( 0xE1,  ((self.d["Dynapse2"]["Threshold1"].get() >> 8) & 0xFF),  ((self.d["Dynapse2"]["Threshold1"].get()) & 0xFF), True) #
+        print("Reference sent:",self.d["Dynapse2"]["Threshold1"].get())
+        self.sendCommand16( 0xE1,  ((self.d["Dynapse2"]["Threshold1"].get() >> 8) & 0xFF),  ((self.d["Dynapse2"]["Threshold1"].get()) & 0xFF), True) #
+
+        self.sendCommand16( 0xE9,  ((self.d["Dynapse2"]["Reset1"].get() >> 8) & 0xFF),  ((self.d["Dynapse2"]["Reset1"].get()) & 0xFF), True) #
+        print("Reference sent:",self.d["Dynapse2"]["Reset1"].get())
+        self.sendCommand16( 0xE9,  ((self.d["Dynapse2"]["Reset1"].get() >> 8) & 0xFF),  ((self.d["Dynapse2"]["Reset1"].get()) & 0xFF), True) #
+        # pass
+
+
     def devmem(self,addr,length,data=None):
         cmd = "devmem " + hex(addr) + " " + str(length)
         if data is not None:
@@ -3048,7 +3516,136 @@ class pyEDScorbotTool:
         tmp = proc.stdout.read()
         return tmp
   
+    def execute_script(self,script):
+        cmd = script
+        proc = proc = subprocess.Popen(cmd.split(' '), stdout=subprocess.PIPE)
+        tmp = proc.stdout.read()
+        return tmp
+        
 
+    def calculate_error(self,motor, gt, cmd, t='ref'):
+        if t not in ['ref','angle','counter']:
+            raise TypeError('Type not supported. Type must be one of ["ref","angle","counter"]')
+        else:
+            if t=='ref':
+                #Convert ground truth to ref
+                gt = self.count_to_ref(motor,gt)
+                pass
+            elif t =='angle':
+                #Convert both to angles
+                cmd = self.ref_to_angle(motor,cmd)
+                gt = self.count_to_angle(motor,gt)
+                pass
+            elif t=='counter':
+                #Convert commanded to counter 
+                cmd = self.ref_to_count(motor,cmd)
+                pass
+        
+            error = []
+            for ground_truth,command in zip(gt,cmd):
+                rmse = np.sqrt(np.mean((command - ground_truth)**2))
+                error.append(rmse)
+            
+                
+        return error
+
+    def count_to_ref(self,motor,count):
+        """
+        Convert counter of motor to reference
+
+        This function takes a motor and its collected position and 
+        returns the corresponding reference to said position
+        for that specific motor.
+
+        Args:
+            motor (int): Number of the motor (1-4)
+            count (int): Position counter to be converted
+        
+        Returns:
+            float: Reference that corresponds to the position given for the given motor 
+        """
+        f = lambda x:x
+
+        if motor == 1:
+            f = lambda x:0.02478*(x-32768)
+        elif motor == 2:
+            f = lambda x:0.0677*(x-32768)
+        elif motor == 3:
+            f = lambda x:0.02399*(x-32768)
+        elif motor ==4:
+            f = lambda x:0.2182353*(x-32768)
+        else:
+            return 0
+
+        
+        
+
+        return f(count)
+
+    def ref_to_count(self,motor,ref):
+        """
+        Convert reference of motor to counter (estimated) absolute position
+
+        This function takes a motor and an arbitrary reference and 
+        returns the corresponding estimated position for said reference
+        for that specific motor.
+
+        Args:
+            motor (int): Number of the motor (1-4)
+            ref (int): Reference to be converted
+        
+        Returns:
+            float: Absolute estimated position that corresponds to the reference given for the given motor 
+        """
+        
+        f = lambda x:x
+
+        if motor == 1:
+            f = lambda x:40.35269645959781*x + 32768
+        elif motor == 2:
+            f = lambda x:14.770677455806219*x + 32768
+        elif motor == 3:
+            f = lambda x:41.6752813118148*x + 32768
+        elif motor ==4:
+            f = lambda x:4.582209206643176*x + 32768
+        else:
+            return 0
+
+        return f(ref)
+        
+    def count_to_angle(self,motor,count):
+        """
+        Convert counter of motor to estimated angle
+
+        This function takes a motor and its collected position and 
+        returns the corresponding estimated angle to said position
+        for that specific motor.
+
+        Args:
+            motor (int): Number of the motor (1-4)
+            count (int): Position counter to be converted
+        
+        Returns:
+            float: Estimated angle that corresponds to the position given for the given motor 
+        """
+        f = lambda x:x
+
+        if motor == 1:
+            f = lambda x:(1/125.5)*(x-32768)
+        elif motor == 2:
+            f = lambda x:(1/131)*(x-32768)
+        elif motor == 3:
+            f = lambda x:(1/127.7)*(x-32768)
+        elif motor ==4:
+            f = lambda x:0.012391573729863692*(x-32768)
+        else:
+            f = lambda x:x
+
+        
+        
+
+        return f(count)
+        
 
             
 

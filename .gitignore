@@ -133,3 +133,7 @@ docs/build/
 docs/doxy/html
 docs/doxy/latex
 docs/doxy/xml
+# Downloaded libraries
+
+c/src/json
+c/json
