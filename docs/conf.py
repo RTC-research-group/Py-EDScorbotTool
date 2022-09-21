@@ -32,7 +32,13 @@ author = 'Enrique Piñero'
 extensions = [
     'sphinx_rtd_theme',
     'sphinx.ext.autodoc',
-    'sphinx.ext.napoleon'
+    'sphinx.ext.napoleon',
+    'sphinx.ext.doctest',
+    'sphinx.ext.mathjax',
+    'sphinx.ext.viewcode',
+    'sphinx.ext.imgmath', 
+    'sphinx.ext.todo',
+    'breathe',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -61,3 +67,10 @@ html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
 html_logo = "../atc.png"
 html_favicon = "../atc.png"
+
+import subprocess
+subprocess.call('make clean', shell=True)
+subprocess.call('cd doxygen ; doxygen', shell=True)
+
+breathe_projects = { "EDScorbot": "doxy/xml/" }
+breathe_default_project = "EDScorbot"
