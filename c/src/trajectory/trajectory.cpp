@@ -5,12 +5,14 @@ using json = nlohmann::json;
 int main(int argc, char *argv[])
 {
     // argv[1] --> datos en json
-
-    float j1[500], j2[500];
-    parse_jsonnp_array(argv[1], j1, j2);
+    
+    std::vector<int> j1,j2,j3,j4,j5,j6;
+    //float j1[500], j2[500];
+    parse_jsonnp_array(argv[1], &j1[0], &j2[0],&j3[0],&j4[0],&j5[0],&j6[0]);
     // printf("%f,%f\n", j1[0], j2[0]);
     float j1_angles[500], j2_angles[500];
-    w_to_angles(j1_angles, j2_angles, j1, j2);
+    std::vector<float> j1_angles,j2_angles,j3_angles,j4_angles,j5_angles,j6_angles;
+    w_to_angles(j1_angles, j2_angles,j3_angles, j4_angles,j5_angles, j6_angles, j1, j2,j3, j4,j5, j6);
 
     // Inicializacion scorbot
     // argv[2] --> initial_config.json
@@ -80,6 +82,10 @@ int main(int argc, char *argv[])
         timestamp_arr[i]=timestamp_vector.back();
     }
 
+    
+    write_array("./j1_counters_output");
+    
+    
     FILE *fj1 = fopen("./j1_counters_output", "wb");
     int *pv = &j1_vector[0];
     fwrite((const void *)pv, 4, j1_vector.size(), fj1);

@@ -13,8 +13,14 @@
 #define MAX_MQTT_MSG 200
 
 
-//Struct to hold robot state, including timestamp
+/**
+ * @brief Struct to hold robot state, including timestamp
+ * 
+ * 
+ * 
+ */
 typedef struct{
+
     int j1;
     int j2;
     int j3;
@@ -26,10 +32,10 @@ typedef struct{
 robot_state;
 
 
-// Function to parse numpy array in json format
+/// Function to parse numpy array in json format
 void parse_jsonnp_array(char *filename, float *j1, float *j2);
 
-// Function to transform a trajectory from angular velocities (w, omega) to angles
+/// Function to transform a trajectory from angular velocities (w, omega) to angles
 void w_to_angles(float *j1_angles, float *j2_angles, float *j1, float *j2);
 
 void init_mqtt_client(mosquitto *mosq, char *broker_ip);
