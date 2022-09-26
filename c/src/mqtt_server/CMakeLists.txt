@@ -22,7 +22,7 @@ set(LANGUAGE C_STANDARD)
 # Compile this module (standard C++ file, no additional dependencies)
 #add_library(test_target SHARED src/testModule.cpp)
 
-add_executable(mqtt_server mqtt_server.cpp ../EDScorbot.cpp ../devmem.cpp)
+add_executable(mqtt_server mqtt_server.cpp ../EDScorbot/EDScorbot.cpp ../EDScorbot/devmem.cpp)
 #add_executable(mqtt_client src/mqtt_client.c)
 
 
@@ -44,7 +44,7 @@ target_include_directories(mqtt_server PUBLIC "/home/enrique/mosquitto-2.0.14/in
 
 #TARGET_LINK_LIBRARIES(test_target PRIVATE ${DV_LIBRARIES})
 
-TARGET_LINK_LIBRARIES(mqtt_server PRIVATE nlohmann_json::nlohmann_json /home/enrique/Trabajo/Py-EDScorbotTool/c/compiled_libs_armhf/libmosquitto.a -lpthread)
+TARGET_LINK_LIBRARIES(mqtt_server PRIVATE nlohmann_json::nlohmann_json ../compiled_libs_armhf/libmosquitto.a -lpthread)
 
 #TARGET_LINK_LIBRARIES(mqtt_server )
 
