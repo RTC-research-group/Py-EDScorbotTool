@@ -2,14 +2,23 @@ cmake_minimum_required(VERSION 3.10)
 project(edscorbot_runtime)
 
 
+
 #find_package(PkgConfig REQUIRED)
 #pkg_check_modules(Mosquitto IMPORTED_TARGET libmosquitto REQUIRED)
+# fetch latest argparse
+include(FetchContent)
+FetchContent_Declare(
+    argparse
+    GIT_REPOSITORY https://github.com/p-ranav/argparse.git
+)
+FetchContent_MakeAvailable(argparse)
 
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++17)
 
 add_subdirectory("json")
+#add_subdirectory("src/include")
 add_subdirectory("src/trajectory")
 add_subdirectory("src/mqtt_server")
 #set(nlohmann_json_DIR "/home/enrique/Trabajo/Py-EDScorbotTool/c/src/json/cmake")
@@ -20,20 +29,23 @@ add_subdirectory("src/mqtt_server")
 
 SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fPIC --static  -DEDS_VERBOSE")
 SET(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -DEDS_VERBOSE")
-
+set(HEADER_FILES src/include/EDScorbot.hpp)
 # Custom CMake base module
 
 # Compile this module (standard C++ file, no additional dependencies)
 #add_library(test_target SHARED src/testModule.cpp)
-add_executable(test_edscorbot src/EDScorbot.cpp src/test_joints.cpp src/devmem.cpp)
-add_executable(server src/server.cpp src/EDScorbot.cpp src/devmem.cpp)
-add_executable(test_read src/EDScorbot.cpp src/read_joints.cpp src/devmem.cpp)
-add_executable(receive_server src/receive_server.cpp)
-add_executable(test_json src/test_json.cpp)
-add_executable(test_home src/test_home.cpp src/EDScorbot.cpp src/devmem.cpp)
-add_executable(reset src/reset_all.cpp src/EDScorbot.cpp src/devmem.cpp)
+#add_executable(test_edscorbot src/EDScorbot.cpp src/test_joints.cpp src/devmem.cpp)
+#add_executable(server src/server.cpp src/EDScorbot.cpp src/devmem.cpp)
+add_executable(read_joints src/EDScorbot/EDScorbot.cpp src/scripts/read_joints.cpp src/EDScorbot/devmem.cpp ${HEADER_FILES})
+add_executable(test_arrays src/test_scripts/test_arrays.cpp)
+add_executable(test_argparse src/test_scripts/test_argparse.cpp)
+
+# add_executable(receive_server src/receive_server.cpp)
+add_executable(test_json src/test_scripts/test_json.cpp)
+add_executable(home src/scripts/home.cpp src/EDScorbot/EDScorbot.cpp src/EDScorbot/devmem.cpp ${HEADER_FILES})
+add_executable(reset src/scripts/reset_all.cpp src/EDScorbot/EDScorbot.cpp src/EDScorbot/devmem.cpp ${HEADER_FILES})
 #add_executable(trajectory src/trajectory.cpp src/EDScorbot.cpp src/devmem.cpp)
-add_executable(mqtt_client src/mqtt_client.c)
+# add_executable(mqtt_client src/mqtt_client.c)
 
 
 
@@ -46,48 +58,52 @@ add_executable(mqtt_client src/mqtt_client.c)
 # )
 
 #target_include_directories(test_target PUBLIC "/usr/include")
-target_include_directories(test_edscorbot PUBLIC "c/json/single_include/")
-target_include_directories(test_edscorbot PUBLIC "c/src/include")
+# target_include_directories(test_edscorbot PUBLIC "c/json/single_include/")
+# target_include_directories(test_edscorbot PUBLIC "c/src/include")
 
-target_include_directories(test_read PUBLIC "c/json/single_include/")
-target_include_directories(test_read PUBLIC "c/src/include")
+#message("My test's working directory: ${PROJECT_SOURCE_DIR}")
+# target_include_directories(read_joints PUBLIC "c/json/single_include/")
+target_include_directories(read_joints PUBLIC "src")
 
-target_include_directories(test_json PUBLIC "c/json/single_include/")
-target_include_directories(test_json PUBLIC "c/src/include")
+# target_include_directories(test_json PUBLIC "c/json/single_include/")
+target_include_directories(test_json PUBLIC "src")
 
-target_include_directories(test_home PUBLIC "c/json/single_include/")
-target_include_directories(test_home PUBLIC "c/src/include")
-
-
-target_include_directories(reset PUBLIC "c/json/single_include/")
-target_include_directories(reset PUBLIC "c/src/include")
-
-target_include_directories(server PUBLIC "c/json/single_include/")
-target_include_directories(server PUBLIC "c/src/")
-
-target_include_directories(receive_server PUBLIC "c/json/single_include/")
-target_include_directories(receive_server PUBLIC "c/src/")
+# target_include_directories(home PUBLIC "c/json/single_include/")
+target_include_directories(home PUBLIC "src")
 
 
+# target_include_directories(reset PUBLIC "c/json/single_include/")
+target_include_directories(reset PUBLIC "src")
+target_include_directories(test_argparse PUBLIC "src" "./")
+#target_include_directories(reset PUBLIC "c/src/include")
 
-target_include_directories(mqtt_client PUBLIC "c/json/single_include/")
-target_include_directories(mqtt_client PUBLIC "c/src/")
-target_include_directories(mqtt_client PUBLIC "/home/enrique/mosquitto-2.0.14/include")
+# target_include_directories(server PUBLIC "c/json/single_include/")
+# target_include_directories(server PUBLIC "c/src/")
+
+# target_include_directories(receive_server PUBLIC "c/json/single_include/")
+# target_include_directories(receive_server PUBLIC "c/src/")
+
+
+
+# target_include_directories(mqtt_client PUBLIC "c/json/single_include/")
+# target_include_directories(mqtt_client PUBLIC "c/src/")
+# target_include_directories(mqtt_client PUBLIC "/home/enrique/mosquitto-2.0.14/include")
 
 
 #TARGET_LINK_LIBRARIES(test_target PRIVATE ${DV_LIBRARIES})
-TARGET_LINK_LIBRARIES(test_edscorbot PRIVATE nlohmann_json::nlohmann_json)
-TARGET_LINK_LIBRARIES(test_read PRIVATE nlohmann_json::nlohmann_json)
+# TARGET_LINK_LIBRARIES(test_edscorbot PRIVATE nlohmann_json::nlohmann_json)
+TARGET_LINK_LIBRARIES(read_joints PRIVATE nlohmann_json::nlohmann_json)
 TARGET_LINK_LIBRARIES(test_json PRIVATE nlohmann_json::nlohmann_json)
 
-TARGET_LINK_LIBRARIES(test_home PRIVATE nlohmann_json::nlohmann_json)
+TARGET_LINK_LIBRARIES(home PRIVATE nlohmann_json::nlohmann_json)
 
 TARGET_LINK_LIBRARIES(reset PRIVATE nlohmann_json::nlohmann_json)
+TARGET_LINK_LIBRARIES(test_argparse PUBLIC argparse)
 
 SET(CMAKE_BUILD_TYPE "Debug")
-TARGET_LINK_LIBRARIES(server PRIVATE nlohmann_json::nlohmann_json)
+# TARGET_LINK_LIBRARIES(server PRIVATE nlohmann_json::nlohmann_json)
 #TARGET_LINK_LIBRARIES(trajectory PRIVATE nlohmann_json::nlohmann_json)
-TARGET_LINK_LIBRARIES(mqtt_client /home/enrique/Trabajo/Py-EDScorbotTool/c/compiled_libs_armhf/libmosquitto.a -lpthread)
+# TARGET_LINK_LIBRARIES(mqtt_client /home/enrique/Trabajo/Py-EDScorbotTool/c/compiled_libs_armhf/libmosquitto.a -lpthread)
 
 
 
@@ -98,7 +114,7 @@ TARGET_LINK_LIBRARIES(mqtt_client /home/enrique/Trabajo/Py-EDScorbotTool/c/compi
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
-SET(CMAKE_BUILD_TYPE "Debug")
+# SET(CMAKE_BUILD_TYPE "Debug")
 
 
 #target_include_directories(caller PUBLIC "/home/ubuntu/libs/ros_lib/")
