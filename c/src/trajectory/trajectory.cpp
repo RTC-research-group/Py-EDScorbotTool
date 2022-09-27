@@ -1,36 +1,58 @@
 #include "utils.h"
+#include <argparse/argparse.hpp>
 using json = nlohmann::json;
-
 
 int main(int argc, char *argv[])
 {
-    // argv[1] --> datos en json
-    
-    std::vector<int> j1,j2,j3,j4,j5,j6;
-    //float j1[500], j2[500];
-    parse_jsonnp_array(argv[1], &j1[0], &j2[0],&j3[0],&j4[0],&j5[0],&j6[0]);
+
+    argparse::ArgumentParser parser("trajectory");
+    parser.add_argument("trajectory_file").help("File which contains the trajectory in JSON format");
+    parser.add_argument("n_points").help("Number of points of the trajectory. Integer").scan<'i', int>();
+    parser.add_argument("-cont", "--out_cont").help("Optional. Base name of output files for counter values").default_value(std::string("out_cont"));
+    parser.add_argument("-xyz", "--out_xyz").help("Optional. Base name of output files for xyz values").default_value(std::string("out_xyz"));
+
+    try
+    {
+        parser.parse_args(argc, argv);
+    }
+    catch (const std::runtime_error &err)
+    {
+        std::cerr << err.what() << std::endl;
+        std::cerr << parser;
+        std::exit(1);
+    }
+
+        char* jsonnp_array_fname = parser["trajectory_file"].c_str();
+
+        int n = parser["n_points"];
+
+        // argv[1] --> datos en json
+        // argv[2] --> numero de puntos de la trayectoria
+        // argv[3] --> nombre de
+        // argv[2] --> initial_config.json
+        std::vector<int>
+            j1, j2, j3, j4, j5, j6;
+    // float j1[500], j2[500];
+    parse_jsonnp_array(argv[1], &j1[0], &j2[0], &j3[0], &j4[0], &j5[0], &j6[0]);
     // printf("%f,%f\n", j1[0], j2[0]);
-    float j1_angles[500], j2_angles[500];
-    std::vector<float> j1_angles,j2_angles,j3_angles,j4_angles,j5_angles,j6_angles;
-    w_to_angles(j1_angles, j2_angles,j3_angles, j4_angles,j5_angles, j6_angles, j1, j2,j3, j4,j5, j6);
+    // float j1_angles[500], j2_angles[500];
+    // std::vector<float> j1_angles,j2_angles,j3_angles,j4_angles,j5_angles,j6_angles;
+    // w_to_angles(j1_angles, j2_angles,j3_angles, j4_angles,j5_angles, j6_angles, j1, j2,j3, j4,j5, j6);
 
     // Inicializacion scorbot
     // argv[2] --> initial_config.json
     char *config_file = argv[2];
     EDScorbot handler(config_file);
 
-    //Arbitrary size vectors, for collecting data while we wait for the robot to reach a position
-    std::vector<int> j1_vector, j2_vector;
+    // Arbitrary size vectors, for collecting data while we wait for the robot to reach a position
+    //  std::vector<int> j1_vector, j2_vector;
     //
-    std::vector<timeval> timestamp_vector;
+    //  std::vector<timeval> timestamp_vector;
     std::vector<robot_state> state_vector;
 
-
-
-    //500 point arrays, to send data back to the l2l model
+    // 500 point arrays, to send data back to the l2l model
     int j1_pos[500], j2_pos[500];
     struct timeval timestamp_arr[500];
-    
 
     handler.initJoints();
 
@@ -79,13 +101,11 @@ int main(int argc, char *argv[])
         publish(mosq, mqtt_msg, strlen(mqtt_msg), "EDScorbot/trajectory");
         j1_pos[i] = j1_vector.back();
         j2_pos[i] = j2_vector.back();
-        timestamp_arr[i]=timestamp_vector.back();
+        timestamp_arr[i] = timestamp_vector.back();
     }
 
-    
     write_array("./j1_counters_output");
-    
-    
+
     FILE *fj1 = fopen("./j1_counters_output", "wb");
     int *pv = &j1_vector[0];
     fwrite((const void *)pv, 4, j1_vector.size(), fj1);
@@ -97,13 +117,13 @@ int main(int argc, char *argv[])
     fclose(fj2);
 
     FILE *ts = fopen("./timestamp_output", "wb");
-    struct timeval* pts = &timestamp_vector[0];
+    struct timeval *pts = &timestamp_vector[0];
     fwrite((const void *)pts, 8, timestamp_vector.size(), ts);
     fclose(ts);
 
     FILE *fj1_500 = fopen("./j1_counters_output_500", "wb");
     pv = &j1_pos[0];
-    fwrite((const void *)pv, 4,500, fj1_500);
+    fwrite((const void *)pv, 4, 500, fj1_500);
     fclose(fj1_500);
 
     // Ejecucion de la trayectoria con j1 y j2
@@ -115,5 +135,3 @@ int main(int argc, char *argv[])
 
     return 0;
 }
-
-

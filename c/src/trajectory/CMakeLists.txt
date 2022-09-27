@@ -1,6 +1,13 @@
 cmake_minimum_required(VERSION 3.10)
 project(edscorbot_runtime)
 
+# fetch latest argparse
+include(FetchContent)
+FetchContent_Declare(
+    argparse
+    GIT_REPOSITORY https://github.com/p-ranav/argparse.git
+)
+FetchContent_MakeAvailable(argparse)
 
 
 
@@ -42,7 +49,7 @@ target_include_directories(trajectory PUBLIC "/home/enrique/mosquitto-2.0.14/inc
 
 #TARGET_LINK_LIBRARIES(test_target PRIVATE ${DV_LIBRARIES})
 
-TARGET_LINK_LIBRARIES(trajectory PRIVATE nlohmann_json::nlohmann_json ../compiled_libs_armhf/libmosquitto.a -lpthread)
+TARGET_LINK_LIBRARIES(trajectory PRIVATE nlohmann_json::nlohmann_json ../compiled_libs_armhf/libmosquitto.a -lpthread argparse)
 
 #INSTALL(TARGETS test_edscorbot DESTINATION "/usr/share/dv/modules")
 #INSTALL(TARGETS image_generator DESTINATION "/usr/share/dv/modules")

@@ -1,7 +1,7 @@
 #include "utils.h"
 using json = nlohmann::json;
 
-void parse_jsonnp_array(char *filename, float *j1, float *j2)
+void parse_jsonnp_array(char *filename, float *j1, float *j2,float *j3, float *j4,float *j5, float *j6)
 {
     std::ifstream arr_stream(filename, std::ios::in);
     json array = json::parse(arr_stream);
@@ -11,6 +11,10 @@ void parse_jsonnp_array(char *filename, float *j1, float *j2)
         int i = atoi(k.c_str());
         j1[i] = v[0];
         j2[i] = v[1];
+        j3[i] = v[2];
+        j4[i] = v[3];
+        j5[i] = v[4];
+        j6[i] = v[5];
         // std::cout << "Key: " << k << std::endl;
         // std::cout << "Value: " << v[1] << std::endl;
     }
@@ -75,11 +79,24 @@ long int time_in_micros(timeval t)
     return time_in_microseconds;
 }
 
-void write_array(char *fname, void* data, int size, int n)
-{
-    FILE *f = fopen(fname, "wb");
-    //Aqui data ya es pv
-    //int *pv = &j1_vector[0];
-    fwrite((const void *)data, size, n, f);
+void write_vector_to_file(std::vector<int> v, std::string filename)
+{//FUNCIONA!!!!
+
+    FILE *f;
+    f = fopen(filename.c_str(),"wb");
+
+    fwrite(&v[0],sizeof(int),v.size(),f);
+    //std::memcpy(&v[0],f,);
     fclose(f);
+    
+}   
+
+int read_vector_from_file(int* v, int n, std::string filename)
+{
+    //FUNCIONA!!!!
+    FILE *f;
+    f = fopen(filename.c_str(),"rb");
+    fread(v,sizeof(int),n,f);
+    fclose(f);
+    return 0;
 }
