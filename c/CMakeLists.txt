@@ -2,8 +2,16 @@ cmake_minimum_required(VERSION 3.10)
 project(edscorbot_runtime)
 
 
+
 #find_package(PkgConfig REQUIRED)
 #pkg_check_modules(Mosquitto IMPORTED_TARGET libmosquitto REQUIRED)
+# fetch latest argparse
+include(FetchContent)
+FetchContent_Declare(
+    argparse
+    GIT_REPOSITORY https://github.com/p-ranav/argparse.git
+)
+FetchContent_MakeAvailable(argparse)
 
 
 ## Compile as C++11, supported in ROS Kinetic and newer
@@ -29,6 +37,9 @@ set(HEADER_FILES src/include/EDScorbot.hpp)
 #add_executable(test_edscorbot src/EDScorbot.cpp src/test_joints.cpp src/devmem.cpp)
 #add_executable(server src/server.cpp src/EDScorbot.cpp src/devmem.cpp)
 add_executable(read_joints src/EDScorbot/EDScorbot.cpp src/scripts/read_joints.cpp src/EDScorbot/devmem.cpp ${HEADER_FILES})
+add_executable(test_arrays src/test_scripts/test_arrays.cpp)
+add_executable(test_argparse src/test_scripts/test_argparse.cpp)
+
 # add_executable(receive_server src/receive_server.cpp)
 add_executable(test_json src/test_scripts/test_json.cpp)
 add_executable(home src/scripts/home.cpp src/EDScorbot/EDScorbot.cpp src/EDScorbot/devmem.cpp ${HEADER_FILES})
@@ -63,6 +74,7 @@ target_include_directories(home PUBLIC "src")
 
 # target_include_directories(reset PUBLIC "c/json/single_include/")
 target_include_directories(reset PUBLIC "src")
+target_include_directories(test_argparse PUBLIC "src" "./")
 #target_include_directories(reset PUBLIC "c/src/include")
 
 # target_include_directories(server PUBLIC "c/json/single_include/")
@@ -86,6 +98,7 @@ TARGET_LINK_LIBRARIES(test_json PRIVATE nlohmann_json::nlohmann_json)
 TARGET_LINK_LIBRARIES(home PRIVATE nlohmann_json::nlohmann_json)
 
 TARGET_LINK_LIBRARIES(reset PRIVATE nlohmann_json::nlohmann_json)
+TARGET_LINK_LIBRARIES(test_argparse PUBLIC argparse)
 
 SET(CMAKE_BUILD_TYPE "Debug")
 # TARGET_LINK_LIBRARIES(server PRIVATE nlohmann_json::nlohmann_json)
