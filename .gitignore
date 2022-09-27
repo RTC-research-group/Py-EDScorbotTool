@@ -132,3 +132,5 @@ dmypy.json
 
 c/src/json
 c/json
+
+docs/
