@@ -35,7 +35,8 @@ def on_message(client, userdata, msg):
     j4 = parsed[3]
     j5 = parsed[4]
     j6 = parsed[5]
-    iter = parsed[6]
+    ts = parsed[6]
+    iter = parsed[7]
     
     global pos_data
     pos_data.append([j1,j2,j3,j4,j5,j6])
