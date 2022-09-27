@@ -2133,24 +2133,24 @@ class pyEDScorbotTool:
 
             return j6_pos
 
-    def CalculateXYZ(self,njoints=4):
-        j1 = self.count_to_angle(self.d["Joints"]["J1_sensor_value"].get())
-        j2 = self.count_to_angle(self.d["Joints"]["J2_sensor_value"].get())
-        j3 = self.count_to_angle(self.d["Joints"]["J3_sensor_value"].get())
-        j4 = self.count_to_angle(self.d["Joints"]["J4_sensor_value"].get())
-        j5 = self.count_to_angle(self.d["Joints"]["J5_sensor_value"].get())
-        j6 = self.count_to_angle(self.d["Joints"]["J6_sensor_value"].get())
-        l = [j1,j2,j3,j4,j5,j6]
-        l2 = []
-        for i in range(njoints):
-            l2.append(l[i])
+    # def CalculateXYZ(self,njoints=4):
+    #     j1 = self.count_to_angle(self.d["Joints"]["J1_sensor_value"].get())
+    #     j2 = self.count_to_angle(self.d["Joints"]["J2_sensor_value"].get())
+    #     j3 = self.count_to_angle(self.d["Joints"]["J3_sensor_value"].get())
+    #     j4 = self.count_to_angle(self.d["Joints"]["J4_sensor_value"].get())
+    #     j5 = self.count_to_angle(self.d["Joints"]["J5_sensor_value"].get())
+    #     j6 = self.count_to_angle(self.d["Joints"]["J6_sensor_value"].get())
+    #     l = [j1,j2,j3,j4,j5,j6]
+    #     l2 = []
+    #     for i in range(njoints):
+    #         l2.append(l[i])
 
 
-        xyz = inverse_kinematics(l2)
+    #     xyz = inverse_kinematics(l2)
 
 
 
-        return xyz
+    #     return xyz
         
 
     def Read_J1_gui(self):
@@ -3547,9 +3547,10 @@ class pyEDScorbotTool:
                 error.append(rmse)
             
                 
-        return error
-
-    def count_to_ref(self,motor,count):
+        return erro
+        
+    @staticmethod
+    def count_to_ref(motor,count):
         """
         Convert counter of motor to reference
 
@@ -3582,7 +3583,8 @@ class pyEDScorbotTool:
 
         return f(count)
 
-    def ref_to_count(self,motor,ref):
+    @staticmethod
+    def ref_to_count(motor,ref):
         """
         Convert reference of motor to counter (estimated) absolute position
 
@@ -3612,8 +3614,9 @@ class pyEDScorbotTool:
             return 0
 
         return f(ref)
-        
-    def count_to_angle(self,motor,count):
+    
+    @staticmethod
+    def count_to_angle(motor,count):
         """
         Convert counter of motor to estimated angle
 
