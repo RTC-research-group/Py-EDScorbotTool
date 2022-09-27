@@ -5,11 +5,18 @@ using json = nlohmann::json;
 int main(int argc, char *argv[])
 {
 
+    ///
+    /// Argument parsing
+    ///
+    ///
     argparse::ArgumentParser parser("trajectory");
     parser.add_argument("trajectory_file").help("File which contains the trajectory in JSON format");
     parser.add_argument("n_points").help("Number of points of the trajectory. Integer").scan<'i', int>();
     parser.add_argument("-cont", "--out_cont").help("Optional. Base name of output files for counter values").default_value(std::string("out_cont"));
     parser.add_argument("-xyz", "--out_xyz").help("Optional. Base name of output files for xyz values").default_value(std::string("out_xyz"));
+    parser.add_argument("-i", "--ip").help("Optional. IP of the MQTT broker to connect to. Default is ...").default_value(std::string("192.168.1.104"));
+    parser.add_argument("-c", "--config_file").help("Optional. Configuration file in JSON format. This file can be used to configure each joint's controller parameters. Default is 'initial_config.json'").default_value(std::string("initial_config.json"));
+    parser.add_argument("-s", "--sleep").help("Optional. Amount of microseconds to wait between joint commands. Default is 250000").default_value(int(250000));
 
     try
     {
@@ -22,18 +29,23 @@ int main(int argc, char *argv[])
         std::exit(1);
     }
 
-        char* jsonnp_array_fname = parser["trajectory_file"].c_str();
+    int n = parser.get<int>("n_points");
+    const char *jsonnp_array_fname = parser.get<std::string>("trajectory_file").c_str();
+    const char *ip = parser.get<std::string>("--ip").c_str();
+    const char *config_file = parser.get<std::string>("--config_file").c_str();
+    int SLEEP = parser.get<int>("--sleep");
+    std::string out_cont = parser.get<std::string>("--out_cont");
+    /// Load trajectory from file
 
-        int n = parser["n_points"];
+    int *pjx[6];
+    for (int i = 0; i < 6; i++)
+    {
+        pjx[i] = reinterpret_cast<int *>(malloc(sizeof(int) * n));
+    }
 
-        // argv[1] --> datos en json
-        // argv[2] --> numero de puntos de la trayectoria
-        // argv[3] --> nombre de
-        // argv[2] --> initial_config.json
-        std::vector<int>
-            j1, j2, j3, j4, j5, j6;
     // float j1[500], j2[500];
-    parse_jsonnp_array(argv[1], &j1[0], &j2[0], &j3[0], &j4[0], &j5[0], &j6[0]);
+    // parse_jsonnp_array(argv[1], &j1[0], &j2[0], &j3[0], &j4[0], &j5[0], &j6[0]);
+    parse_jsonnp_array(jsonnp_array_fname, pjx[0], pjx[1], pjx[2], pjx[3], pjx[4], pjx[5]);
     // printf("%f,%f\n", j1[0], j2[0]);
     // float j1_angles[500], j2_angles[500];
     // std::vector<float> j1_angles,j2_angles,j3_angles,j4_angles,j5_angles,j6_angles;
@@ -41,7 +53,7 @@ int main(int argc, char *argv[])
 
     // Inicializacion scorbot
     // argv[2] --> initial_config.json
-    char *config_file = argv[2];
+
     EDScorbot handler(config_file);
 
     // Arbitrary size vectors, for collecting data while we wait for the robot to reach a position
@@ -61,11 +73,10 @@ int main(int argc, char *argv[])
     struct mosquitto *mosq;
     mosq = mosquitto_new(NULL, true, 0);
 
-    init_mqtt_client(mosq, "192.168.1.104");
+    init_mqtt_client(mosq, ip);
     char mqtt_msg[MAX_MQTT_MSG];
 
-    int i;
-    for (i = 0; i < 500; i++)
+    for (int i = 0; i < n; i++)
     {
         int refj1, refj2;
         refj1 = handler.angle_to_ref(1, j1_angles[i]);
@@ -87,51 +98,42 @@ int main(int argc, char *argv[])
             // Do something
             // printf("start: %li, stop:%li, elapsed: %li\n",start.tv_usec,end.tv_usec,elapsed);
             handler.readJoints(joints);
-            j1_vector.push_back(joints[0]);
-            j2_vector.push_back(joints[1]);
-            timestamp_vector.push_back(end);
             (gettimeofday(&end, NULL));
+            robot_state rs;
+            rs.j1 = joints[0];
+            rs.j2 = joints[1];
+            rs.j3 = joints[2];
+            rs.j4 = joints[3];
+            rs.j5 = joints[4];
+            rs.j6 = joints[5];
+            rs.timestamp = time_in_micros(end);
+            state_vector.push_back(rs);
+
+            // j1_vector.push_back(joints[0]);
+            // j2_vector.push_back(joints[1]);
+            // timestamp_vector.push_back(end);
+
             // while (!ret){
             //     ret = (gettimeofday(&end, NULL));
             // }
             elapsed = time_in_micros(end) - time_in_micros(start);
         }
 
-        snprintf(mqtt_msg, MAX_MQTT_MSG, "[%d,%d,%d,%d,%d,%d,%d]", joints[0], joints[1], joints[2], joints[3], joints[4], joints[5], i);
+        snprintf(mqtt_msg, MAX_MQTT_MSG, "[%d,%d,%d,%d,%d,%d,%d,%d]", joints[0], joints[1], joints[2], joints[3], joints[4], joints[5], time_in_micros(end), i);
         publish(mosq, mqtt_msg, strlen(mqtt_msg), "EDScorbot/trajectory");
-        j1_pos[i] = j1_vector.back();
-        j2_pos[i] = j2_vector.back();
-        timestamp_arr[i] = timestamp_vector.back();
+        // j1_pos[i] = j1_vector.back();
+        // j2_pos[i] = j2_vector.back();
+        // timestamp_arr[i] = timestamp_vector.back();
     }
-
-    write_array("./j1_counters_output");
-
-    FILE *fj1 = fopen("./j1_counters_output", "wb");
-    int *pv = &j1_vector[0];
-    fwrite((const void *)pv, 4, j1_vector.size(), fj1);
-    fclose(fj1);
-
-    FILE *fj2 = fopen("./j2_counters_output", "wb");
-    pv = &j2_vector[0];
-    fwrite((const void *)pv, 4, j2_vector.size(), fj2);
-    fclose(fj2);
-
-    FILE *ts = fopen("./timestamp_output", "wb");
-    struct timeval *pts = &timestamp_vector[0];
-    fwrite((const void *)pts, 8, timestamp_vector.size(), ts);
-    fclose(ts);
-
-    FILE *fj1_500 = fopen("./j1_counters_output_500", "wb");
-    pv = &j1_pos[0];
-    fwrite((const void *)pv, 4, 500, fj1_500);
-    fclose(fj1_500);
-
-    // Ejecucion de la trayectoria con j1 y j2
-
-    // Recogida de resultados? Listas de c++ o arrays de c?
-
-    // Conversion y envío de resultados en json
-    publish(mosq, "[-1,-1,-1,-1,-1,-1,-1]", strlen("[-1,-1,-1,-1,-1,-1,-1]"), "EDScorbot/trajectory");
+    publish(mosq, "[-1,-1,-1,-1,-1,-1,-1,-1]", strlen("[-1,-1,-1,-1,-1,-1,-1,-1]"), "EDScorbot/trajectory");
+    json js;
+    for (int i = 0; i < state_vector.size(); i++)
+    {
+        // Construir el json aqui
+        js[i] = {state_vector[i].j1, state_vector[i].j2, state_vector[i].j3, state_vector[i].j4, state_vector[i].j5, state_vector[i].j6, state_vector[i].timestamp};
+    }
+    std::ofstream o(out_cont);
+    o << std::setw(4) << js << std::endl; // Conversion y envío de resultados en json
 
     return 0;
 }

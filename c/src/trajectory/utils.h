@@ -9,7 +9,7 @@
 #include "mosquitto.h"
 #include "include/EDScorbot.hpp"
 #define PI 3.141592653589793
-#define SLEEP 250000
+//#define SLEEP 250000
 #define MAX_MQTT_MSG 200
 
 
@@ -36,7 +36,7 @@ robot_state;
  * @param filename Name of the Numpy array in json format
  * @param jX Arrays of floats to hold values from Numpy array  
  */
-void parse_jsonnp_array(char *filename, float *j1, float *j2,float *j3, float *j4,float *j5, float *j6);
+void parse_jsonnp_array(char *filename, int *j1, int *j2,int *j3, int *j4,int *j5, int *j6);
 
 /**
  * @brief  Transform a trajectory from angular velocities (w, omega) to angles
