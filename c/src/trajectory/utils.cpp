@@ -1,7 +1,7 @@
 #include "utils.h"
 using json = nlohmann::json;
 
-void parse_jsonnp_array(char *filename, float *j1, float *j2,float *j3, float *j4,float *j5, float *j6)
+void parse_jsonnp_array(const char *filename, int *j1, int *j2,int *j3, int *j4,int *j5, int *j6)
 {
     std::ifstream arr_stream(filename, std::ios::in);
     json array = json::parse(arr_stream);
@@ -41,7 +41,7 @@ void w_to_angles(float *j1_angles, float *j2_angles, float *j1, float *j2)
     }
 }
 
-void init_mqtt_client(mosquitto *mosq, char *broker_ip)
+void init_mqtt_client(mosquitto *mosq, const char *broker_ip)
 {
     int rc;
 
@@ -59,7 +59,7 @@ void init_mqtt_client(mosquitto *mosq, char *broker_ip)
     // SUBSCRIBE!
 }
 
-int publish(mosquitto *mosq, char *msg, int msg_len, char *topic)
+int publish(mosquitto *mosq, char *msg, int msg_len, const char *topic)
 {
     int ret = mosquitto_publish(mosq, NULL, topic, msg_len, msg, 0, false);
     return ret;
