@@ -23,7 +23,7 @@ typedef struct
 
 progress_info progress;
 
-void parse_command(char *command, int *t, char *m, char *url);
+void parse_command(char *command, int *t, char *m, char *url, int* n);
 void ftp_trajectory(char *url);
 void handle_signal(int s)
 {
@@ -47,10 +47,10 @@ void message_callback(struct mosquitto *mosq, void *obj, const struct mosquitto_
 		printf("got message for /EDScorbot/commands topic\n");
 #endif
 
-		int type;
+		int type,n;
 		char mode;
 		char url[100];
-		parse_command((char *)message->payload, &type, &mode, url);
+		parse_command((char *)message->payload, &type, &mode, url,&n);
 		progress.type = type;
 		progress.mode = mode;
 		progress.payload = url;
@@ -59,7 +59,7 @@ void message_callback(struct mosquitto *mosq, void *obj, const struct mosquitto_
 		if(progress.type == 1){
 			if(progress.mode == 'S'){
 				char cmd[300];
-				snprintf(cmd,300,"/home/root/trajectory %s /home/root/initial_config.json &",progress.payload);
+				snprintf(cmd,300,"/home/root/trajectory %s %d -c /home/root/initial_config.json -p 100 &",progress.payload,n);
 				//printf("%s",cmd);
 				system(cmd);
 			}
@@ -70,7 +70,7 @@ void message_callback(struct mosquitto *mosq, void *obj, const struct mosquitto_
 	}
 }
 
-void parse_command(char *command, int *t, char *m, char *url)
+void parse_command(char *command, int *t, char *m, char *url, int* n)
 {
 
 	char *pch;
@@ -84,6 +84,8 @@ void parse_command(char *command, int *t, char *m, char *url)
 	pch = strtok(NULL, "[],");
 	// char buf[100];
 	strcpy(url, pch);
+	pch = strtok(NULL, "[],");
+	*n = atoi(pch);
 // url = buf;
 #ifdef EDS_VERBOSE
 
