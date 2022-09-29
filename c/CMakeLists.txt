@@ -29,7 +29,10 @@ add_subdirectory("src/mqtt_server")
 
 SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fPIC --static  -DEDS_VERBOSE")
 SET(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -DEDS_VERBOSE")
-set(HEADER_FILES src/include/EDScorbot.hpp)
+SET(HEADER_FILES src/include/EDScorbot.hpp)
+#cmake_path(SET project_base_dir ..)
+#message("Directorios: ${CMAKE_BINARY_DIR}\t${CMAKE_SOURCE_DIR}\t${CMAKE_CURRENT_BINARY_DIR}\t${CMAKE_CURRENT_SOURCE_DIR}")
+#message("DIRECTORIO BASE PROYECTO: ${project_base_dir}")
 # Custom CMake base module
 
 # Compile this module (standard C++ file, no additional dependencies)
@@ -44,6 +47,8 @@ add_executable(test_argparse src/test_scripts/test_argparse.cpp)
 add_executable(test_json src/test_scripts/test_json.cpp)
 add_executable(home src/scripts/home.cpp src/EDScorbot/EDScorbot.cpp src/EDScorbot/devmem.cpp ${HEADER_FILES})
 add_executable(reset src/scripts/reset_all.cpp src/EDScorbot/EDScorbot.cpp src/EDScorbot/devmem.cpp ${HEADER_FILES})
+add_executable(send_home src/scripts/send_0.cpp src/EDScorbot/EDScorbot.cpp src/EDScorbot/devmem.cpp ${HEADER_FILES})
+
 #add_executable(trajectory src/trajectory.cpp src/EDScorbot.cpp src/devmem.cpp)
 # add_executable(mqtt_client src/mqtt_client.c)
 
@@ -74,6 +79,8 @@ target_include_directories(home PUBLIC "src")
 
 # target_include_directories(reset PUBLIC "c/json/single_include/")
 target_include_directories(reset PUBLIC "src")
+target_include_directories(send_home PUBLIC "src")
+
 target_include_directories(test_argparse PUBLIC "src" "./")
 #target_include_directories(reset PUBLIC "c/src/include")
 
@@ -98,6 +105,8 @@ TARGET_LINK_LIBRARIES(test_json PRIVATE nlohmann_json::nlohmann_json)
 TARGET_LINK_LIBRARIES(home PRIVATE nlohmann_json::nlohmann_json)
 
 TARGET_LINK_LIBRARIES(reset PRIVATE nlohmann_json::nlohmann_json)
+TARGET_LINK_LIBRARIES(send_home PRIVATE nlohmann_json::nlohmann_json)
+
 TARGET_LINK_LIBRARIES(test_argparse PUBLIC argparse)
 
 SET(CMAKE_BUILD_TYPE "Debug")
