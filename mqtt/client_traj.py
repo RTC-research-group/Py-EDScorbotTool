@@ -9,13 +9,14 @@ from tqdm import  tqdm
 # The callback for when the client receives a CONNACK response from the server.
 def on_connect(client, userdata, flags, rc):
     global traj_name
+    global n
     print("Connected with result code "+str(rc))
 
     # Subscribing in on_connect() means that if we lose the connection and
     # reconnect then subscriptions will be renewed.
     client.subscribe("EDScorbot/trajectory")
     topic = "/EDScorbot/commands"
-    msg = "[1,S,{}]".format(traj_name)
+    msg = "[1,S,{},{}]".format(traj_name,n)
     
     client.publish(topic,msg,qos=0)
     
@@ -52,14 +53,16 @@ def on_message(client, userdata, msg):
 
 parser = ArgumentParser(description="Remote trajectory control/monitorization")
 parser.add_argument("-t","--trajectory",type=str,help="Name of the trajectory file to execute")
-
+parser.add_argument("-n","--npoints",type=int,help="Number of points of trajectory file")
 args = parser.parse_args()
 global traj_name
 global i
 global pos_data
+global n
 pos_data = []
 i = 0
 traj_name = args.trajectory
+n = args.npoints
 
 client = mqtt.Client()
 client.on_connect = on_connect
