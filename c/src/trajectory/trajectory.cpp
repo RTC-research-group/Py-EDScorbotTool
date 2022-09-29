@@ -16,8 +16,9 @@ int main(int argc, char *argv[])
     parser.add_argument("-xyz", "--out_xyz").help("Optional. Base name of output files for xyz values").default_value(std::string("out_xyz"));
     parser.add_argument("-i", "--ip").help("Optional. IP of the MQTT broker to connect to. Default is ...").default_value(std::string("192.168.1.104"));
     parser.add_argument("-c", "--config_file").help("Optional. Configuration file in JSON format. This file can be used to configure each joint's controller parameters. Default is 'initial_config.json'").default_value(std::string("initial_config.json"));
-    parser.add_argument("-s", "--sleep").help("Optional. Amount of microseconds to wait between joint commands. Default is 250000").default_value(int(250000));
-
+    parser.add_argument("-s", "--sleep").help("Optional. Amount of microseconds to wait between joint commands. Default is 250000").default_value(int(250000)).scan<'i',int>();
+    parser.add_argument("-v","--verbose").help("Increase verbosity of output").default_value(false).implicit_value(true);
+    parser.add_argument("-p","--percentage").help("Number of robot state samples that will be skipped after taking one. For a number of 100, 1 out of 100 observed positions will be recorded. Default is 100").default_value(int(100)).scan<'i',int>();
     try
     {
         parser.parse_args(argc, argv);
@@ -34,7 +35,9 @@ int main(int argc, char *argv[])
     const char *ip = parser.get<std::string>("--ip").c_str();
     const char *config_file = parser.get<std::string>("--config_file").c_str();
     int SLEEP = parser.get<int>("--sleep");
+    bool verbose = parser.get<bool>("--verbose");
     std::string out_cont = parser.get<std::string>("--out_cont");
+    int perc_mod = parser.get<int>("--percentage");
     /// Load trajectory from file
 
     int *pjx[6];
@@ -63,11 +66,14 @@ int main(int argc, char *argv[])
     std::vector<robot_state> state_vector;
 
     // 500 point arrays, to send data back to the l2l model
-    int j1_pos[500], j2_pos[500];
-    struct timeval timestamp_arr[500];
+    //int j1_pos[500], j2_pos[500];
+    //struct timeval timestamp_arr[500];
 
-    handler.initJoints();
-
+    //handler.initJoints();
+    handler.sendRef(0,handler.j1);
+    handler.sendRef(0,handler.j2);
+    handler.sendRef(0,handler.j3);
+    handler.sendRef(0,handler.j4);
     mosquitto_lib_init();
 
     struct mosquitto *mosq;
@@ -75,15 +81,26 @@ int main(int argc, char *argv[])
 
     init_mqtt_client(mosq, ip);
     char mqtt_msg[MAX_MQTT_MSG];
-
+   
     for (int i = 0; i < n; i++)
     {
-        int refj1, refj2;
-        refj1 = handler.angle_to_ref(1, j1_angles[i]);
-        refj2 = handler.angle_to_ref(2, j2_angles[i]);
-        printf("It: %d, J1: %d, J2: %d\n", i, refj1, refj2);
+        int refj1, refj2,refj3,refj4;
+        refj1 = pjx[0][i];
+        refj2 = pjx[1][i];
+        refj3 = pjx[2][i];
+        refj4 = pjx[3][i];
+        //refj1 = handler.angle_to_ref(1, j1_angles[i]);
+        //refj2 = handler.angle_to_ref(2, j2_angles[i]);
+        if(verbose){
+            printf("It: %d, J1: %d, J2: %d, J3: %d, J4: %d\n", i, refj1, refj2,refj3,refj4);
+        }
+        
         handler.sendRef(refj1, handler.j1);
         handler.sendRef(refj2, handler.j2);
+        handler.sendRef(refj3, handler.j3);
+        handler.sendRef(refj4, handler.j4);
+        //  handler.sendRef(refj1, handler.j1);
+        // handler.sendRef(refj2, handler.j2);
         struct timeval start, end;
         gettimeofday(&start, NULL);
         gettimeofday(&end, NULL);
@@ -91,7 +108,7 @@ int main(int argc, char *argv[])
         // clock_t start = clock();
         // clock_t end = clock();
         int joints[6];
-
+        int j = 0;
         long int elapsed = time_in_micros(end) - time_in_micros(start);
         while (elapsed < SLEEP)
         {
@@ -107,7 +124,8 @@ int main(int argc, char *argv[])
             rs.j5 = joints[4];
             rs.j6 = joints[5];
             rs.timestamp = time_in_micros(end);
-            state_vector.push_back(rs);
+            if(j%perc_mod == 0)
+                state_vector.push_back(rs);
 
             // j1_vector.push_back(joints[0]);
             // j2_vector.push_back(joints[1]);
@@ -117,15 +135,16 @@ int main(int argc, char *argv[])
             //     ret = (gettimeofday(&end, NULL));
             // }
             elapsed = time_in_micros(end) - time_in_micros(start);
+            j++;
         }
 
-        snprintf(mqtt_msg, MAX_MQTT_MSG, "[%d,%d,%d,%d,%d,%d,%d,%d]", joints[0], joints[1], joints[2], joints[3], joints[4], joints[5], time_in_micros(end), i);
-        publish(mosq, mqtt_msg, strlen(mqtt_msg), "EDScorbot/trajectory");
+        snprintf(mqtt_msg, MAX_MQTT_MSG, "[%d,%d,%d,%d,%d,%d,%ld,%d]", joints[0], joints[1], joints[2], joints[3], joints[4], joints[5], time_in_micros(end), i);
+        publish(mosq, mqtt_msg, strlen(mqtt_msg), std::string("EDScorbot/trajectory").c_str());
         // j1_pos[i] = j1_vector.back();
         // j2_pos[i] = j2_vector.back();
         // timestamp_arr[i] = timestamp_vector.back();
     }
-    publish(mosq, "[-1,-1,-1,-1,-1,-1,-1,-1]", strlen("[-1,-1,-1,-1,-1,-1,-1,-1]"), "EDScorbot/trajectory");
+    publish(mosq, "[-1,-1,-1,-1,-1,-1,-1,-1]", strlen("[-1,-1,-1,-1,-1,-1,-1,-1]"), std::string("EDScorbot/trajectory").c_str());
     json js;
     for (int i = 0; i < state_vector.size(); i++)
     {
@@ -133,7 +152,8 @@ int main(int argc, char *argv[])
         js[i] = {state_vector[i].j1, state_vector[i].j2, state_vector[i].j3, state_vector[i].j4, state_vector[i].j5, state_vector[i].j6, state_vector[i].timestamp};
     }
     std::ofstream o(out_cont);
-    o << std::setw(4) << js << std::endl; // Conversion y envío de resultados en json
 
+    o << std::setw(4) << js << std::endl; // Conversion y envío de resultados en json
+    o.close();
     return 0;
 }
