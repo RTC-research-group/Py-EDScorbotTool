@@ -383,7 +383,7 @@ class pyEDScorbotTool:
         real_name = filename.name.split("/")[-1]
         cmd = "scp {} root@192.168.1.115:/home/root/{}".format(filename.name,real_name)
         os.system(cmd)
-        cmd = "python3 mqtt/client_traj.py -t {} &".format(real_name)
+        cmd = "python3 mqtt/client_traj.py -t {} -n 500 &".format(real_name)
         os.system(cmd)
 
         
