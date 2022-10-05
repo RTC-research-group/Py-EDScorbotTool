@@ -155,5 +155,10 @@ int main(int argc, char *argv[])
 
     o << std::setw(4) << js << std::endl; // Conversion y envío de resultados en json
     o.close();
+
+    for(int k = 0; k < 6; k++){
+        free(pjx[i]);
+    }
+
     return 0;
 }
