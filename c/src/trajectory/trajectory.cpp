@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
     handler.sendRef(0,handler.j3);
     handler.sendRef(0,handler.j4);
     mosquitto_lib_init();
-
+    usleep(3000000);//Wait for 3 seconds to let the arm come back to home position
     struct mosquitto *mosq;
     mosq = mosquitto_new(NULL, true, 0);
 
