@@ -18,6 +18,8 @@ import numpy as np
 import pickle as P
 import paho.mqtt.client as mqtt
 import subprocess
+import matplotlib.pyplot as plt
+from visualization import *
 
 def on_connect(client, userdata, flags, rc):
         global traj_name
@@ -421,7 +423,33 @@ class pyEDScorbotTool:
             ttk.Button(labelframe,text="Reset J5 SPID",command=self.sendJ5FPGAReset).grid(row=2,column=6,sticky=(tk.W,tk.E))
             ttk.Button(labelframe,text="Reset J6 SPID",command=self.sendJ6FPGAReset).grid(row=3,column=6,sticky=(tk.W,tk.E))
             ttk.Button(labelframe,text="Trajectory",command=self.send_trajectory).grid(row=4,column=6,sticky=(tk.W,tk.E))
-            
+            ttk.Button(labelframe,text="Plot data",command=self.plot_data).grid(row=5,column=6,sticky=(tk.W,tk.E))
+    
+    def plot_data(self):
+        filename = filedialog.askopenfile(mode="r")
+        #check box for 2d or 3d
+        data = np.load(filename.name,allow_pickle=True)
+        self.plot(data,2)
+
+    
+    def plot(self,data,dim):
+        
+        if dim == 2:
+            #plot normally
+            plt.plot(data)
+            plt.show()
+            pass
+        elif dim == 3:
+            plot3d(data[0],data[1],data[2])
+            #plot3d()
+            pass
+        else:
+            #give error/return 
+            pass
+        
+
+        pass
+
     def send_trajectory(self):
         
         filename = filedialog.askopenfile(mode="r")
@@ -471,7 +499,7 @@ class pyEDScorbotTool:
             labelframe = ttk.LabelFrame(self.root, text="Information")
             labelframe.grid(column=col, row=row, sticky=(
             tk.N, tk.W), padx=5, pady=5)
-            self.textbox = tk.Text(labelframe)
+            self.textbox = tk.Text(labelframe,height=7,width=71)
             self.textbox.grid(column=1,row=1,sticky=(tk.W,tk.N))
         
 
