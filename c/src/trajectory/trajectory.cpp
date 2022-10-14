@@ -157,7 +157,7 @@ int main(int argc, char *argv[])
     o.close();
 
     for(int k = 0; k < 6; k++){
-        free(pjx[i]);
+        free(pjx[k]);
     }
 
     return 0;
