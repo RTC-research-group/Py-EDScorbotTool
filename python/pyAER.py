@@ -20,6 +20,7 @@ import paho.mqtt.client as mqtt
 import subprocess
 import matplotlib.pyplot as plt
 from visualization import *
+from tkinter import scrolledtext
 
 def on_connect(client, userdata, flags, rc):
         global traj_name
@@ -39,30 +40,32 @@ def on_connect(client, userdata, flags, rc):
 def on_message(client, userdata, msg):
         
         parsed = msg.payload.decode('utf8').lstrip('[').rstrip(']').split(',')
-        
+        #print(parsed)
         #t.update()
-        global i
-        i+=1
+        #global i
+        #i+=1
 
-        j1 = parsed[0]
-        j2 = parsed[1]
-        j3 = parsed[2]
-        j4 = parsed[3]
-        j5 = parsed[4]
-        j6 = parsed[5]
-        ts = parsed[6]
-        iter = parsed[7]
+        j1 = int(parsed[0])
+        j2 = int(parsed[1])
+        j3 = int(parsed[2])
+        j4 = int(parsed[3])
+        j5 = int(parsed[4])
+        j6 = int(parsed[5])
+        ts = int(parsed[6])
+        iter = int(parsed[7])
         
-        global pos_data
-        pos_data.append([j1,j2,j3,j4,j5,j6])
+        
+        userdata['pos_data'].append([j1,j2,j3,j4,j5,j6,ts])
 
         if int(iter) < 0:
-            arr = np.array(pos_data)
+            arr = np.array(userdata['pos_data'])
             
-            np.save("output_data.npy",arr)
+            np.save("output_data.npy",arr[:-1])
+            userdata['progressbar'].stop()
             #sys.exit()
-        if userdata.visible == True:
-            userdata.textbox.insert(tk.END,msg.topic+" "+str(msg.payload))
+        if userdata['visible'] == True and iter > 0:
+            userdata['textbox'].insert(tk.END,msg.topic+" "+str(msg.payload) + "\n")
+            userdata['progressbar'].step()
         print(msg.topic+" "+str(msg.payload))
         
 class pyEDScorbotTool:
@@ -93,7 +96,7 @@ class pyEDScorbotTool:
         
             #self.root = tk.Tk()
                 #Set the icon
-            self.root.iconphoto(False,tk.PhotoImage(file="./atc.png"))
+            self.root.iconphoto(False,tk.PhotoImage(file="atc.png"))
         else:
             self.root.withdraw()
         #Create dictionaries where the interface data will be stored
@@ -429,14 +432,15 @@ class pyEDScorbotTool:
         filename = filedialog.askopenfile(mode="r")
         #check box for 2d or 3d
         data = np.load(filename.name,allow_pickle=True)
-        self.plot(data,2)
+        df = pandas.DataFrame(data)
+        self.plot(df,2)
 
     
     def plot(self,data,dim):
         
         if dim == 2:
             #plot normally
-            plt.plot(data)
+            plt.plot(data[0][:-1])
             plt.show()
             pass
         elif dim == 3:
@@ -452,6 +456,11 @@ class pyEDScorbotTool:
 
     def send_trajectory(self):
         
+        if self.checked_remote.get() == False:
+            self.alert("Remote mode must be activated")
+            return
+        
+
         filename = filedialog.askopenfile(mode="r")
         real_name = filename.name.split("/")[-1]
         n = simpledialog.askinteger("Trajectory sender","Number of points of trajectory (integer)")
@@ -464,8 +473,9 @@ class pyEDScorbotTool:
         self.pb["maximum"] = n
         msg = "[1,S,/home/root/{},{}]".format(real_name,n)
         
-        self.client.publish(self.topic,msg,qos=0)
-        os.system(cmd)
+        self.mqtt_client.publish(self.topic,msg,qos=0)
+        #os.system(cmd)
+        i = 0
 
         
         
@@ -499,7 +509,8 @@ class pyEDScorbotTool:
             labelframe = ttk.LabelFrame(self.root, text="Information")
             labelframe.grid(column=col, row=row, sticky=(
             tk.N, tk.W), padx=5, pady=5)
-            self.textbox = tk.Text(labelframe,height=7,width=71)
+            self.textbox = scrolledtext.ScrolledText(labelframe,height=7,width=90)
+            self.textbox.see(tk.END)
             self.textbox.grid(column=1,row=1,sticky=(tk.W,tk.N))
         
 
@@ -624,7 +635,7 @@ class pyEDScorbotTool:
         
         else:
             
-            #If remote isage is enabled, try to connect to mqtt broker
+            #If remote usage is enabled, try to connect to mqtt broker
             self.checked_usb.set(False)
             self.mqtt_client = self.open_mqtt("192.168.1.104")
 
@@ -636,13 +647,22 @@ class pyEDScorbotTool:
         client = mqtt.Client()
         client.on_connect = on_connect
         client.on_message = on_message
-
+        d = {
+            'visible':self.visible,
+            'textbox':self.textbox,
+            'pos_data':[],
+            'progressbar':self.pb
+        }
+        self.topic = "/EDScorbot/commands"
+        client.user_data_set(d)
         client.connect("192.168.1.104", 1883, 60)
+        client.loop_start()
         
         return client
     
     
     def close_mqtt(self):
+        self.mqtt_client.loop_stop()
         self.mqtt_client.disconnect()
         self.mqtt_client = None
         pass
