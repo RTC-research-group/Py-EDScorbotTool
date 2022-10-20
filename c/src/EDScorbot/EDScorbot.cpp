@@ -258,25 +258,25 @@ void EDScorbot::readJoints(int *ret)
 //          {6, -1}};
 
 // Polarities per joint are: 1,-1,-1,-1,-1,-1
-void EDScorbot::searchHome(EDScorbotJoint j)
+void EDScorbot::searchHome(EDScorbotJoint j, bool v)
 {
     // Un poco mas rapido
     int pol = (j.jnum < 4 ? 1 : -1);
-    
+
     int old_sj = 0x20000 / 4; // 32768
     int sj = 0x20000 / 4;     // 32768
     int addr_j = 0x02;        // 2
     int inc_j = -50 * pol;
-    
-    int data = 0x00000000 | 0xF7 << 16 | 0xff << 8 | 0xff;//enable counter reset when microswitch is hit
+
+    int data = 0x00000000 | 0xF7 << 16 | 0xff << 8 | 0xff; // enable counter reset when microswitch is hit
     this->bram_ptr[0] = data;
-    
 
     // El joint a 50/-50
     sendRef(inc_j, j);
     usleep(2000000);
     sj = this->bram_ptr[j.jnum]; // lectura de posicion
-    puts("while1");
+    if (v)
+        puts("while1");
     while (abs(sj - old_sj) != 0)
     {
         inc_j = inc_j - 75 * pol;
@@ -287,10 +287,12 @@ void EDScorbot::searchHome(EDScorbotJoint j)
         if (abs(sj - old_sj < 0x5))
             break;
     }
-    puts("configureinit");
+    if (v)
+        puts("configureinit");
     configureInitJoint(j); // En java y python la llamada es a SendFPGAReset_joint
     resetJPos(j);
-    puts("switch");
+    if (v)
+        puts("switch");
     switch (j.jnum)
     {
     case 1:
@@ -311,19 +313,20 @@ void EDScorbot::searchHome(EDScorbotJoint j)
         break;
     default:
         break;
-        
     }
     usleep(2000000);
     sj = this->bram_ptr[j.jnum];
     old_sj = sj + 1000;
-    puts("while2");
+    if (v)
+        puts("while2");
     while (abs(old_sj - sj) > 200)
     {
         old_sj = sj;
         sj = this->bram_ptr[j.jnum];
         usleep(1000000);
     }
-    puts("while3");
+    if (v)
+        puts("while3");
     while (abs(sj - (0x20000 / 4)) > 0x400)
     {
         inc_j = inc_j + (10 * pol);
@@ -336,15 +339,14 @@ void EDScorbot::searchHome(EDScorbotJoint j)
             configureInitJoint(j);
         }
     }
-    data = 0x00000000 | 0xF7 << 16 | 0x00 << 8 | 0x00;//disable counter reset when microswitch is hit
+    data = 0x00000000 | 0xF7 << 16 | 0x00 << 8 | 0x00; // disable counter reset when microswitch is hit
     this->bram_ptr[0] = data;
-    
 }
 
 void EDScorbot::configureInitJoint(EDScorbotJoint j) // configure init pero por joint
 {
     // Comprobar que hace que los contadores se reseteen
-    //EDScorbotJoint *joints[6] = {&j1, &j2, &j3, &j4, &j5, &j6};
+    // EDScorbotJoint *joints[6] = {&j1, &j2, &j3, &j4, &j5, &j6};
     int data, base;
 
     base = 0x00000000 | ((j.jnum - 1) * JOINT_STEP) << 16;
@@ -352,19 +354,19 @@ void EDScorbot::configureInitJoint(EDScorbotJoint j) // configure init pero por 
     data = base | PI_FD_ENABLE_ADDR << 16 | 0x0f; //|0x00 << 8
     this->bram_ptr[0] = data;
 
-    #ifdef EDS_VERBOSE
+#ifdef EDS_VERBOSE
     printf("J%d PI_FD: %08x\n", j.jnum, data);
-    #endif
+#endif
 
     data = base | PI_FD_ENABLE_ADDR << 16 | 0x03; //|0x00 << 8
     this->bram_ptr[0] = data;
 
-    #ifdef EDS_VERBOSE
+#ifdef EDS_VERBOSE
     printf("J%d PI_FD: %08x\n", j.jnum, data);
 #endif
 
     data = base | SPIKE_GEN_FREQ_DIVIDER << 16 | 0x01; // | 0x00 <<8
-    this->bram_ptr[0]=data;
+    this->bram_ptr[0] = data;
     data = base | PI_FD_ADDR << 16 | ((j.controller["PI_FD_bank3_18bits"] >> 8) & 0xFF) << 8 | (j.controller["PI_FD_bank3_18bits"] & 0xFF);
     this->bram_ptr[0] = data;
 #ifdef EDS_VERBOSE
@@ -409,56 +411,108 @@ void EDScorbot::resetJPos(EDScorbotJoint j)
     sendCommand16(address, 0x00, address, this->bram_ptr);
 }
 
-float EDScorbot::count_to_angle(int motor, int count){
-    switch(motor){
-        case 1:return (1/125.5)*(count-32768);break;
-        case 2:return (1/131)*(count-32768);break;
-        case 3:return (1/127.7)*(count-32768);break;
-        case 4:return (0.012391573729863692)*(count-32768);break;
-        default:puts("Maximum actionable joint is J4 for them moment");break;
+float EDScorbot::count_to_angle(int motor, int count)
+{
+    switch (motor)
+    {
+    case 1:
+        return (1 / 125.5) * (count - 32768);
+        break;
+    case 2:
+        return (1 / 131) * (count - 32768);
+        break;
+    case 3:
+        return (1 / 127.7) * (count - 32768);
+        break;
+    case 4:
+        return (0.012391573729863692) * (count - 32768);
+        break;
+    default:
+        puts("Maximum actionable joint is J4 for them moment");
+        break;
     }
     return 0;
 }
-int EDScorbot::ref_to_count(int motor, int ref){
-    switch(motor){
-        case 1:return (40.35269645959781*ref)+32768;break;
-        case 2:return (14.770677455806219*ref)+32768;break;
-        case 3:return (41.6752813118148*ref)+32768;break;
-        case 4:return (4.582209206643176*ref)+32768;break;
-        default:puts("Maximum actionable joint is J4 for them moment");break;
+int EDScorbot::ref_to_count(int motor, int ref)
+{
+    switch (motor)
+    {
+    case 1:
+        return (40.35269645959781 * ref) + 32768;
+        break;
+    case 2:
+        return (14.770677455806219 * ref) + 32768;
+        break;
+    case 3:
+        return (41.6752813118148 * ref) + 32768;
+        break;
+    case 4:
+        return (4.582209206643176 * ref) + 32768;
+        break;
+    default:
+        puts("Maximum actionable joint is J4 for them moment");
+        break;
     }
     return 0;
 }
 
-int EDScorbot::count_to_ref(int motor, int count){
-    switch(motor){
-        case 1:return (0.02478)*(count-32768);break;
-        case 2:return (0.0677)*(count-32768);break;
-        case 3:return (0.02399)*(count-32768);break;
-        case 4:return (0.2182353)*(count-32768);break;
-        default:puts("Maximum actionable joint is J4 for them moment");break;
+int EDScorbot::count_to_ref(int motor, int count)
+{
+    switch (motor)
+    {
+    case 1:
+        return (0.02478) * (count - 32768);
+        break;
+    case 2:
+        return (0.0677) * (count - 32768);
+        break;
+    case 3:
+        return (0.02399) * (count - 32768);
+        break;
+    case 4:
+        return (0.2182353) * (count - 32768);
+        break;
+    default:
+        puts("Maximum actionable joint is J4 for them moment");
+        break;
     }
     return 0;
 }
 
-int EDScorbot::angle_to_ref(int motor, float angle){
-    switch(motor){
-        case 1:return int(-3*angle);
-        case 2:return int(-9.4*angle);
-        case 3:return int(-3.1*angle);
-        case 4:return int(-17.61158871*angle);
-        default:puts("Maximum actionable joint is J4 for them moment");break;
+int EDScorbot::angle_to_ref(int motor, float angle)
+{
+    switch (motor)
+    {
+    case 1:
+        return int(-3 * angle);
+    case 2:
+        return int(-9.4 * angle);
+    case 3:
+        return int(-3.1 * angle);
+    case 4:
+        return int(-17.61158871 * angle);
+    default:
+        puts("Maximum actionable joint is J4 for them moment");
+        break;
     }
     return 0;
 }
 
-float EDScorbot::ref_to_angle(int motor, int ref){
-    switch(motor){
-        case 1:return ((-1/3)*ref);
-        case 2:return ((-1/9.4)*ref);
-        case 3:return ((-1/3.1)*ref);
-        case 4:return (-0.056780795*ref);
-        default:puts("Maximum actionable joint is J4 for them moment");break;
+float EDScorbot::ref_to_angle(int motor, int ref)
+{
+    switch (motor)
+    {
+    case 1:
+        return ((-1 / 3) * ref);
+    case 2:
+        return ((-1 / 9.4) * ref);
+    case 3:
+        return ((-1 / 3.1) * ref);
+    case 4:
+        return (-0.056780795 * ref);
+    default:
+        puts("Maximum actionable joint is J4 for them moment");
+        break;
     }
     return 0;
 }

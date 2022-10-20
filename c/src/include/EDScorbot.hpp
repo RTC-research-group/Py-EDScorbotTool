@@ -159,9 +159,9 @@ public:
      * mechanical limits and then a gradual increase in position allows for searching the home signal, given by a microswitch in each joint
      * 
      * @param j Joint to perform the home routine to
-     * 
+     * @param v Whether to behave verbosely or not
      */
-    void searchHome(EDScorbotJoint);
+    void searchHome(EDScorbotJoint,bool);
 
     /**
      * @brief Command a specific position to a specific joint
