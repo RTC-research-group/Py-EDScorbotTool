@@ -957,7 +957,12 @@ class pyEDScorbotTool:
         the position with a reference of 0
         '''
 
-        if (((self.dev and self.checked_usb.get()) == None) or (self.checked_usb.get() == False)):
+        if self.checked_remote:
+            msg = "[3,S,-1,-1]"
+
+            self.mqtt_client.publish(self.topic,msg)
+
+        elif (((self.dev and self.checked_usb.get()) == None) or (self.checked_usb.get() == False)):
             self.alert("No device opened. Try checking USB option first")
             return
         else:
@@ -3230,6 +3235,12 @@ class pyEDScorbotTool:
         it has completely finished rendering the graphical 
         interface stuck in the process, so bear that in mind when using it
         '''
+        if self.checked_remote:
+            
+            msg = "[4,S,-1,-1]"
+
+            self.mqtt_client.publish(self.topic,msg)
+
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
             return 
@@ -3569,11 +3580,16 @@ class pyEDScorbotTool:
         to the 1st joint in order to move it,
         reference to angle are mapped in angle_to_ref function
         '''
+        if self.checked_remote:
+            msg = "[2,1,na,{}]".format(self.d["Motor Config"]["ref_M1"].get())
         
-        self.sendCommand16( 0x02,  ((self.d["Motor Config"]["ref_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M1"].get()) & 0xFF), True) #Ref M1 0
-        print("Reference sent:",self.d["Motor Config"]["ref_M1"].get())
-        self.sendCommand16( 0x02,  ((self.d["Motor Config"]["ref_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M1"].get()) & 0xFF), True) #Ref M1 0
-        self.sendCommand16( 0x02,  ((self.d["Motor Config"]["ref_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M1"].get()) & 0xFF), True) #Ref M1 0
+            self.mqtt_client.publish(self.topic,msg,qos=0)
+            pass
+        elif self.checked_usb:
+            self.sendCommand16( 0x02,  ((self.d["Motor Config"]["ref_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M1"].get()) & 0xFF), True) #Ref M1 0
+            print("Reference sent:",self.d["Motor Config"]["ref_M1"].get())
+            self.sendCommand16( 0x02,  ((self.d["Motor Config"]["ref_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M1"].get()) & 0xFF), True) #Ref M1 0
+            self.sendCommand16( 0x02,  ((self.d["Motor Config"]["ref_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M1"].get()) & 0xFF), True) #Ref M1 0
         # pass
 
     def SendCommandJoint2_lite(self):
@@ -3584,13 +3600,17 @@ class pyEDScorbotTool:
         to the 2nd joint in order to move it,
         reference to angle are mapped in angle_to_ref function
         '''
+        if self.checked_remote:
+            msg = "[2,2,na,{}]".format(self.d["Motor Config"]["ref_M2"].get())
         
-        self.sendCommand16( 0x22,  ((self.d["Motor Config"]["ref_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M2"].get()) & 0xFF), True) #Ref M2 0
-        print("Reference sent:",self.d["Motor Config"]["ref_M2"].get())
+            self.mqtt_client.publish(self.topic,msg,qos=0)
+        elif self.checked_usb:
+            self.sendCommand16( 0x22,  ((self.d["Motor Config"]["ref_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M2"].get()) & 0xFF), True) #Ref M2 0
+            print("Reference sent:",self.d["Motor Config"]["ref_M2"].get())
 
-        self.sendCommand16( 0x22,  ((self.d["Motor Config"]["ref_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M2"].get()) & 0xFF), True) #Ref M2 0
-        self.sendCommand16( 0x22,  ((self.d["Motor Config"]["ref_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M2"].get()) & 0xFF), True) #Ref M2 0
-        # pass
+            self.sendCommand16( 0x22,  ((self.d["Motor Config"]["ref_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M2"].get()) & 0xFF), True) #Ref M2 0
+            self.sendCommand16( 0x22,  ((self.d["Motor Config"]["ref_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M2"].get()) & 0xFF), True) #Ref M2 0
+            # pass
 
     def SendCommandJoint3_lite(self):
         '''
@@ -3600,12 +3620,16 @@ class pyEDScorbotTool:
         to the 3rd joint in order to move it,
         reference to angle are mapped in angle_to_ref function
         '''
+        if self.checked_remote:
+            msg = "[2,3,na,{}]".format(self.d["Motor Config"]["ref_M3"].get())
         
-        self.sendCommand16( 0x42,  ((self.d["Motor Config"]["ref_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M3"].get()) & 0xFF), True) #Ref M3 0
-        print("Reference sent:",self.d["Motor Config"]["ref_M3"].get())
-        self.sendCommand16( 0x42,  ((self.d["Motor Config"]["ref_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M3"].get()) & 0xFF), True) #Ref M3 0
-        self.sendCommand16( 0x42,  ((self.d["Motor Config"]["ref_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M3"].get()) & 0xFF), True) #Ref M3 0
-        # pass
+            self.mqtt_client.publish(self.topic,msg,qos=0)
+        elif self.checked_usb:
+            self.sendCommand16( 0x42,  ((self.d["Motor Config"]["ref_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M3"].get()) & 0xFF), True) #Ref M3 0
+            print("Reference sent:",self.d["Motor Config"]["ref_M3"].get())
+            self.sendCommand16( 0x42,  ((self.d["Motor Config"]["ref_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M3"].get()) & 0xFF), True) #Ref M3 0
+            self.sendCommand16( 0x42,  ((self.d["Motor Config"]["ref_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M3"].get()) & 0xFF), True) #Ref M3 0
+            # pass
         
     def SendCommandJoint4_lite(self):
         '''
@@ -3615,12 +3639,16 @@ class pyEDScorbotTool:
         to the 4th joint in order to move it,
         reference to angle are mapped in angle_to_ref function
         '''
+        if self.checked_remote:
+            msg = "[2,4,na,{}]".format(self.d["Motor Config"]["ref_M4"].get())
         
-        self.sendCommand16( 0x62,  ((self.d["Motor Config"]["ref_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M4"].get()) & 0xFF), True) #Ref M4 0
-        print("Reference sent:",self.d["Motor Config"]["ref_M4"].get())
-        self.sendCommand16( 0x62,  ((self.d["Motor Config"]["ref_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M4"].get()) & 0xFF), True) #Ref M4 0
-        self.sendCommand16( 0x62,  ((self.d["Motor Config"]["ref_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M4"].get()) & 0xFF), True) #Ref M4 0
-        # pass
+            self.mqtt_client.publish(self.topic,msg,qos=0)
+        elif self.checked_usb:
+            self.sendCommand16( 0x62,  ((self.d["Motor Config"]["ref_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M4"].get()) & 0xFF), True) #Ref M4 0
+            print("Reference sent:",self.d["Motor Config"]["ref_M4"].get())
+            self.sendCommand16( 0x62,  ((self.d["Motor Config"]["ref_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M4"].get()) & 0xFF), True) #Ref M4 0
+            self.sendCommand16( 0x62,  ((self.d["Motor Config"]["ref_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M4"].get()) & 0xFF), True) #Ref M4 0
+            # pass
 
     def SendCommandJoint5_lite(self):
         '''
@@ -3630,12 +3658,17 @@ class pyEDScorbotTool:
         to the 5th joint in order to move it,
         reference to angle are mapped in angle_to_ref function
         '''
+        if self.checked_remote:
+            msg = "[2,5,na,{}]".format(self.d["Motor Config"]["ref_M5"].get())
         
-        self.sendCommand16( 0x82,  ((self.d["Motor Config"]["ref_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M5"].get()) & 0xFF), True) #Ref M5 0
-        print("Reference sent:",self.d["Motor Config"]["ref_M5"].get())
-        self.sendCommand16( 0x82,  ((self.d["Motor Config"]["ref_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M5"].get()) & 0xFF), True) #Ref M5 0
-        self.sendCommand16( 0x82,  ((self.d["Motor Config"]["ref_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M5"].get()) & 0xFF), True) #Ref M5 0
-        pass
+            self.mqtt_client.publish(self.topic,msg,qos=0)
+        elif self.checked_usb:
+
+            self.sendCommand16( 0x82,  ((self.d["Motor Config"]["ref_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M5"].get()) & 0xFF), True) #Ref M5 0
+            print("Reference sent:",self.d["Motor Config"]["ref_M5"].get())
+            self.sendCommand16( 0x82,  ((self.d["Motor Config"]["ref_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M5"].get()) & 0xFF), True) #Ref M5 0
+            self.sendCommand16( 0x82,  ((self.d["Motor Config"]["ref_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M5"].get()) & 0xFF), True) #Ref M5 0
+            pass
 
     def SendCommandJoint6_lite(self):
         '''
@@ -3645,11 +3678,15 @@ class pyEDScorbotTool:
         to the 6th joint in order to move it,
         reference to angle are mapped in angle_to_ref function
         '''
+        if self.checked_remote:
+            msg = "[2,6,na,{}]".format(self.d["Motor Config"]["ref_M6"].get())
         
-        self.sendCommand16( 0xA2,  ((self.d["Motor Config"]["ref_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M6"].get()) & 0xFF), True) #Ref M6 0
-        self.sendCommand16( 0xA2,  ((self.d["Motor Config"]["ref_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M6"].get()) & 0xFF), True) #Ref M6 0
-        self.sendCommand16( 0xA2,  ((self.d["Motor Config"]["ref_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M6"].get()) & 0xFF), True) #Ref M6 0
-        # pass
+            self.mqtt_client.publish(self.topic,msg,qos=0)
+        elif self.checked_usb:
+            self.sendCommand16( 0xA2,  ((self.d["Motor Config"]["ref_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M6"].get()) & 0xFF), True) #Ref M6 0
+            self.sendCommand16( 0xA2,  ((self.d["Motor Config"]["ref_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M6"].get()) & 0xFF), True) #Ref M6 0
+            self.sendCommand16( 0xA2,  ((self.d["Motor Config"]["ref_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M6"].get()) & 0xFF), True) #Ref M6 0
+            # pass
 
     def send_dynapse2(self):
         '''
