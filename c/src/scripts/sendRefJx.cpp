@@ -3,7 +3,7 @@
 
 int main(int argc, char *argv[])
 {
-    argparse::ArgumentParser parser("trajectory");
+    argparse::ArgumentParser parser("sendRef");
     parser.add_argument("joint").help("Joint to be moved. Integer").scan<'i', int>();
     parser.add_argument("ref").help("Digital reference to be commanded to the joint. Integer").scan<'i', int>();
     parser.add_argument("-c", "--config_file").help("Optional. Configuration file in JSON format. This file can be used to configure each joint's controller parameters. Default is 'initial_config.json'").default_value(std::string("initial_config.json"));
