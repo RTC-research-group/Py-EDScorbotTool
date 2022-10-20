@@ -73,16 +73,19 @@ void message_callback(struct mosquitto *mosq, void *obj, const struct mosquitto_
 			//Not really progress nor n, don't know how to solve this right now :P
 			snprintf(cmd,300,"/home/root/sendRef %d %d",progress.mode,n);
 			system(cmd);
+			break;
 		case 3:
 			//Reset spid (ConfigureInit)
 			char cmd[20];
 			snprintf(cmd,20,"/home/root/reset");
 			system(cmd);
+			break;
 		case 4:
 			//Home
 			char cmd[20];
 			snprintf(cmd,20,"/home/root/home");
 			system(cmd);
+			break;
 
 		default:
 			break;
