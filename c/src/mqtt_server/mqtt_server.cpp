@@ -56,16 +56,37 @@ void message_callback(struct mosquitto *mosq, void *obj, const struct mosquitto_
 		progress.payload = url;
 		progress.last = 1;
 		
-		if(progress.type == 1){
+		switch (progress.type)
+		{
+		case 1:
+			//Trajectory
 			if(progress.mode == 'S'){
-				char cmd[300];
-				snprintf(cmd,300,"/home/root/trajectory %s %d -c /home/root/initial_config.json -p 100 &",progress.payload,n);
+				char cmd[512];
+				snprintf(cmd,512,"/home/root/trajectory %s %d -c /home/root/initial_config.json -p 100 &",progress.payload,n);
 				//printf("%s",cmd);
 				system(cmd);
 			}
-		}
+			break;
+		case 2:
+			//Move joints
+			char cmd[300];
+			//Not really progress nor n, don't know how to solve this right now :P
+			snprintf(cmd,300,"/home/root/sendRef %d %d",progress.mode,n);
+			system(cmd);
+		case 3:
+			//Reset spid (ConfigureInit)
+			char cmd[20];
+			snprintf(cmd,20,"/home/root/reset");
+			system(cmd);
+		case 4:
+			//Home
+			char cmd[20];
+			snprintf(cmd,20,"/home/root/home");
+			system(cmd);
 
-		
+		default:
+			break;
+		}		
 		
 	}
 }
