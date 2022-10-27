@@ -61,7 +61,7 @@ void init_mqtt_client(mosquitto *mosq, const char *broker_ip)
 
 int publish(mosquitto *mosq, char *msg, int msg_len, const char *topic)
 {
-    int ret = mosquitto_publish(mosq, NULL, topic, msg_len, msg, 0, false);
+    int ret = mosquitto_publish(mosq, NULL, topic, msg_len, msg, 1, false);
     return ret;
 }
 

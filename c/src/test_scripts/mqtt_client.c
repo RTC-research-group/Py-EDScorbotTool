@@ -27,7 +27,7 @@ int main()
 
 		snprintf(buf, 100, "[1,2,3,4,5,6,%d]", i);
 		printf("%s\n", buf);
-		mosquitto_publish(mosq, NULL, "EDScorbot/trajectory", strlen(buf), buf, 0, false);
+		mosquitto_publish(mosq, NULL, "EDScorbot/trajectory", strlen(buf), buf, 1, false);
 		usleep(10000);
 	}
 	// mosquitto_publish(mosq, NULL, "test/t1", 6, "Hello", 0, false);
