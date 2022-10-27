@@ -48,6 +48,7 @@ add_executable(test_json src/test_scripts/test_json.cpp)
 add_executable(home src/scripts/home.cpp src/EDScorbot/EDScorbot.cpp src/EDScorbot/devmem.cpp ${HEADER_FILES})
 add_executable(reset src/scripts/reset_all.cpp src/EDScorbot/EDScorbot.cpp src/EDScorbot/devmem.cpp ${HEADER_FILES})
 add_executable(send_home src/scripts/send_0.cpp src/EDScorbot/EDScorbot.cpp src/EDScorbot/devmem.cpp ${HEADER_FILES})
+add_executable(sendRef src/scripts/sendRefJx.cpp src/EDScorbot/EDScorbot.cpp src/EDScorbot/devmem.cpp ${HEADER_FILES})
 
 #add_executable(trajectory src/trajectory.cpp src/EDScorbot.cpp src/devmem.cpp)
 # add_executable(mqtt_client src/mqtt_client.c)
@@ -74,15 +75,19 @@ target_include_directories(read_joints PUBLIC "src")
 target_include_directories(test_json PUBLIC "src")
 
 # target_include_directories(home PUBLIC "c/json/single_include/")
-target_include_directories(home PUBLIC "src")
+target_include_directories(home PUBLIC "src" "./")
 
 
 # target_include_directories(reset PUBLIC "c/json/single_include/")
-target_include_directories(reset PUBLIC "src")
-target_include_directories(send_home PUBLIC "src")
+target_include_directories(reset PUBLIC "src" "./")
+target_include_directories(send_home PUBLIC "src" "./")
 
 target_include_directories(test_argparse PUBLIC "src" "./")
+
+target_include_directories(sendRef PUBLIC "src" "./" "${CMAKE_CURRENT_SOURCE_DIR}/json/single_include/")
+
 #target_include_directories(reset PUBLIC "c/src/include")
+
 
 # target_include_directories(server PUBLIC "c/json/single_include/")
 # target_include_directories(server PUBLIC "c/src/")
@@ -108,6 +113,9 @@ TARGET_LINK_LIBRARIES(reset PRIVATE nlohmann_json::nlohmann_json)
 TARGET_LINK_LIBRARIES(send_home PRIVATE nlohmann_json::nlohmann_json)
 
 TARGET_LINK_LIBRARIES(test_argparse PUBLIC argparse)
+TARGET_LINK_LIBRARIES(test_argparse PRIVATE argparse nlohmann_json::nlohmann_json)
+
+
 
 SET(CMAKE_BUILD_TYPE "Debug")
 # TARGET_LINK_LIBRARIES(server PRIVATE nlohmann_json::nlohmann_json)
