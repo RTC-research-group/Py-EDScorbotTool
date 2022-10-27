@@ -70,10 +70,10 @@ int main(int argc, char *argv[])
     //struct timeval timestamp_arr[500];
 
     //handler.initJoints();
-    handler.sendRef(0,handler.j1);
-    handler.sendRef(0,handler.j2);
-    handler.sendRef(0,handler.j3);
-    handler.sendRef(0,handler.j4);
+    // handler.sendRef(0,handler.j1);
+    // handler.sendRef(0,handler.j2);
+    // handler.sendRef(0,handler.j3);
+    // handler.sendRef(0,handler.j4);
     mosquitto_lib_init();
     usleep(3000000);//Wait for 3 seconds to let the arm come back to home position
     struct mosquitto *mosq;
