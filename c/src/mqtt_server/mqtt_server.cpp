@@ -55,13 +55,13 @@ void message_callback(struct mosquitto *mosq, void *obj, const struct mosquitto_
 		progress.mode = mode;
 		progress.payload = url;
 		progress.last = 1;
-		
+		char* cmd;
 		switch (progress.type)
 		{
 		case 1:
 			//Trajectory
 			if(progress.mode == 'S'){
-				char cmd[512];
+				cmd = reinterpret_cast<char*>(malloc(512));
 				snprintf(cmd,512,"/home/root/trajectory %s %d -c /home/root/initial_config.json -p 100 &",progress.payload,n);
 				//printf("%s",cmd);
 				system(cmd);
@@ -69,28 +69,29 @@ void message_callback(struct mosquitto *mosq, void *obj, const struct mosquitto_
 			break;
 		case 2:
 			//Move joints
-			char cmd[300];
+			cmd = reinterpret_cast<char*>(malloc(300));
 			//Not really progress nor n, don't know how to solve this right now :P
 			snprintf(cmd,300,"/home/root/sendRef %d %d",progress.mode,n);
 			system(cmd);
 			break;
 		case 3:
 			//Reset spid (ConfigureInit)
-			char cmd[20];
+			cmd = reinterpret_cast<char*>(malloc(20));
 			snprintf(cmd,20,"/home/root/reset");
 			system(cmd);
 			break;
 		case 4:
 			//Home
-			char cmd[20];
+			cmd = reinterpret_cast<char*>(malloc(20));
 			snprintf(cmd,20,"/home/root/home");
 			system(cmd);
 			break;
 
 		default:
+		//free(cmd);
 			break;
 		}		
-		
+		free(cmd);
 	}
 }
 
@@ -123,7 +124,7 @@ void parse_command(char *command, int *t, char *m, char *url, int* n)
 void *pub_progress(void *buf)
 {
 	char *payload = (char *)buf;
-	int rc = mosquitto_publish(mosq, NULL, "/EDScorbot/trajectory", strlen(payload), payload, 0, false);
+	int rc = mosquitto_publish(mosq, NULL, "/EDScorbot/trajectory", strlen(payload), payload, 1, false);
 	int *p = &rc;
 	void *v = (void *)p;
 	return v;
