@@ -8,18 +8,9 @@ from pyAER import pyEDScorbotTool
 import numpy as np
 from visual_kinematics import RobotSerial
 
-def cont_to_angle(fname):
+def cont_to_angle(conts):
     
-    dh_params = np.array([[0.3585, 0.05, -0.5 * np.pi, 23.6*(np.pi/180)],
-                      [-0.098, 0.3, 0., -22*(np.pi/180)],
-                      [0.065, 0.35, 0., 22.4*(np.pi/180)],
-                      [0., 0.22, 0., 0.]])
-    robot = RobotSerial(dh_params)
-
-
-    conts = np.array(j.load(open(fname)))
     qs = []
-    xyz = []
     cs = []
     timestamps = []
     for row in conts:
@@ -52,8 +43,9 @@ if __name__== '__main__':
     cont_file = args.input_file
     output_file = args.output_file
     include_timestamps = args.include_timestamps
+    conts = np.load(cont_file,allow_pickle=True)
     qs,cs,timestamps= cont_to_angle(cont_file)
-    timestamps = timestamps - timestamps[0]
+    
 
     if include_timestamps:
         import pandas
