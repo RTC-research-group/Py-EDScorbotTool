@@ -12,7 +12,9 @@ if __name__ == "__main__":
     parser.add_argument("--output_file","-o",type=str,action="store",help="Name of the output file",default="refs_out.npy")
     
     args = parser.parse_args()
-    arr = np.load(args.file,allow_pickle=True)
+    input_file = args.input_file
+    output_file = args.output_file
+    arr = np.load(input_file,allow_pickle=True)
     df = pd.DataFrame(arr)
     l = []
     i = 0
@@ -22,5 +24,6 @@ if __name__ == "__main__":
         df[i] = values
         i+=1
     
-    fname = args.file[:-4] + "_refs"
-    np.save(fname,df.to_numpy())
+    
+    np.save(output_file,df.to_numpy())
+    print("Saved output to file{}".format(output_file))

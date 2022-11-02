@@ -18,7 +18,6 @@ if __name__ == "__main__":
 
     arr = np.load(input_file,allow_pickle=True)
     df = pd.DataFrame(arr)
-    l = []
     i = 0
     for name, values in df.iteritems():
         #print(name,values)
@@ -28,3 +27,4 @@ if __name__ == "__main__":
     
     
     np.save(output_file,df.to_numpy())
+    print("Saved output to file{}".format(output_file))
