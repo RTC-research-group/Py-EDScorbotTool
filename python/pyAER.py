@@ -3463,7 +3463,8 @@ class pyEDScorbotTool:
             self.alert("Invalid config file")
             return
     
-    def ref_to_angle(self,motor,ref,strict=True):
+    @staticmethod
+    def ref_to_angle(motor,ref,strict=True):
         """
         Convert reference of motor to angle
 
@@ -3514,8 +3515,9 @@ class pyEDScorbotTool:
             ret = bounds[motor-1][0]*np.sign(ret)
 
         return ret
-            
-    def angle_to_ref(self,motor,angle,strict=False):
+    
+    @staticmethod   
+    def angle_to_ref(motor,angle):
         """
         Convert angle of motor to reference
 
@@ -3533,7 +3535,7 @@ class pyEDScorbotTool:
         """
         f = lambda x:x
 
-        bounds = [[400,-400],[700,-900],[300,-400],[1583,-1583]]
+        #bounds = [[400,-400],[700,-900],[300,-400],[1583,-1583]]
         ##############DEPRECATED#############
         #These are the inverse of the functions that appear in ref_to_angle function
         
