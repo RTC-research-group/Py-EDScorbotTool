@@ -16,7 +16,9 @@ if __name__ == "__main__":
     output_file = args.output_file
     arr = np.load(input_file,allow_pickle=True)
     df = pd.DataFrame(arr)
-    l = []
+    #Cambiamos la direccion del movimiento (no coincide entre visual kinematics y la realidad)
+    df[0] = -df[0]
+    df[1] = -df[1]
     i = 0
     for name, values in df.iteritems():
         #print(name,values)
