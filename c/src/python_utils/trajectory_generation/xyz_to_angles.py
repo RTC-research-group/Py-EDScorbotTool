@@ -3,7 +3,9 @@ from argparse import ArgumentParser
 import pandas as pd
 import sys, os
 sys.path.append(os.path.abspath("../../../python"))
-from visual_kinematics import RobotSerial, RobotTrajectory, Frame
+from visual_kinematics.RobotSerial import RobotSerial
+from visual_kinematics.RobotTrajectory import RobotTrajectory
+from visual_kinematics.Frame import Frame
 
 dh_params = np.array([[0.3585, 0.05, -0.5 * np.pi, 23.6*(np.pi/180)],
                       [-0.098, 0.3, 0., -22*(np.pi/180)],

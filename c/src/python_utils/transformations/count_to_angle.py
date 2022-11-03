@@ -6,7 +6,8 @@ sys.path.append(os.path.abspath(r"D:\Universidad\Master\Ondrive Cloud\OneDrive -
 from argparse import ArgumentParser
 from pyAER import pyEDScorbotTool
 import numpy as np
-from visual_kinematics import RobotSerial
+from visual_kinematics.RobotSerial import RobotSerial
+import json as j
 
 def cont_to_angle(conts):
     
@@ -43,14 +44,14 @@ if __name__== '__main__':
     cont_file = args.input_file
     output_file = args.output_file
     include_timestamps = args.include_timestamps
-    conts = np.load(cont_file,allow_pickle=True)
-    qs,cs,timestamps= cont_to_angle(cont_file)
+    conts = np.array(j.load(open(cont_file,'r')))
+    qs,cs,timestamps= cont_to_angle(conts)
     
 
     if include_timestamps:
         import pandas
         df = pandas.DataFrame(qs)
-        df[4] = cs
+        df[4] = timestamps
         np.save(output_file,df.to_numpy())
         
     else:

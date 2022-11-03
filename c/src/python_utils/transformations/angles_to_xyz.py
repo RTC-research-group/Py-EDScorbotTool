@@ -4,11 +4,11 @@ import pandas as pd
 import sys, os
 sys.path.append(os.path.abspath("../../../python"))
 from pyAER import pyEDScorbotTool
-from visual_kinematics import RobotSerial
+from visual_kinematics.RobotSerial import RobotSerial
 
 def angles_to_xyz(angles):
 
-    dh_params = np.array([[0.3585, 0.05, -0.5 * pi, 23.6*(np.pi/180)],
+    dh_params = np.array([[0.3585, 0.05, -0.5 * np.pi, 23.6*(np.pi/180)],
                       [-0.098, 0.3, 0., -22*(np.pi/180)],
                       [0.065, 0.35, 0., 22.4*(np.pi/180)],
                       [0., 0.22, 0., 0.]])
@@ -31,7 +31,7 @@ def angles_to_xyz(angles):
         xyz.append(f.t_3_1.reshape([3, ]))
         qs.append([q1,q2,q3,q4])
         
-    return np.array(xyz),np.array(qs)
+    return np.array(xyz),(np.array(qs)*(180/np.pi))
 
 if __name__ == "__main__":
     parser = ArgumentParser()
@@ -47,5 +47,5 @@ if __name__ == "__main__":
     
     
     np.save(output_file,xyz)
-    print("Saved output to file{}".format(output_file))
+    print("Saved output to file {}".format(output_file))
 
