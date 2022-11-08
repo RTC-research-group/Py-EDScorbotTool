@@ -51,4 +51,5 @@ if __name__== '__main__':
         plot3d(xyz[:,0],xyz[:,1],xyz[:,2],label=label,title=title)
         
     else:
+        plot3d(xyz[:,0],xyz[:,1],xyz[:,2],label=label,title=title)
         pass
