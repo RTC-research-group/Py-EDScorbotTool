@@ -2,7 +2,7 @@ import numpy as np
 from argparse import ArgumentParser
 import pandas as pd
 import sys, os
-sys.path.append(os.path.abspath("../../../python"))
+sys.path.append(os.path.abspath("../../../../python"))
 from pyAER import pyEDScorbotTool
 
 

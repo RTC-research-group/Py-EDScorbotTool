@@ -2,7 +2,7 @@ import numpy as np
 from argparse import ArgumentParser
 import pandas as pd
 import sys, os
-sys.path.append(os.path.abspath("../../../python"))
+sys.path.append(os.path.abspath("../../../../python"))
 from visual_kinematics.RobotSerial import RobotSerial
 from visual_kinematics.RobotTrajectory import RobotTrajectory
 from visual_kinematics.Frame import Frame

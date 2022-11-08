@@ -1,8 +1,8 @@
 import sys
 import os
-sys.path.append(os.path.abspath("../../../python"))
+sys.path.append(os.path.abspath("../../../../python"))
 sys.path.append(os.path.abspath("../"))
-sys.path.append(os.path.abspath(r"D:\Universidad\Master\Ondrive Cloud\OneDrive - UNIVERSIDAD DE SEVILLA\Trabajo\SMALL\dataset"))
+sys.path.append(os.path.abspath("/media/HDD/home/enrique/Proyectos/SMALL/dataset"))
 from argparse import ArgumentParser
 from pyAER import pyEDScorbotTool
 import numpy as np
