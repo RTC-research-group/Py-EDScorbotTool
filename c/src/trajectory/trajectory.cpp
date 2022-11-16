@@ -11,14 +11,15 @@ int main(int argc, char *argv[])
     ///
     argparse::ArgumentParser parser("trajectory");
     parser.add_argument("trajectory_file").help("File which contains the trajectory in JSON format");
-    parser.add_argument("n_points").help("Number of points of the trajectory. Integer").scan<'i', int>();
+    parser.add_argument("-n", "--n_traj").help("Index for a file with multiple trajectories. Check the format at URL").default_value(int(0)).scan<'i', int>();
     parser.add_argument("-cont", "--out_cont").help("Optional. Base name of output files for counter values").default_value(std::string("out_cont"));
     parser.add_argument("-xyz", "--out_xyz").help("Optional. Base name of output files for xyz values").default_value(std::string("out_xyz"));
     parser.add_argument("-i", "--ip").help("Optional. IP of the MQTT broker to connect to. Default is ...").default_value(std::string("192.168.1.104"));
     parser.add_argument("-c", "--config_file").help("Optional. Configuration file in JSON format. This file can be used to configure each joint's controller parameters. Default is 'initial_config.json'").default_value(std::string("initial_config.json"));
-    parser.add_argument("-s", "--sleep").help("Optional. Amount of microseconds to wait between joint commands. Default is 250000").default_value(int(250000)).scan<'i',int>();
-    parser.add_argument("-v","--verbose").help("Increase verbosity of output").default_value(false).implicit_value(true);
-    parser.add_argument("-p","--percentage").help("Number of robot state samples that will be skipped after taking one. For a number of 100, 1 out of 100 observed positions will be recorded. Default is 100").default_value(int(100)).scan<'i',int>();
+    parser.add_argument("-s", "--sleep").help("Optional. Amount of microseconds to wait between joint commands. Default is 250000").default_value(int(250000)).scan<'i', int>();
+    parser.add_argument("-v", "--verbose").help("Increase verbosity of output").default_value(false).implicit_value(true);
+    parser.add_argument("-p", "--percentage").help("Number of robot state samples that will be skipped after taking one. For a number of 100, 1 out of 100 observed positions will be recorded. Default is 100").default_value(int(100)).scan<'i', int>();
+
     try
     {
         parser.parse_args(argc, argv);
@@ -30,7 +31,7 @@ int main(int argc, char *argv[])
         std::exit(1);
     }
 
-    int n = parser.get<int>("n_points");
+    int n = parser.get<int>("--n_traj");
     const char *jsonnp_array_fname = parser.get<std::string>("trajectory_file").c_str();
     const char *ip = parser.get<std::string>("--ip").c_str();
     const char *config_file = parser.get<std::string>("--config_file").c_str();
@@ -40,11 +41,31 @@ int main(int argc, char *argv[])
     int perc_mod = parser.get<int>("--percentage");
     /// Load trajectory from file
 
+    /***/
+    /***TO BE CHANGED*/
+    std::ifstream arr_stream(jsonnp_array_fname, std::ios::in);
+    json js = json::parse(arr_stream);
+
+
+    int initial_position[6]={js["Joint_initial_positions"]["J1"],js["Joint_initial_positions"]["J2"],js["Joint_initial_positions"]["J3"],js["Joint_initial_positions"]["J4"],js["Joint_initial_positions"]["J5"],js["Joint_initial_positions"]["J6"]};
+    assert(n>=0);
+    char[5] traj_index;
+    snprintf(traj_index,5,"#%d",n);
+    json trajectory = js["Trajectories"][traj_index];
+    int n_steps = trajectory["steps"];
+
     int *pjx[6];
     for (int i = 0; i < 6; i++)
     {
-        pjx[i] = reinterpret_cast<int *>(malloc(sizeof(int) * n));
+        pjx[i] = reinterpret_cast<int *>(malloc(sizeof(int) * n_steps));
     }
+    auto tj1, tj2, tj3, tj4, tj5, tj6;
+    tj1 = trajectory["J1"];
+    tj2 = trajectory["J2"];
+    tj3 = trajectory["J3"];
+    tj4 = trajectory["J4"];
+    tj5 = trajectory["J5"];
+    tj6 = trajectory["J6"];
 
     // float j1[500], j2[500];
     // parse_jsonnp_array(argv[1], &j1[0], &j2[0], &j3[0], &j4[0], &j5[0], &j6[0]);
@@ -66,35 +87,37 @@ int main(int argc, char *argv[])
     std::vector<robot_state> state_vector;
 
     // 500 point arrays, to send data back to the l2l model
-    //int j1_pos[500], j2_pos[500];
-    //struct timeval timestamp_arr[500];
+    // int j1_pos[500], j2_pos[500];
+    // struct timeval timestamp_arr[500];
 
-    //handler.initJoints();
-    // handler.sendRef(0,handler.j1);
-    // handler.sendRef(0,handler.j2);
-    // handler.sendRef(0,handler.j3);
-    // handler.sendRef(0,handler.j4);
+    // handler.initJoints();
+    //  handler.sendRef(0,handler.j1);
+    //  handler.sendRef(0,handler.j2);
+    //  handler.sendRef(0,handler.j3);
+    //  handler.sendRef(0,handler.j4);
     mosquitto_lib_init();
-    usleep(3000000);//Wait for 3 seconds to let the arm come back to home position
+    usleep(3000000); // Wait for 3 seconds to let the arm come back to home position
     struct mosquitto *mosq;
     mosq = mosquitto_new(NULL, true, 0);
 
     init_mqtt_client(mosq, ip);
     char mqtt_msg[MAX_MQTT_MSG];
-   
+
     for (int i = 0; i < n; i++)
     {
-        int refj1, refj2,refj3,refj4;
-        refj1 = pjx[0][i];
-        refj2 = pjx[1][i];
-        refj3 = pjx[2][i];
-        refj4 = pjx[3][i];
-        //refj1 = handler.angle_to_ref(1, j1_angles[i]);
-        //refj2 = handler.angle_to_ref(2, j2_angles[i]);
-        if(verbose){
-            printf("It: %d, J1: %d, J2: %d, J3: %d, J4: %d\n", i, refj1, refj2,refj3,refj4);
+        int refj1, refj2, refj3, refj4;
+        //TO BE TESTED
+        refj1 = tj1[i];
+        refj2 = tj2[i];
+        refj3 = tj3[i];
+        refj4 = tj4[i];
+        // refj1 = handler.angle_to_ref(1, j1_angles[i]);
+        // refj2 = handler.angle_to_ref(2, j2_angles[i]);
+        if (verbose)
+        {
+            printf("It: %d, J1: %d, J2: %d, J3: %d, J4: %d\n", i, refj1, refj2, refj3, refj4);
         }
-        
+
         handler.sendRef(refj1, handler.j1);
         handler.sendRef(refj2, handler.j2);
         handler.sendRef(refj3, handler.j3);
@@ -124,7 +147,7 @@ int main(int argc, char *argv[])
             rs.j5 = joints[4];
             rs.j6 = joints[5];
             rs.timestamp = time_in_micros(end);
-            if(j%perc_mod == 0)
+            if (j % perc_mod == 0)
                 state_vector.push_back(rs);
 
             // j1_vector.push_back(joints[0]);
@@ -156,7 +179,8 @@ int main(int argc, char *argv[])
     o << std::setw(4) << js << std::endl; // Conversion y envío de resultados en json
     o.close();
 
-    for(int k = 0; k < 6; k++){
+    for (int k = 0; k < 6; k++)
+    {
         free(pjx[k]);
     }
 
