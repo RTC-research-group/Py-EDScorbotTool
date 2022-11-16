@@ -33,6 +33,16 @@ if __name__== '__main__':
 
 
     f = open(args.out_file,"w")
-    js = json.dump(new_arr.tolist(),f,indent=4)
+    
+    d_js = {
+        "J1":new_arr[:,0].tolist(),
+        "J2":new_arr[:,1].tolist(),
+        "J3":new_arr[:,2].tolist(),
+        "J4":new_arr[:,3].tolist(),
+        "J5":new_arr[:,4].tolist(),
+        "J6":new_arr[:,5].tolist()
+    }
+    
+    js = json.dump(d_js,f,indent=4)
     f.close()
     
