@@ -90,12 +90,12 @@ int main(int argc, char *argv[])
     // struct timeval timestamp_arr[500];
 
     // handler.initJoints();
-    //  handler.sendRef(0,handler.j1);
-    //  handler.sendRef(0,handler.j2);
-    //  handler.sendRef(0,handler.j3);
-    //  handler.sendRef(0,handler.j4);
+     handler.sendRef(initial_position[0],handler.j1);
+     handler.sendRef(initial_position[1],handler.j2);
+     handler.sendRef(initial_position[2],handler.j3);
+     handler.sendRef(initial_position[3],handler.j4);
     mosquitto_lib_init();
-    usleep(3000000); // Wait for 3 seconds to let the arm come back to home position
+    usleep(5000000); // Wait for 5 seconds to let the arm come back to home position
     struct mosquitto *mosq;
     mosq = mosquitto_new(NULL, true, 0);
 
@@ -183,13 +183,13 @@ int main(int argc, char *argv[])
     }
 
     json out_js;
-    js["J1"] = js1;
-    js["J2"] = js2;
-    js["J3"] = js3;
-    js["J4"] = js4;
-    js["J5"] = js5;
-    js["J6"] = js6;
-    js["timestamp"] = jstimestamp;
+    out_js["J1"] = js1;
+    out_js["J2"] = js2;
+    out_js["J3"] = js3;
+    out_js["J4"] = js4;
+    out_js["J5"] = js5;
+    out_js["J6"] = js6;
+    out_js["timestamp"] = jstimestamp;
     std::ofstream o(out_cont);
 
     o << std::setw(4) << out_js << std::endl; // Conversion y envío de resultados en json
