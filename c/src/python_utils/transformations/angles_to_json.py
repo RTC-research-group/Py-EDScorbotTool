@@ -12,7 +12,7 @@ import json
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("input_file",type=str,action="store",help="Numpy file (.npy or pickled) with angles in format (q1,q2,q3,q4) to be converted to references")
-    parser.add_argument("--output_file","-o",type=str,action="store",help="Name of the output file",default="refs_out.npy")
+    parser.add_argument("--output_file","-o",type=str,action="store",help="Name of the output file",default="6dims_converted_out.npy")
     
     args = parser.parse_args()
     input_file = args.input_file
