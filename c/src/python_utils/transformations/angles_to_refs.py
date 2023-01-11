@@ -6,13 +6,11 @@ sys.path.append(os.path.abspath("../../../../python"))
 from pyAER import pyEDScorbotTool
 from copy import deepcopy
 
-def transform(data,output_file):
+def transform(data):
     
     
     #Cambiamos la direccion del movimiento (no coincide entre visual kinematics y la realidad)
     df = deepcopy(data)
-    df[0] = -df[0]
-    df[1] = -df[1]
     i = 0
     for name, values in df.iteritems():
         #print(name,values)
@@ -23,7 +21,7 @@ def transform(data,output_file):
     
     # np.save(output_file,df.to_numpy())
     # print("Saved output to file {}".format(output_file))
-    # return df
+    return df
 
 if __name__ == "__main__":
     parser = ArgumentParser()
