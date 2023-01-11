@@ -4,6 +4,12 @@ from argparse import ArgumentParser
 import numpy as np
 import json as j
 
+def cont_to_xyz(cont):
+    qs,cs,timestamps= cont_to_angle(conts)
+
+    xyz,_ = angles_to_xyz(qs)
+    return xyz
+
 if __name__== '__main__':
 
     parser = ArgumentParser()
