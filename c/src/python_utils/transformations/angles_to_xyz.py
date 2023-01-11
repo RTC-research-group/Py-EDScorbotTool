@@ -3,6 +3,7 @@ from argparse import ArgumentParser
 import pandas as pd
 import sys, os
 sys.path.append(os.path.abspath("../../../../python"))
+sys.path.append(os.path.abspath("/media/HDD/home/enrique/Proyectos/SMALL/dataset/"))
 from pyAER import pyEDScorbotTool
 from visual_kinematics.RobotSerial import RobotSerial
 
