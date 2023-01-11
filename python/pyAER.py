@@ -3506,7 +3506,7 @@ class pyEDScorbotTool:
         elif motor == 2:
             f = lambda x:-(1/9.4)*x
         elif motor == 3:
-            f = lambda x:-(1/-3.1)*x
+            f = lambda x:-(1/-3.0)*x
         elif motor == 4:
             f = lambda x: -0.056780795*x
 
@@ -3561,7 +3561,7 @@ class pyEDScorbotTool:
             f = lambda x:-9.4*x
         elif motor == 3:
             #f = lambda x:-3.4044209*x
-            f = lambda x:-3.1*x
+            f = lambda x:-3*x
         elif motor ==4:
             f = lambda x:-17.61158871*x
         else:
@@ -3749,7 +3749,7 @@ class pyEDScorbotTool:
                 error.append(rmse)
             
                 
-        return erro
+        return error
         
     @staticmethod
     def count_to_ref(motor,count):
@@ -3774,7 +3774,7 @@ class pyEDScorbotTool:
         elif motor == 2:
             f = lambda x:0.0677*(x-32768)
         elif motor == 3:
-            f = lambda x:0.02399*(x-32768)
+            f = lambda x:(1/44.3)*(x-32768)
         elif motor ==4:
             f = lambda x:0.2182353*(x-32768)
         else:
@@ -3809,7 +3809,7 @@ class pyEDScorbotTool:
         elif motor == 2:
             f = lambda x:14.770677455806219*x + 32768
         elif motor == 3:
-            f = lambda x:41.6752813118148*x + 32768
+            f = lambda x:44.3*x + 32768
         elif motor ==4:
             f = lambda x:4.582209206643176*x + 32768
         else:
@@ -3840,7 +3840,7 @@ class pyEDScorbotTool:
         elif motor == 2:
             f = lambda x:(1/131)*(x-32768)
         elif motor == 3:
-            f = lambda x:(1/127.7)*(x-32768)
+            f = lambda x:(1/132.5)*(x-32768)
         elif motor ==4:
             f = lambda x:0.012391573729863692*(x-32768)
         else:
