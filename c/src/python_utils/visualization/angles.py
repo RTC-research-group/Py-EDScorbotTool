@@ -17,12 +17,6 @@ def plotangles(x,label,title,timestamps=None):
         plt.xlabel('Samples', linespacing=4)
     
     plt.ylabel('Angles(º)', linespacing=4)
-
-    
-
-    plt.xlim(-1,1)
-    plt.ylim(-1,1)
-
     plt.legend(loc='best')
 
     plt.show()
@@ -52,5 +46,5 @@ if __name__== '__main__':
 
         plotangles(angles[:,:-1],label=label,title=title,timestamp=angles[:,-1])       
     else:
-        plotangles(angles,label=label,title=title)       
+        plotangles(angles*(180/np.pi),label=label,title=title)       
 

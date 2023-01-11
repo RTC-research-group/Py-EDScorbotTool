@@ -3,14 +3,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def plot3d(x,y,z,label,title,timestamps=None):
+def plot3d(x,y,z,label,title,order=False):
 
     fig = plt.figure(figsize=(10,10))
 
     ax = plt.axes(projection='3d')
     ax.set_title(title)
-    if type(timestamps) is not type(None):
-        ax.plot(x,y,z,timestamps,marker=".",label=label)
+    if order:
+        rang = np.arange(1,x.shape[0]+1)*0.001
+        ax.scatter(x,y,z,marker=".",label=label,s=rang)
     else:
         ax.plot(x,y,z,marker=".",label=label)
     ax.set_xlabel('X', linespacing=4)
@@ -35,6 +36,7 @@ if __name__== '__main__':
     parser.add_argument("--include_timestamps","-ts",action="store_true",help="Include timestamps in the figure",default=False)
     parser.add_argument("--label","-l",action="store",type=str,help="Label of the data for the plot",default="XYZ data")
     parser.add_argument("--title","-t",action="store",type=str,help="Title of the plot",default="3D Plot")
+    parser.add_argument("--order","-or",action="store_true",help="Whether to show trajectory with order or not",default=False)
     args = parser.parse_args()
 
     input_file = args.input_file
@@ -44,12 +46,7 @@ if __name__== '__main__':
     include_timestamps = args.include_timestamps
     label = args.label
     title = args.title
+    order = args.order
     xyz = np.load(input_file,allow_pickle=True)
+    plot3d(xyz[:,0],xyz[:,1],xyz[:,2],label=label,title=title,order=order)
 
-    if include_timestamps:
-
-        plot3d(xyz[:,0],xyz[:,1],xyz[:,2],label=label,title=title)
-        
-    else:
-        plot3d(xyz[:,0],xyz[:,1],xyz[:,2],label=label,title=title)
-        pass
