@@ -9,6 +9,14 @@ from angles_to_refs import transform
 from pad_trajectory import pad
 import json
 
+def angles_to_json(df):
+    df[0] = -df[0]
+    df[1] = -df[1]
+    
+    df = transform(df) #angles to refs
+    new_arr = pad(df.to_numpy()) #pad reference trajectory
+    return new_arr
+
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("input_file",type=str,action="store",help="Numpy file (.npy or pickled) with angles in format (q1,q2,q3,q4) to be converted to references")
