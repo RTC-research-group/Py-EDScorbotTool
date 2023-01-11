@@ -6,7 +6,7 @@ sys.path.append(os.path.abspath("../../../../python"))
 from pyAER import pyEDScorbotTool
 from copy import deepcopy
 
-def transform(data):
+def angles_to_refs(data):
     
     
     #Cambiamos la direccion del movimiento (no coincide entre visual kinematics y la realidad)
