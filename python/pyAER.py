@@ -6,6 +6,7 @@ from tkinter import ttk,messagebox
 from tkinter.ttk import Progressbar
 from tkinter.constants import X
 from tkinter import simpledialog
+
 import usb.core
 import usb.util
 import usb.backend.libusb1
@@ -21,6 +22,14 @@ import subprocess
 import matplotlib.pyplot as plt
 from visualization import *
 from tkinter import scrolledtext
+import utils.transformations.count_to_angle  as c_to_a
+import utils.transformations.cont_to_xyz as c_to_xyz
+import utils.transformations.angles_to_json as a_to_j
+import utils.transformations.angles_to_refs as a_to_r
+import utils.transformations.angles_to_xyz as a_to_xyz
+import utils.transformations.pad_trajectory 
+import utils.transformations.omegas_to_angles as w_to_a
+
 
 def on_connect(client, userdata, flags, rc):
         global traj_name
@@ -60,7 +69,9 @@ def on_message(client, userdata, msg):
         if int(iter) < 0:
             arr = np.array(userdata['pos_data'])
             
-            np.save("output_data.npy",arr[:-1])
+            savename = filedialog.asksaveasfilename()
+            np.save(savename,arr[:-1])
+            #np.save("output_data.npy",arr[:-1])
             userdata['progressbar'].stop()
             #sys.exit()
         if userdata['visible'] == True and iter > 0:
@@ -372,61 +383,61 @@ class pyEDScorbotTool:
             labelframe.grid(column=col, row=row, sticky=(
                 tk.N, tk.W), padx=5, pady=5,rowspan=2)
             
-            ttk.Button(labelframe,text="ConfigureInit",command=self.ConfigureInit).grid(row=1,column=1,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="ConfigureLeds",command=self.ConfigureLeds).grid(row=2,column=1,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="ConfigureSPID",command=self.ConfigureSPID).grid(row=3,column=1,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Draw8xy",command=self.Draw8xy).grid(row=4,column=1,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Example",command=lambda x: "").grid(row=5,column=1,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="ScanAllMotor",command=self.ScanAllMotor).grid(row=6,column=1,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="ScanMotor1",command=self.scanMotor1).grid(row=7,column=1,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="ScanMotor2",command=self.scanMotor2).grid(row=8,column=1,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="ScanMotor3",command=self.scanMotor3).grid(row=9,column=1,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="ScanMotor4",command=self.scanMotor4).grid(row=10,column=1,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="ScanMotor5",command=self.scanMotor5).grid(row=1,column=2,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="ScanMotor6",command=self.scanMotor6).grid(row=2,column=2,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Search_Home",command=self.search_Home_all).grid(row=3,column=2,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Send_Home",command=self.send_Home_all).grid(row=4,column=2,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="SendFPGAReset",command=self.SendFPGAReset).grid(row=5,column=2,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="SetAERIN_ref",command=self.SetAERIN_ref).grid(row=6,column=2,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="SetUSBSPI_ref",command=self.SetUSBSPI_ref).grid(row=7,column=2,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="SwitchOffLEDS",command=self.SwitchOffLEDS).grid(row=8,column=2,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="DumpConfig",command=self.dumpConfig).grid(row=9,column=2,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="LoadConfig",command=self.loadConfig).grid(row=10,column=2,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="ResetUSB",command=self.resetUSB).grid(row=1,column=3,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Send J1 Home",command=self.send_Home_J1).grid(row=2,column=3,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Send J2 Home",command=self.send_Home_J2).grid(row=3,column=3,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Send J3 Home",command=self.send_Home_J3).grid(row=4,column=3,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Send J4 Home",command=self.send_Home_J4).grid(row=5,column=3,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Send J5 Home",command=self.send_Home_J5).grid(row=6,column=3,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Send J6 Home",command=self.send_Home_J6).grid(row=7,column=3,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Search J1 Home",command=self.search_Home_J1).grid(row=8,column=3,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Search J2 Home",command=self.search_Home_J2).grid(row=9,column=3,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Search J3 Home",command=self.search_Home_J3).grid(row=10,column=3,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Search J4 Home",command=self.search_Home_J4).grid(row=1,column=4,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Search J5 Home",command=self.search_Home_J5).grid(row=2,column=4,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Search J6 Home",command=self.search_Home_J6).grid(row=3,column=4,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Send J1 ref",command=self.SendCommandJoint1_lite).grid(row=4,column=4,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Send J2 ref",command=self.SendCommandJoint2_lite).grid(row=5,column=4,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Send J3 ref",command=self.SendCommandJoint3_lite).grid(row=6,column=4,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Send J4 ref",command=self.SendCommandJoint4_lite).grid(row=7,column=4,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Send J5 ref",command=self.SendCommandJoint5_lite).grid(row=8,column=4,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Send J6 ref",command=self.SendCommandJoint6_lite).grid(row=9,column=4,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Reset J1 counter",command=self.Reset_J1_pos).grid(row=10,column=4,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Reset J2 counter",command=self.Reset_J2_pos).grid(row=1,column=5,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Reset J3 counter",command=self.Reset_J3_pos).grid(row=2,column=5,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Reset J4 counter",command=self.Reset_J4_pos).grid(row=3,column=5,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Reset J5 counter",command=self.Reset_J5_pos).grid(row=4,column=5,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Reset J6 counter",command=self.Reset_J6_pos).grid(row=5,column=5,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Start/Stop recording",command=self.toggle_record).grid(row=6,column=5,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="DYNAPSE2",command=self.send_dynapse2).grid(row=7,column=5,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Reset J1 SPID",command=self.sendJ1FPGAReset).grid(row=8,column=5,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Reset J2 SPID",command=self.sendJ2FPGAReset).grid(row=9,column=5,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Reset J3 SPID",command=self.sendJ3FPGAReset).grid(row=10,column=5,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Reset J4 SPID",command=self.sendJ4FPGAReset).grid(row=1,column=6,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Reset J5 SPID",command=self.sendJ5FPGAReset).grid(row=2,column=6,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Reset J6 SPID",command=self.sendJ6FPGAReset).grid(row=3,column=6,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Trajectory",command=self.send_trajectory).grid(row=4,column=6,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Plot data",command=self.plot_data).grid(row=5,column=6,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Angles to JSON",command=self.traj_to_json).grid(row=1,column=1,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="W to Angles",command=self.w_to_angles).grid(row=2,column=1,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Angles to XYZ",command=self.angles_to_xyz).grid(row=3,column=1,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Count to XYZ (from npy)",command=self.count_to_xyz_npy).grid(row=4,column=1,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Count to angles (from npy)",command=self.count_to_angles_npy).grid(row=5,column=1,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Count to XYZ (from json)",command=self.count_to_xyz_json).grid(row=6,column=1,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Count to angles (from json)",command=self.count_to_angles_json).grid(row=7,column=1,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Send Trajectory",command=self.send_trajectory).grid(row=8,column=1,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="ScanMotor3",command=self.scanMotor3).grid(row=9,column=1,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="ScanMotor4",command=self.scanMotor4).grid(row=10,column=1,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="ScanMotor5",command=self.scanMotor5).grid(row=1,column=2,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="ScanMotor6",command=self.scanMotor6).grid(row=2,column=2,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="Search_Home",command=self.search_Home_all).grid(row=3,column=2,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="Send_Home",command=self.send_Home_all).grid(row=4,column=2,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="SendFPGAReset",command=self.SendFPGAReset).grid(row=5,column=2,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="SetAERIN_ref",command=self.SetAERIN_ref).grid(row=6,column=2,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="SetUSBSPI_ref",command=self.SetUSBSPI_ref).grid(row=7,column=2,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="SwitchOffLEDS",command=self.SwitchOffLEDS).grid(row=8,column=2,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="DumpConfig",command=self.dumpConfig).grid(row=9,column=2,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="LoadConfig",command=self.loadConfig).grid(row=10,column=2,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="ResetUSB",command=self.resetUSB).grid(row=1,column=3,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="Send J1 Home",command=self.send_Home_J1).grid(row=2,column=3,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="Send J2 Home",command=self.send_Home_J2).grid(row=3,column=3,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="Send J3 Home",command=self.send_Home_J3).grid(row=4,column=3,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="Send J4 Home",command=self.send_Home_J4).grid(row=5,column=3,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="Send J5 Home",command=self.send_Home_J5).grid(row=6,column=3,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="Send J6 Home",command=self.send_Home_J6).grid(row=7,column=3,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="Search J1 Home",command=self.search_Home_J1).grid(row=8,column=3,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="Search J2 Home",command=self.search_Home_J2).grid(row=9,column=3,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="Search J3 Home",command=self.search_Home_J3).grid(row=10,column=3,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="Search J4 Home",command=self.search_Home_J4).grid(row=1,column=4,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="Search J5 Home",command=self.search_Home_J5).grid(row=2,column=4,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="Search J6 Home",command=self.search_Home_J6).grid(row=3,column=4,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="Send J1 ref",command=self.SendCommandJoint1_lite).grid(row=4,column=4,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="Send J2 ref",command=self.SendCommandJoint2_lite).grid(row=5,column=4,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="Send J3 ref",command=self.SendCommandJoint3_lite).grid(row=6,column=4,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="Send J4 ref",command=self.SendCommandJoint4_lite).grid(row=7,column=4,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="Send J5 ref",command=self.SendCommandJoint5_lite).grid(row=8,column=4,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="Send J6 ref",command=self.SendCommandJoint6_lite).grid(row=9,column=4,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="Reset J1 counter",command=self.Reset_J1_pos).grid(row=10,column=4,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="Reset J2 counter",command=self.Reset_J2_pos).grid(row=1,column=5,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="Reset J3 counter",command=self.Reset_J3_pos).grid(row=2,column=5,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="Reset J4 counter",command=self.Reset_J4_pos).grid(row=3,column=5,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="Reset J5 counter",command=self.Reset_J5_pos).grid(row=4,column=5,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="Reset J6 counter",command=self.Reset_J6_pos).grid(row=5,column=5,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="Start/Stop recording",command=self.toggle_record).grid(row=6,column=5,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="DYNAPSE2",command=self.send_dynapse2).grid(row=7,column=5,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="Reset J1 SPID",command=self.sendJ1FPGAReset).grid(row=8,column=5,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="Reset J2 SPID",command=self.sendJ2FPGAReset).grid(row=9,column=5,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="Reset J3 SPID",command=self.sendJ3FPGAReset).grid(row=10,column=5,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="Reset J4 SPID",command=self.sendJ4FPGAReset).grid(row=1,column=6,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="Reset J5 SPID",command=self.sendJ5FPGAReset).grid(row=2,column=6,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="Reset J6 SPID",command=self.sendJ6FPGAReset).grid(row=3,column=6,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="Trajectory",command=self.send_trajectory).grid(row=4,column=6,sticky=(tk.W,tk.E))
+            # ttk.Button(labelframe,text="Plot data",command=self.plot_data).grid(row=5,column=6,sticky=(tk.W,tk.E))
     
     def plot_data(self):
         filename = filedialog.askopenfile(mode="r")
@@ -3850,9 +3861,111 @@ class pyEDScorbotTool:
         
 
         return f(count)
+    
+    def traj_to_json(self):
+        '''
+        [[q1],q2],q3],q4] to [r1,r2,r3,r4,r5,r6] with padding
+        input file is .npy in qx format
+        '''
         
+        filename = filedialog.askopenfile(mode="r")
+        real_name = filename.name.split("/")[-1]
+        arr = np.load(filename.name)
+        df = pandas.DataFrame(arr)
+        out = a_to_j.angles_to_json(df)
+        savename = filedialog.asksaveasfilename()
+        f = open(savename,"w")
+    
+        js = json.dump(out.tolist(),f,indent=4)
+        
+        f.close()
+        self.alert("Saved output to file {}".format(savename))
 
-            
+
+
+
+
+    def angles_to_ref(self):
+        
+        
+        filename = filedialog.askopenfile(mode="r")
+        real_name = filename.name.split("/")[-1]
+        arr = np.load(filename.name)
+        refs = a_to_r.angles_to_refs(arr)
+        savename = filedialog.asksaveasfilename()
+        np.save(savename,refs)
+        self.alert("Saved output to file {}".format(savename))
+
+
+        pass
+    def pad_traj(self):
+        pass
+    
+    def count_to_xyz_json(self):
+       
+        
+        filename = filedialog.askopenfile(mode="r")
+        real_name = filename.name.split("/")[-1]
+        conts = np.array(json.load(open(filename.name,'r')))
+        xyz = c_to_xyz.cont_to_xyz(conts)
+        savename = filedialog.asksaveasfilename()
+        np.save(savename,xyz)
+        self.alert("Saved output to file {}".format(savename))
+
+        pass
+
+    def count_to_xyz_npy(self):
+       
+        
+        filename = filedialog.askopenfile(mode="r")
+        real_name = filename.name.split("/")[-1]
+        conts = np.load(filename.name)
+        xyz = c_to_xyz.cont_to_xyz(conts)
+        savename = filedialog.asksaveasfilename()
+        np.save(savename,xyz)
+        self.alert("Saved output to file {}".format(savename))
+
+        pass
+
+
+    def count_to_angles_json(self):
+        
+        
+        filename = filedialog.askopenfile(mode="r")
+        real_name = filename.name.split("/")[-1]
+        conts = np.array(json.load(open(filename.name,'r')))         
+        qs,cs,timestamp = c_to_a.cont_to_angle(conts)
+        savename = filedialog.asksaveasfilename()
+        np.save(savename,qs)
+        self.alert("Saved output to file {}".format(savename))
+        pass
+
+    def count_to_angles_npy(self):
+        
+        
+        filename = filedialog.askopenfile(mode="r")
+        real_name = filename.name.split("/")[-1]
+        conts = np.load(filename.name)         
+        qs,cs,timestamp = c_to_a.cont_to_angle(conts)
+        savename = filedialog.asksaveasfilename()
+        np.save(savename,qs)
+        self.alert("Saved output to file {}".format(savename))
+        pass
+    
+    def angles_to_xyz(self):
+        pass
+    
+    def w_to_angles(self):
+        
+        
+        filename = filedialog.askopenfile(mode="r")
+        real_name = filename.name.split("/")[-1]
+        w = np.load(filename.name)         
+        angles = w_to_a.w_to_angles(w)
+        #savename = simpledialog.askstring("Output file name","Please write the name you want for the output file")
+        savename = filedialog.asksaveasfilename()
+        np.save(savename,angles)
+        self.alert("Saved output to file {}".format(savename))
 
 # if __name__ == "__main__":
 
@@ -3861,3 +3974,4 @@ class pyEDScorbotTool:
     
     
 #     pass
+
