@@ -1,11 +1,11 @@
-from count_to_angle import cont_to_angle
-from angles_to_xyz import angles_to_xyz
+from .count_to_angle import cont_to_angle
+from .angles_to_xyz import angles_to_xyz
 from argparse import ArgumentParser
 import numpy as np
 import json as j
 
 def cont_to_xyz(cont):
-    qs,cs,timestamps= cont_to_angle(conts)
+    qs,cs,timestamps= cont_to_angle(cont)
 
     xyz,_ = angles_to_xyz(qs)
     return xyz

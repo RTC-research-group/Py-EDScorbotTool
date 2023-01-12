@@ -4,7 +4,7 @@ sys.path.append(os.path.abspath("../../../../python"))
 sys.path.append(os.path.abspath("../"))
 sys.path.append(os.path.abspath("/media/HDD/home/enrique/Proyectos/SMALL/dataset"))
 from argparse import ArgumentParser
-from pyAER import pyEDScorbotTool
+import pyAER
 import numpy as np
 from visual_kinematics.RobotSerial import RobotSerial
 import json as j
@@ -21,10 +21,10 @@ def cont_to_angle(conts):
         c3 = row[2]
         c4 = row[3]
         ts = row[6]
-        q1 = -(pyEDScorbotTool.count_to_angle(1,c1) * np.pi/180)
-        q2 = -(pyEDScorbotTool.count_to_angle(2,c2) * np.pi/180)
-        q3 = pyEDScorbotTool.count_to_angle(3,c3) * np.pi/180
-        q4 = pyEDScorbotTool.count_to_angle(4,c4) * np.pi/180
+        q1 = -(pyAER.pyEDScorbotTool.count_to_angle(1,c1) * np.pi/180)
+        q2 = -(pyAER.pyEDScorbotTool.count_to_angle(2,c2) * np.pi/180)
+        q3 = pyAER.pyEDScorbotTool.count_to_angle(3,c3) * np.pi/180
+        q4 = pyAER.pyEDScorbotTool.count_to_angle(4,c4) * np.pi/180
         
         qs.append([q1,q2,q3,q4])
         cs.append([c1,c2,c3,c4])

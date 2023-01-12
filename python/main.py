@@ -1,5 +1,5 @@
 from tkinter import EW
-from pyAER import pyEDScorbotTool
+import pyAER
 import argparse
 
 if __name__ == "__main__":
@@ -10,7 +10,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    config = pyEDScorbotTool(visible=(not args.scripting))
+    config = pyAER.pyEDScorbotTool(visible=(not args.scripting))
     config.render_gui()
 
     pass

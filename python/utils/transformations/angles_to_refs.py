@@ -3,18 +3,18 @@ from argparse import ArgumentParser
 import pandas as pd
 import sys, os
 sys.path.append(os.path.abspath("../../../../python"))
-from pyAER import pyEDScorbotTool
+import pyAER 
 from copy import deepcopy
 
 def angles_to_refs(data):
     
     
     #Cambiamos la direccion del movimiento (no coincide entre visual kinematics y la realidad)
-    df = deepcopy(data)
+    df = pd.DataFrame(data)
     i = 0
     for name, values in df.iteritems():
         #print(name,values)
-        values = pyEDScorbotTool.angle_to_ref(name+1,values)
+        values = pyAER.pyEDScorbotTool.angle_to_ref(name+1,values)
         df[i] = values
         i+=1
     

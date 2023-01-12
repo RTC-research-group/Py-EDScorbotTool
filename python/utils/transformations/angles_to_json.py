@@ -3,17 +3,17 @@ from argparse import ArgumentParser
 import pandas as pd
 import sys, os
 sys.path.append(os.path.abspath("../../../../python"))
-from pyAER import pyEDScorbotTool
+#from pyAER import pyEDScorbotTool
 from copy import deepcopy
-from angles_to_refs import transform
-from pad_trajectory import pad
+from .angles_to_refs import angles_to_refs
+from .pad_trajectory import pad
 import json
 
 def angles_to_json(df):
     df[0] = -df[0]
     df[1] = -df[1]
     
-    df = transform(df) #angles to refs
+    df = angles_to_refs(df) #angles to refs
     new_arr = pad(df.to_numpy()) #pad reference trajectory
     return new_arr
 

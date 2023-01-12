@@ -4,7 +4,7 @@ import pandas as pd
 import sys, os
 sys.path.append(os.path.abspath("../../../../python"))
 sys.path.append(os.path.abspath("/media/HDD/home/enrique/Proyectos/SMALL/dataset/"))
-from pyAER import pyEDScorbotTool
+#from pyAER import pyEDScorbotTool
 from visual_kinematics.RobotSerial import RobotSerial
 
 def angles_to_xyz(angles):
