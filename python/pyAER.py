@@ -29,6 +29,9 @@ import utils.transformations.angles_to_refs as a_to_r
 import utils.transformations.angles_to_xyz as a_to_xyz
 import utils.transformations.pad_trajectory 
 import utils.transformations.omegas_to_angles as w_to_a
+import utils.visualization.xyz
+import utils.visualization.angles
+import utils.visualization.counters
 
 
 def on_connect(client, userdata, flags, rc):
@@ -391,9 +394,9 @@ class pyEDScorbotTool:
             ttk.Button(labelframe,text="Count to XYZ (from json)",command=self.count_to_xyz_json).grid(row=6,column=1,sticky=(tk.W,tk.E))
             ttk.Button(labelframe,text="Count to angles (from json)",command=self.count_to_angles_json).grid(row=7,column=1,sticky=(tk.W,tk.E))
             ttk.Button(labelframe,text="Send Trajectory",command=self.send_trajectory).grid(row=8,column=1,sticky=(tk.W,tk.E))
-            # ttk.Button(labelframe,text="ScanMotor3",command=self.scanMotor3).grid(row=9,column=1,sticky=(tk.W,tk.E))
-            # ttk.Button(labelframe,text="ScanMotor4",command=self.scanMotor4).grid(row=10,column=1,sticky=(tk.W,tk.E))
-            # ttk.Button(labelframe,text="ScanMotor5",command=self.scanMotor5).grid(row=1,column=2,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Plot 3D trajectory",command=self.plot_traj_3d).grid(row=9,column=1,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Plot counters",command=self.plot_counters).grid(row=10,column=1,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Plot angles",command=self.plot_angles).grid(row=1,column=2,sticky=(tk.W,tk.E))
             # ttk.Button(labelframe,text="ScanMotor6",command=self.scanMotor6).grid(row=2,column=2,sticky=(tk.W,tk.E))
             # ttk.Button(labelframe,text="Search_Home",command=self.search_Home_all).grid(row=3,column=2,sticky=(tk.W,tk.E))
             # ttk.Button(labelframe,text="Send_Home",command=self.send_Home_all).grid(row=4,column=2,sticky=(tk.W,tk.E))
@@ -3966,6 +3969,28 @@ class pyEDScorbotTool:
         savename = filedialog.asksaveasfilename()
         np.save(savename,angles)
         self.alert("Saved output to file {}".format(savename))
+
+    def plot_traj_3d(self):
+
+        filename = filedialog.askopenfile(mode="r")
+        xyz = np.load(filename.name,allow_pickle=True)
+        utils.visualization.xyz.plot3d(xyz[:,0],xyz[:,1],xyz[:,2],label="Trajectory data",title="3D Trajectory",order=False)
+    
+    def plot_counters(self):
+        filename = filedialog.askopenfile(mode="r")
+        if filename.name.lower().endswith('.json'):
+            conts = np.array(json.load(open(filename.name,'r')))
+        elif filename.name.lower().endswith(('.npy','.p','.pkl')):
+            conts = np.load(filename.name,allow_pickle=True)
+        else:
+            self.alert("You tried to open an invalid file")
+        utils.visualization.counters.plotcounters(conts[:,:-1],label="Counter data",title="")
+    def plot_angles(self):
+
+        filename = filedialog.askopenfile(mode="r")
+        angles = np.load(filename.name,allow_pickle=True)
+        utils.visualization.angles.plotangles(angles*(180/np.pi),label="Angle data",title="Angle Space")
+        pass
 
 # if __name__ == "__main__":
 
