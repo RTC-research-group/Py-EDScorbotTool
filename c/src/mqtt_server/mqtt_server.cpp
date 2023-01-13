@@ -62,7 +62,7 @@ void message_callback(struct mosquitto *mosq, void *obj, const struct mosquitto_
 			//Trajectory
 			if(progress.mode == 'S'){
 				cmd = reinterpret_cast<char*>(malloc(512));
-				snprintf(cmd,512,"/home/root/trajectory %s %d -c /home/root/initial_config.json -p 100 &",progress.payload,n);
+				snprintf(cmd,512,"/home/root/trajectory %s %d -c /home/root/initial_config.json -p 100 > last_log.txt &",progress.payload,n);
 				//printf("%s",cmd);
 				system(cmd);
 			}
