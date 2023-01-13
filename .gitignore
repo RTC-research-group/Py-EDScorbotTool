@@ -135,4 +135,5 @@ c/json
 
 docs/
 
-.vscode
+.vscode/*
+
