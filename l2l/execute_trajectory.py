@@ -1,84 +1,147 @@
 from nis import match
 import sys
-  
+import os
 # setting path
 sys.path.append('../')
 
 from pyAER import pyEDScorbotTool
 import argparse
-from transformations import w_to_angles
+import utils.transformations.omegas_to_angles
 import numpy as np
 from DirecKinScorbot import DirecKinScorbot
+import paho.mqtt.client as mqtt
+import tqdm
+
+TOPIC = "/EDScorbot/commands"
+RUNNING = 1
+
+def on_connect(client, userdata, flags, rc):
+        global traj_name
+        global n
+        print("Connected with result code "+str(rc))
+
+        # Subscribing in on_connect() means that if we lose the connection and
+        # reconnect then subscriptions will be renewed.
+        client.subscribe("EDScorbot/trajectory")       
+ 
+        
+        
+
+        # The callback for when a PUBLISH message is received from the server.
+def on_message(client, userdata, msg):
+        
+        parsed = msg.payload.decode('utf8').lstrip('[').rstrip(']').split(',')
+        #print(parsed)
+        #t.update()
+        #global i
+        #i+=1
+
+        j1 = int(parsed[0])
+        j2 = int(parsed[1])
+        j3 = int(parsed[2])
+        j4 = int(parsed[3])
+        j5 = int(parsed[4])
+        j6 = int(parsed[5])
+        ts = int(parsed[6])
+        iter = int(parsed[7])
+        
+        
+        userdata['pos_data'].append([j1,j2,j3,j4,j5,j6,ts])
+
+        if int(iter) < 0:
+            arr = np.array(userdata['pos_data'])
+            savename = userdata['savename']
+            #savename = input("Name for output file")
+            np.save(savename,arr[:-1])
+            print("Output file has been saved to {}".format(savename))
+            #np.save("output_data.npy",arr[:-1])
+            userdata['progressbar'].close()
+            #sys.exit()
+            RUNNING = 0
+        if iter > 0:
+            userdata['progressbar'].update()
+            
+        print(msg.topic+" "+str(msg.payload))
+
+def open_mqtt(ip):
+
+        
+        client = mqtt.Client()
+        client.on_connect = on_connect
+        client.on_message = on_message
+        
+        client.user_data_set(d)
+        client.connect(ip, 1883, 60)
+        client.loop_start()
+        
+        return client
+    
+    
+def close_mqtt(mqtt_client):
+        mqtt_client.loop_stop()
+        mqtt_client.disconnect()
+        
+        pass
+
+def send_trajectory(args):
+    #
+    #filename = filedialog.askopenfile(mode="r")
+    filename = args.trajectory
+    real_name = filename.rstrip().lstrip().split('/')[-1]
+    cmd = "scp {} root@192.168.1.115:/home/root/{}".format(filename,real_name)
+    os.system(cmd)
+    #cmd = "python3 mqtt/client_traj.py -t {} -n 500 &".format(real_name)
+    #################################
+    #MUST BE PARAMETERIZED CORRECTLY#
+    #################################
+    traj = np.load(args.trajectory,allow_pickle=True)    
+    if args.conv:#Esto significa que hay que hacer la conversión
+        traj = utils.transformations.omegas_to_angles.w_to_angles(traj)
+        pass
+    n = traj.shape[0]
+    mqtt_client = open_mqtt("192.168.1.104")
+    pb = tqdm.tqdm()
+    d = {
+        'pos_data':[],
+        'progressbar':pb,
+        'savename':args.counters
+    }
+    d['progressbar'].total = n
+    mqtt_client.user_data_set(d)
+    mqtt_client.on_connect = on_connect
+    mqtt_client.on_message = on_message
+    msg = "[1,S,/home/root/{},{}]".format(real_name,n)
+    
+    mqtt_client.publish(TOPIC,msg,qos=0)
+    #os.system(cmd)
+    return mqtt_client
+
 
 if __name__== '__main__':
 
     parser = argparse.ArgumentParser(description="Trajectory execution tool to include ED-Scorbot in the L2L loop",allow_abbrev=True)
     parser.add_argument("trajectory",type=str,help="Trajectory file in NumPy format. By default, trajectories should be specified in angular velocities")
-    parser.add_argument("--noconv","-n",help="Specify this flag to indicate that the input trajectory should not be converted to angles",action="store_const",const=True,default=False)
-    parser.add_argument("--counters","-c",type=str,help="Name of the file in which we will store the time-stepped output in counter format",default=None)
-    parser.add_argument("--position","-xyz",type=str,help="Name of the file in which we will store the time-stepped output in xyz format",default=None)
+    parser.add_argument("--conv","-c",help="Specify this flag to indicate that the input trajectory should be converted to angles",action="store_true",default=False)
+    parser.add_argument("--counters","-cont",type=str,help="Name of the file in which we will store the time-stepped output in counter format",default=None)
+    #parser.add_argument("--position","-xyz",type=str,help="Name of the file in which we will store the time-stepped output in xyz format",default=None)
 
     args = parser.parse_args()
 
-    traj = np.load(args.trajectory,allow_pickle=True)
+    
 
-    if not args.noconv:#Esto significa que hay que hacer la conversión
-        traj = w_to_angles(traj)
+    
+    
+    mqtt_client = send_trajectory(args)
+    #1.- Inicializacion cliente mqtt
+    #2.- Inicializacion variables globales --> tqdm, userdata (para mqtt)
+
+    while(RUNNING):
         pass
-
+    
+    close_mqtt(mqtt_client)
+    
     #Asumimos que el robot ha hecho el home previamente y que todo esta inicializado
-    #Ejecucion de la trayectoria
-    match_steps = []
-    handler = pyEDScorbotTool(visible=False)
-    handler.render_gui()
-    handler.init_config()
-    handler.checked.set(True)
-    handler.checkUSB()
-    sleep = 0.25
-    handler.toggle_record()
-    tj1 = handler.angle_to_ref(1,traj[:,0])
-    tj2 = handler.angle_to_ref(2,traj[:,1])
     
-    for j1,j2 in zip(tj1,tj2):
-        match_steps.append([handler.Read_J1_pos(),handler.Read_J2_pos(),handler.Read_J3_pos(),handler.Read_J4_pos()])
-        handler.d["Motor Config"]["ref_M1"].set(j1)
-        handler.d["Motor Config"]["ref_M2"].set(j2)
-        handler.SendCommandJoint1_lite()
-        handler.SendCommandJoint2_lite()
-       
-        t1 = handler.millis_now()
-        t2 = t1
-        while not ((t2-t1)>=sleep*1000):
-            handler.update()
-            t2 = handler.millis_now()
-        
-        pass
-    handler.update()
-    handler.toggle_record()
-    pass
-
-    xyz_steps = []
-    for j1,j2,j3,j4 in match_steps:
-        a1 = handler.count_to_angle(1,j1)
-        a2 = handler.count_to_angle(2,j2)
-        xyz = DirecKinScorbot(a1*(np.pi/180),a2*(np.pi/180),0,0)
-        xyz_steps.append(xyz)
-
-    # print(xyz_steps)
-    # print(match_steps)
-
-    match_steps = np.array(match_steps)
-    xyz_steps = np.array(xyz_steps)
-
-    if args.counters == None:
-        np.save("./counters_out.npy",match_steps,allow_pickle=True)
-    else:
-        np.save(args.counters,match_steps,allow_pickle=True)
     
-    if args.position == None:
-        np.save("./xyz_out.npy",xyz_steps,allow_pickle=True)
-    else:
-        np.save(args.position,xyz_steps,allow_pickle=True)
-
     
     
