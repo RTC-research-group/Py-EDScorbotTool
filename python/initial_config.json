@@ -19,7 +19,7 @@
     "PI_FD_bank3_18bits_M3": 3565,
     "leds_M3": 2,
     "ref_M3": 0,
-    "spike_expansor_M3": 1000,
+    "spike_expansor_M3": 2000,
     "ref_freq_divider_M3":1,
     "EI_FD_bank3_18bits_M4": 0,
     "PD_FD_bank3_22bits_M4": 512,
