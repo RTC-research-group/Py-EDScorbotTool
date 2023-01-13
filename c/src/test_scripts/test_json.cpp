@@ -9,78 +9,44 @@ void parse_jsonnp_array(char *filename, float *j1, float *j2, float *j3, float *
 void w_to_angles(float *j1_angles, float *j2_angles, float *j1, float *j2);
 int main(int argc, char *argv[])
 {
+    int a[10];
+    for (int i = 0; i< 10;i++){
+        a[i] = rand();
+    }
+   json js1,js2,js3,js4,js5,js6,jstimestamp;
 
-    char *filename = argv[1];
-    int n = atoi(argv[2]);
-    std::ifstream arr_stream(filename, std::ios::in);
-    json js = json::parse(arr_stream);
-
-
-    int initial_position[6]={js["Joint_initial_positions"]["J1"],js["Joint_initial_positions"]["J2"],js["Joint_initial_positions"]["J3"],js["Joint_initial_positions"]["J4"],js["Joint_initial_positions"]["J5"],js["Joint_initial_positions"]["J6"]};
-    
-    char traj_index[5];
-    snprintf(traj_index,5,"#%d",n);
-    json trajectory = js["Trajectories"][traj_index];
-    int n_steps = trajectory["steps"];
-    
-    int *pjx[6];
-    for (int i = 0; i < 6; i++)
+    for (int i = 0; i < 10; i++)
     {
-        pjx[i] = reinterpret_cast<int *>(malloc(sizeof(int) * n_steps));
-        printf("%d\n",initial_position[i]);
-    }
+        // Construir el json aqui
+        //js[i] = {state_vector[i].j1, state_vector[i].j2, state_vector[i].j3, state_vector[i].j4, state_vector[i].j5, state_vector[i].j6, state_vector[i].timestamp};
+        js1[i] = a[i];
+        js2[i] = a[i];
+        js3[i] = a[i];
+        js4[i] = a[i];
+        js5[i] = a[i];
+        js6[i] = a[i];
+        jstimestamp[i] = a[i];
 
-    auto tj1 = trajectory["J1"];
+    }
+    json js;
+    js["J1"] = js1;
+    js["J2"] = js2;
+    js["J3"] = js3;
+    js["J4"] = js4;
+    js["J5"] = js5;
+    js["J6"] = js6;
+    std::ofstream o("test_json_write.json");
+    o << std::setw(4) << js << std::endl; // Conversion y envío de resultados en json
+    o.close();
     
-    std::cout << tj1 << "tj1" << std::endl;
-    for (int i = 0; i< 10; i++){
-        printf("%d\n",(int)tj1[i]);
-    }
-    // for(int i = 0;i < trajectory["J1"].size();i++){
-        
-    //     std::cout << trajectory["J1"] << 
-    // }
-    for (int i = 0; i < 6; i++)
-    {
-        free(pjx[i]);
-        
-    }
-
-    // float j1[500], j2[500];
-    // float *pjx[6];
-    // for (int i = 0; i < 6; i++)
-    // {
-    //     pjx[i] = reinterpret_cast<float *>(malloc(sizeof(float) *500));
-    // }
-
-    // // float j1[500], j2[500];
-    // // parse_jsonnp_array(argv[1], &j1[0], &j2[0], &j3[0], &j4[0], &j5[0], &j6[0]);
-    // parse_jsonnp_array(argv[1], pjx[0], pjx[1], pjx[2], pjx[3], pjx[4], pjx[5]);
-    // parse_jsonnp_array(argv[1], &j1[0], &j2[0], &j3[0], &j4[0], &j5[0], &j6[0]);
-
-    // printf("%f,%f\n", j1[0], j2[0]);
-    //   float j1_angles[500], j2_angles[500];
-    //   w_to_angles(j1_angles,j2_angles,j1,j2);
-    // for(int i = 0; i< 500;i++){
-    //     printf("i: %d\t[%f,%f,%f,%f,%f,%f]\n",i,pjx[0][i],pjx[1][i],pjx[2][i],pjx[3][i],pjx[4][i],pjx[5][i]);
-    // }
-    // json js;
-    // for (int i = 0; i < 500; i++)
-    // {
-    //     // Construir el json aqui
-    //     js[i] = {pjx[0][i],pjx[1][i],pjx[2][i],pjx[3][i],pjx[4][i],pjx[5][i], 150};
-    // }
-    // std::ofstream o("test_json_write.json");
-    // o << std::setw(4) << js << std::endl; // Conversion y envío de resultados en json
-    // o.close();
-    // for(int i = 0; i<6;i++){
-    //     free(pjx[i]);
-    // }
     return 0;
+    
 }
 
 void parse_jsonnp_array(char *filename, float *j1, float *j2, float *j3, float *j4, float *j5, float *j6)
 {
+    //New format
+    //
     std::ifstream arr_stream(filename, std::ios::in);
     json array = json::parse(arr_stream);
 
