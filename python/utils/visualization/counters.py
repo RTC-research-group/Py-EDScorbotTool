@@ -18,8 +18,8 @@ def plotcounters(x,label,title,timestamps=None):
     
     plt.ylabel('Counter data')
 
-    plt.xlim(-1,1)
-    plt.ylim(-1,1)
+    # plt.xlim(-1,1)
+    # plt.ylim(-1,1)
 
     plt.legend(loc='best')
 

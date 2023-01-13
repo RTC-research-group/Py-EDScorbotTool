@@ -1,21 +1,38 @@
 {
     "configurations": [
         {
-            "name": "Win32",
+            "name": "Linux",
             "includePath": [
+                "${workspaceFolder}/c/json/",
+                "${workspaceFolder}/c/src/",
+                "/usr/arm-linux-gnueabi/include/**",
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/c/json/single_include/**",
+                "${workspaceFolder}/c/src/include",
                 "${workspaceFolder}/c"
             ],
-            "defines": [
-                "_DEBUG",
-                "UNICODE",
-                "_UNICODE"
-            ],
-            "compilerPath": "C:\\ProgramData\\chocolatey\\bin\\gcc.exe",
+            "defines": [],
+            "compilerPath": "/usr/bin/gcc",
             "cStandard": "gnu17",
-            "cppStandard": "gnu++14",
-            "intelliSenseMode": "windows-gcc-x64"
+            "cppStandard": "gnu++17",
+            "intelliSenseMode": "linux-gcc-x64",
+            "configurationProvider": "ms-vscode.cmake-tools"
+        },
+        {
+            "name": "arm",
+            "includePath": [
+                "${workspaceFolder}/c/json/",
+                "${workspaceFolder}/c/src/",
+                "/usr/arm-linux-gnueabi/include/**",
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/c/src/include",
+                "${workspaceFolder}/c",
+                
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/arm-linux-gnueabihf-gcc-8",
+            "cStandard": "gnu17",
+            "cppStandard": "gnu++17",
+            "intelliSenseMode": "linux-gcc-arm"
         }
     ],
     "version": 4
