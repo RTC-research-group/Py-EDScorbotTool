@@ -2,18 +2,23 @@ from nis import match
 import sys
 import os
 # setting path
-sys.path.append('../')
+sys.path.append('../python')
 
 from pyAER import pyEDScorbotTool
 import argparse
 import utils.transformations.omegas_to_angles
+import utils.transformations.angles_to_json
 import numpy as np
 from DirecKinScorbot import DirecKinScorbot
 import paho.mqtt.client as mqtt
 import tqdm
+import json as j
 
 TOPIC = "/EDScorbot/commands"
+global RUNNING
 RUNNING = 1
+
+
 
 def on_connect(client, userdata, flags, rc):
         global traj_name
@@ -54,10 +59,12 @@ def on_message(client, userdata, msg):
             #savename = input("Name for output file")
             np.save(savename,arr[:-1])
             print("Output file has been saved to {}".format(savename))
+            global RUNNING
+            RUNNING = 0
             #np.save("output_data.npy",arr[:-1])
             userdata['progressbar'].close()
             #sys.exit()
-            RUNNING = 0
+            
         if iter > 0:
             userdata['progressbar'].update()
             
@@ -70,7 +77,6 @@ def open_mqtt(ip):
         client.on_connect = on_connect
         client.on_message = on_message
         
-        client.user_data_set(d)
         client.connect(ip, 1883, 60)
         client.loop_start()
         
@@ -87,18 +93,25 @@ def send_trajectory(args):
     #
     #filename = filedialog.askopenfile(mode="r")
     filename = args.trajectory
+    id = args.identity
     real_name = filename.rstrip().lstrip().split('/')[-1]
-    cmd = "scp {} root@192.168.1.115:/home/root/{}".format(filename,real_name)
-    os.system(cmd)
+    ref_filename = real_name.split('.')[0] + "_6dims.json"
     #cmd = "python3 mqtt/client_traj.py -t {} -n 500 &".format(real_name)
     #################################
     #MUST BE PARAMETERIZED CORRECTLY#
     #################################
-    traj = np.load(args.trajectory,allow_pickle=True)    
+    traj = np.load(args.trajectory,allow_pickle=True)
     if args.conv:#Esto significa que hay que hacer la conversión
         traj = utils.transformations.omegas_to_angles.w_to_angles(traj)
         pass
+    traj = utils.transformations.angles_to_json.angles_to_json(traj)
     n = traj.shape[0]
+    f = open(ref_filename,"w")
+    js = j.dump(traj.tolist(),f,indent=4)
+    f.close()
+
+    cmd = "scp -i {} {} root@192.168.1.115:/home/root/{}".format(id,ref_filename,ref_filename)
+    os.system(cmd)
     mqtt_client = open_mqtt("192.168.1.104")
     pb = tqdm.tqdm()
     d = {
@@ -110,7 +123,7 @@ def send_trajectory(args):
     mqtt_client.user_data_set(d)
     mqtt_client.on_connect = on_connect
     mqtt_client.on_message = on_message
-    msg = "[1,S,/home/root/{},{}]".format(real_name,n)
+    msg = "[1,S,/home/root/{},{}]".format(ref_filename,n)
     
     mqtt_client.publish(TOPIC,msg,qos=0)
     #os.system(cmd)
@@ -118,11 +131,13 @@ def send_trajectory(args):
 
 
 if __name__== '__main__':
-
+    #global RUNNING
     parser = argparse.ArgumentParser(description="Trajectory execution tool to include ED-Scorbot in the L2L loop",allow_abbrev=True)
     parser.add_argument("trajectory",type=str,help="Trajectory file in NumPy format. By default, trajectories should be specified in angular velocities")
     parser.add_argument("--conv","-c",help="Specify this flag to indicate that the input trajectory should be converted to angles",action="store_true",default=False)
     parser.add_argument("--counters","-cont",type=str,help="Name of the file in which we will store the time-stepped output in counter format",default=None)
+    parser.add_argument("identity",type=str,help="Name of key file to upload the trajectory file")
+
     #parser.add_argument("--position","-xyz",type=str,help="Name of the file in which we will store the time-stepped output in xyz format",default=None)
 
     args = parser.parse_args()
@@ -134,7 +149,7 @@ if __name__== '__main__':
     mqtt_client = send_trajectory(args)
     #1.- Inicializacion cliente mqtt
     #2.- Inicializacion variables globales --> tqdm, userdata (para mqtt)
-
+    
     while(RUNNING):
         pass
     
