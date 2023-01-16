@@ -478,7 +478,7 @@ class pyEDScorbotTool:
         filename = filedialog.askopenfile(mode="r")
         real_name = filename.name.split("/")[-1]
         n = simpledialog.askinteger("Trajectory sender","Number of points of trajectory (integer)")
-        cmd = "scp {} root@192.168.1.115:/home/root/{}".format(filename.name,real_name)
+        cmd = "scp -i /media/HDD/home/enrique/Proyectos/SMALL/zynq/zynq {} root@192.168.1.115:/home/root/{}".format(filename.name,real_name)
         os.system(cmd)
         #cmd = "python3 mqtt/client_traj.py -t {} -n 500 &".format(real_name)
         #################################
