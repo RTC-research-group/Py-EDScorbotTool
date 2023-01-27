@@ -78,7 +78,7 @@ Windows
 
 
    * 
-     Download and install PuTTY client (\ `official website <https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html>`_\ )
+     Download and install PuTTY client (\ `official website PuTTY <https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html>`_\ )
 
    * 
      Run PuTTYgen utility (it is installed with PuTTY). A window like this should appear:
@@ -117,7 +117,7 @@ Windows
      Once you've done this step, you will have to wait to receive a confirmation e-mail from the server's administrator. Upon receiving the confirmation e-mail, you will already have your user created (you will receive a username in case you didn't specify one in the e-mail) and ready to go. However, you will need to install the Xming software as well as configure PuTTY in order for you to be able to use the X11 utilities (otherwise you can't use the graphical interface).  
 
 #. 
-   Install Xming software (\ `official website <https://sourceforge.net/projects/xming/>`_\ )
+   Install Xming software (\ `official website Xming <https://sourceforge.net/projects/xming/>`_\ )
 
 
    * 
@@ -205,7 +205,7 @@ Windows
      You just have one more thing to check, and you can do that by checking the bottom left checkbox that says "Open device". If a message that says "\ *Device found and initialized successfully*\ " is displayed in the PuTTY console, then you're ready to begin.
 
 ED-Scorbot use tutorial with ED-Scorbot Server
-========================================
+=================================================
 
 *NOTE: It is important to note that this access is quite limited, so that you only may perform certain activities. However, if you need to use any command or utility that isn't available out of the box, contact epinerof@us.es with your requests.*
 
@@ -260,7 +260,7 @@ Therefore, in order to move the robot you have to first do the actions specified
 TL;DR
 ^^^^^
 
-In order to move the robot, you have to hit ``Configure_SPID`` at least once after the initial setup (described `here <#Prepare-the-session>`_\ ) and then use the ``Send JX ref`` buttons (within the GUI) or ``SendCommandJointX_lite`` functions within the code.
+In order to move the robot, you have to hit ``Configure_SPID`` at least once after the initial setup (described `above <#Prepare-the-session>`_\ ) and then use the ``Send JX ref`` buttons (within the GUI) or ``SendCommandJointX_lite`` functions within the code.
 
 ``Configure_SPID`` can also be used to update references, but it is far slower than using ``SendCommandJointX_lite`` functions, so using the latter method is recommended.
 
@@ -369,9 +369,6 @@ Additional arguments can be specified for the use of a camera, as the scripts li
                         Path where recordings will be saved to
 
 You can display this information at any time by typing ``python3 /usr/local/bin/cam.py -h``.
-
-
-
 
 FAQ
 ===
