@@ -7,8 +7,8 @@ from argparse import ArgumentParser
 import numpy as np
 import json as j
 
-def cont_to_xyz(cont):
-    qs,cs,timestamps= cont_to_angle(cont)
+def cont_to_xyz(cont,visual):
+    qs,cs,timestamps= cont_to_angle(cont,visual)
 
     xyz,_ = angles_to_xyz(qs)
     return xyz
