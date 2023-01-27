@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <cassert>
 #include "mosquitto.h"
 
 #define mqtt_host "192.168.1.104"
@@ -23,7 +24,7 @@ typedef struct
 
 progress_info progress;
 
-void parse_command(char *command, int *t, char *m, char *url, int* n);
+void parse_command(char *command, int *t, char *m, char *url, int *n);
 void ftp_trajectory(char *url);
 void handle_signal(int s)
 {
@@ -47,55 +48,71 @@ void message_callback(struct mosquitto *mosq, void *obj, const struct mosquitto_
 		printf("got message for /EDScorbot/commands topic\n");
 #endif
 
-		int type,n;
+		int type, n;
 		char mode;
 		char url[100];
-		parse_command((char *)message->payload, &type, &mode, url,&n);
+		parse_command((char *)message->payload, &type, &mode, url, &n);
 		progress.type = type;
 		progress.mode = mode;
 		progress.payload = url;
 		progress.last = 1;
-		char* cmd;
+		char *cmd, *out_fname;
 		switch (progress.type)
 		{
 		case 1:
-			//Trajectory
-			if(progress.mode == 'S'){
-				cmd = reinterpret_cast<char*>(malloc(512));
-				snprintf(cmd,512,"/home/root/trajectory %s %d -c /home/root/initial_config.json -p 100 &",progress.payload,n);
-				//printf("%s",cmd);
+			// Trajectory
+			if (progress.mode == 'S')
+			{
+				cmd = reinterpret_cast<char *>(malloc(512));
+				out_fname = reinterpret_cast<char *>(malloc(100));
+				int l = strlen(progress.payload);
+				
+				
+				for (int i = 0; i < l; i++)
+				{
+					out_fname[i] = progress.payload[i];
+					if (l - i < 7)
+					{
+						char aux[15] = "_out_cont.json";
+						strcat(out_fname,aux);
+						break;
+					}
+				}
+
+				snprintf(cmd, 512, "/home/root/trajectory -c /home/root/initial_config.json -n %d -p 100 -cont %s %s > log.txt &", n,out_fname,progress.payload);
+				printf("%s",cmd);
 				system(cmd);
 			}
 			break;
 		case 2:
-			//Move joints
-			cmd = reinterpret_cast<char*>(malloc(300));
-			//Not really progress nor n, don't know how to solve this right now :P
-			snprintf(cmd,300,"/home/root/sendRef %d %d",progress.mode,n);
+			// Move joints
+			cmd = reinterpret_cast<char *>(malloc(300));
+			// Not really progress nor n, don't know how to solve this right now :P
+			snprintf(cmd, 300, "/home/root/sendRef %d %d", progress.mode, n);
 			system(cmd);
 			break;
 		case 3:
-			//Reset spid (ConfigureInit)
-			cmd = reinterpret_cast<char*>(malloc(20));
-			snprintf(cmd,20,"/home/root/reset");
+			// Reset spid (ConfigureInit)
+			cmd = reinterpret_cast<char *>(malloc(20));
+			snprintf(cmd, 20, "/home/root/reset");
 			system(cmd);
 			break;
 		case 4:
-			//Home
-			cmd = reinterpret_cast<char*>(malloc(20));
-			snprintf(cmd,20,"/home/root/home");
+			// Home
+			cmd = reinterpret_cast<char *>(malloc(20));
+			snprintf(cmd, 20, "/home/root/home");
 			system(cmd);
 			break;
 
 		default:
-		//free(cmd);
+			// free(cmd);
 			break;
-		}		
+		}
 		free(cmd);
 	}
 }
 
-void parse_command(char *command, int *t, char *m, char *url, int* n)
+void parse_command(char *command, int *t, char *m, char *url, int *n)
 {
 
 	char *pch;
@@ -120,7 +137,7 @@ void parse_command(char *command, int *t, char *m, char *url, int* n)
 
 #endif
 }
-//esto va en el archivo trajectory.cpp
+// esto va en el archivo trajectory.cpp
 void *pub_progress(void *buf)
 {
 	char *payload = (char *)buf;
@@ -136,8 +153,6 @@ void ftp_trajectory(char *url)
 	// descargar trayectoria y ejecutarla
 	// system("execute_trajectory ....");
 	// pthread_t pub_thread;
-
-	
 }
 
 int main(int argc, char *argv[])
@@ -153,8 +168,8 @@ int main(int argc, char *argv[])
 	mosquitto_lib_init();
 
 	memset(clientid, 0, 24);
-	snprintf(clientid, 23, "mysql_log_%d", getpid());
-	mosq = mosquitto_new(clientid, true, 0);
+	snprintf(clientid, 23, "mqtt_server_%d", getpid());
+	mosq = mosquitto_new(clientid, true, NULL);
 	progress.last = 0;
 	if (mosq)
 	{
@@ -171,11 +186,11 @@ int main(int argc, char *argv[])
 			if (run && rc)
 			{
 				printf("connection error!\n");
-				sleep(10);
+				sleep(1);
 				mosquitto_reconnect(mosq);
 			}
-			
 		}
+		mosquitto_loop_stop(mosq,true);
 		mosquitto_destroy(mosq);
 	}
 

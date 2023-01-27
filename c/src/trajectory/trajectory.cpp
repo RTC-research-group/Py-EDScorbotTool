@@ -46,29 +46,29 @@ int main(int argc, char *argv[])
     std::ifstream arr_stream(jsonnp_array_fname, std::ios::in);
     json js = json::parse(arr_stream);
 
-
-    int initial_position[6]={js["Joint_initial_positions"]["J1"],js["Joint_initial_positions"]["J2"],js["Joint_initial_positions"]["J3"],js["Joint_initial_positions"]["J4"],js["Joint_initial_positions"]["J5"],js["Joint_initial_positions"]["J6"]};
-    assert(n>=0);
+    // int initial_position[6]={js["Joint_initial_positions"]["J1"],js["Joint_initial_positions"]["J2"],js["Joint_initial_positions"]["J3"],js["Joint_initial_positions"]["J4"],js["Joint_initial_positions"]["J5"],js["Joint_initial_positions"]["J6"]};
+    assert(n >= 0);
     char traj_index[5];
-    snprintf(traj_index,5,"#%d",n);
-    json trajectory = js["Trajectories"][traj_index];
-    int n_steps = trajectory["steps"];
+    snprintf(traj_index, 5, "#%d", n);
+    // json trajectory = js["Trajectories"][traj_index];
+    // int n_steps = trajectory["steps"];
 
-    // int *pjx[6];
-    // for (int i = 0; i < 6; i++)
-    // {
-    //     pjx[i] = reinterpret_cast<int *>(malloc(sizeof(int) * n_steps));
-    // }
-    auto tj1 = trajectory["J1"];
-    auto tj2 = trajectory["J2"];
-    auto tj3 = trajectory["J3"];
-    auto tj4 = trajectory["J4"];
-    auto tj5 = trajectory["J5"];
-    auto tj6 = trajectory["J6"];
+    int *pjx[6];
+    for (int i = 0; i < 6; i++)
+    {
+        pjx[i] = reinterpret_cast<int *>(malloc(sizeof(int) * n));
+    }
+
+    // auto tj1 = trajectory["J1"];
+    // auto tj2 = trajectory["J2"];
+    // auto tj3 = trajectory["J3"];
+    // auto tj4 = trajectory["J4"];
+    // auto tj5 = trajectory["J5"];
+    // auto tj6 = trajectory["J6"];
 
     // float j1[500], j2[500];
     // parse_jsonnp_array(argv[1], &j1[0], &j2[0], &j3[0], &j4[0], &j5[0], &j6[0]);
-    //parse_jsonnp_array(jsonnp_array_fname, pjx[0], pjx[1], pjx[2], pjx[3], pjx[4], pjx[5]);
+    parse_jsonnp_array(jsonnp_array_fname, pjx[0], pjx[1], pjx[2], pjx[3], pjx[4], pjx[5]);
     // printf("%f,%f\n", j1[0], j2[0]);
     // float j1_angles[500], j2_angles[500];
     // std::vector<float> j1_angles,j2_angles,j3_angles,j4_angles,j5_angles,j6_angles;
@@ -90,26 +90,27 @@ int main(int argc, char *argv[])
     // struct timeval timestamp_arr[500];
 
     // handler.initJoints();
-     handler.sendRef(initial_position[0],handler.j1);
-     handler.sendRef(initial_position[1],handler.j2);
-     handler.sendRef(initial_position[2],handler.j3);
-     handler.sendRef(initial_position[3],handler.j4);
+    handler.sendRef(pjx[0][0], handler.j1);
+    handler.sendRef(pjx[1][0], handler.j2);
+    handler.sendRef(pjx[2][0], handler.j3);
+    handler.sendRef(pjx[3][0], handler.j4);
     mosquitto_lib_init();
-    usleep(5000000); // Wait for 5 seconds to let the arm come back to home position
+    usleep(3000000); // Wait for 3 seconds to let the arm come back to home position
     struct mosquitto *mosq;
     mosq = mosquitto_new(NULL, true, 0);
 
     init_mqtt_client(mosq, ip);
     char mqtt_msg[MAX_MQTT_MSG];
-
+    printf("N: %d\n", n);
+    fflush(stdout);
     for (int i = 0; i < n; i++)
     {
         int refj1, refj2, refj3, refj4;
-        //TO BE TESTED
-        refj1 = tj1[i];
-        refj2 = tj2[i];
-        refj3 = tj3[i];
-        refj4 = tj4[i];
+        // TO BE TESTED
+        refj1 = pjx[0][i];
+        refj2 = pjx[1][i];
+        refj3 = pjx[2][i];
+        refj4 = pjx[3][i];
         // refj1 = handler.angle_to_ref(1, j1_angles[i]);
         // refj2 = handler.angle_to_ref(2, j2_angles[i]);
         if (verbose)
@@ -161,44 +162,31 @@ int main(int argc, char *argv[])
         }
 
         snprintf(mqtt_msg, MAX_MQTT_MSG, "[%d,%d,%d,%d,%d,%d,%ld,%d]", joints[0], joints[1], joints[2], joints[3], joints[4], joints[5], time_in_micros(end), i);
-        publish(mosq, mqtt_msg, strlen(mqtt_msg), std::string("EDScorbot/trajectory").c_str());
+
+        int ret = publish(mosq, mqtt_msg, strlen(mqtt_msg), std::string("EDScorbot/trajectory").c_str());
+        printf("MSG: %s\nRET: %d\n", mqtt_msg, ret);
+        fflush(stdout);
         // j1_pos[i] = j1_vector.back();
         // j2_pos[i] = j2_vector.back();
         // timestamp_arr[i] = timestamp_vector.back();
     }
-    publish(mosq, "[-1,-1,-1,-1,-1,-1,-1,-1]", strlen("[-1,-1,-1,-1,-1,-1,-1,-1]"), std::string("EDScorbot/trajectory").c_str());
-    json js1,js2,js3,js4,js5,js6,jstimestamp;
+    int ret = publish(mosq, "[-1,-1,-1,-1,-1,-1,-1,-1]", strlen("[-1,-1,-1,-1,-1,-1,-1,-1]"), std::string("EDScorbot/trajectory").c_str());
+
+    json js2;
     for (int i = 0; i < state_vector.size(); i++)
     {
         // Construir el json aqui
-        //js[i] = {state_vector[i].j1, state_vector[i].j2, state_vector[i].j3, state_vector[i].j4, state_vector[i].j5, state_vector[i].j6, state_vector[i].timestamp};
-        js1[i] = state_vector[i].j1;
-        js2[i] = state_vector[i].j2;
-        js3[i] = state_vector[i].j3;
-        js4[i] = state_vector[i].j4;
-        js5[i] = state_vector[i].j5;
-        js6[i] = state_vector[i].j6;
-        jstimestamp[i] = state_vector[i].timestamp;
-
+        js2[i] = {state_vector[i].j1, state_vector[i].j2, state_vector[i].j3, state_vector[i].j4, state_vector[i].j5, state_vector[i].j6, state_vector[i].timestamp};
     }
-
-    json out_js;
-    out_js["J1"] = js1;
-    out_js["J2"] = js2;
-    out_js["J3"] = js3;
-    out_js["J4"] = js4;
-    out_js["J5"] = js5;
-    out_js["J6"] = js6;
-    out_js["timestamp"] = jstimestamp;
     std::ofstream o(out_cont);
 
-    o << std::setw(4) << out_js << std::endl; // Conversion y envío de resultados en json
+    o << std::setw(4) << js << std::endl; // Conversion y envío de resultados en json
     o.close();
 
-    // for (int k = 0; k < 6; k++)
-    // {
-    //     free(pjx[k]);
-    // }
+    for (int k = 0; k < 6; k++)
+    {
+        free(pjx[k]);
+    }
 
     return 0;
 }

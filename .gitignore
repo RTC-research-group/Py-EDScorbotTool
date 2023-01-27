@@ -140,4 +140,7 @@ c/json
 
 docs/
 
-.vscode
+.vscode/*
+
+pyEDScorbotTool/20230116_target_trajectories*/*
+pyEDScorbotTool/FIXED*/**

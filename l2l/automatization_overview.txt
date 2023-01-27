@@ -1,0 +1,54 @@
+##################
+PROBE TRAJECTORY
+##################
+
+####
+TUG
+####
+0.- Generate probe trajectory file
+1.- Send probe to Scorbot server
+
+####
+USE
+####
+2.- Receive probe file (server)
+3.- Execute trajectory --> python3 execute_trajectory.py -c <counters_output_file> -xyz <trajectory_output_file> Probe_trajectory.p/.npy
+4.- Send results (xyz trajectory) to TUG server
+
+####
+TUG 
+####
+5.- Receive xyz trajectory (server)
+6.- Feed L2L model with the received trajectory 
+
+
+#####################
+RECTIFIED TRAJECTORY
+#####################
+
+####
+TUG
+####
+0.- Generate probe trajectory file (last step of previous process)
+1.- Send trajectory to Scorbot server
+
+####
+USE
+####
+2.- Receive trajectory file (server)
+3.- Execute trajectory --> python3 execute_trajectory.py -c <counters_output_file> -xyz <trajectory_output_file> rect_trajectory.p/.npy
+4.- Send results (xyz trajectory) to TUG server
+
+####
+TUG 
+####
+5.- Receive xyz trajectory (server)
+6.- Plot Comparison
+7.- ?
+
+######################
+END OF AUTOMATIZATION
+#####################
+
+
+
