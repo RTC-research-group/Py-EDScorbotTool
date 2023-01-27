@@ -1,6 +1,7 @@
 from datetime import time
 from os import read
 import os
+import sys
 import tkinter as tk
 from tkinter import ttk,messagebox
 from tkinter.ttk import Progressbar
@@ -71,11 +72,18 @@ def on_message(client, userdata, msg):
 
         if int(iter) < 0:
             arr = np.array(userdata['pos_data'])
-            
+            userdata['pos_data'] = []
+           #name of folder in localhost where to save the data 
             savename = filedialog.asksaveasfilename()
             np.save(savename,arr[:-1])
             #np.save("output_data.npy",arr[:-1])
             userdata['progressbar'].stop()
+           #name of ouput file in remote server 
+            out_fname = userdata['filename'][:-5] + "_out_cont.json"
+            cmd = "scp -i /media/HDD/home/enrique/Proyectos/SMALL/zynq/zynq root@192.168.1.115:/home/root/refs_out_cont.json {}".format(os.path.join(savename,"out_cont.json"))
+            #cmd = "scp -i /media/HDD/home/enrique/Proyectos/SMALL/zynq/zynq {} root@192.168.1.115:/home/root/{}".format(filename.name,real_name)
+            os.system(cmd)
+            
             #sys.exit()
         if userdata['visible'] == True and iter > 0:
             userdata['textbox'].insert(tk.END,msg.topic+" "+str(msg.payload) + "\n")
@@ -136,6 +144,8 @@ class pyEDScorbotTool:
         self.ENDPOINT_IN = 0x81
         self.PACKET_LENGTH = 64
         
+        self.filename = ""
+
         #Handle for USB connection
         self.dev = None
 
@@ -486,7 +496,7 @@ class pyEDScorbotTool:
         #################################
         self.pb["maximum"] = n
         msg = "[1,S,/home/root/{},{}]".format(real_name,n)
-        
+        self.filename = real_name
         self.mqtt_client.publish(self.topic,msg,qos=0)
         #os.system(cmd)
         i = 0
@@ -652,6 +662,7 @@ class pyEDScorbotTool:
             #If remote usage is enabled, try to connect to mqtt broker
             self.checked_usb.set(False)
             self.mqtt_client = self.open_mqtt("192.168.1.104")
+            #self.mqtt_client = self.open_mqtt("150.214.140.189")
 
     
 
@@ -665,7 +676,8 @@ class pyEDScorbotTool:
             'visible':self.visible,
             'textbox':self.textbox,
             'pos_data':[],
-            'progressbar':self.pb
+            'progressbar':self.pb,
+            'filename':self.filename
         }
         self.topic = "/EDScorbot/commands"
         client.user_data_set(d)
@@ -3910,7 +3922,7 @@ class pyEDScorbotTool:
         filename = filedialog.askopenfile(mode="r")
         real_name = filename.name.split("/")[-1]
         conts = np.array(json.load(open(filename.name,'r')))
-        xyz = c_to_xyz.cont_to_xyz(conts)
+        xyz = c_to_xyz.cont_to_xyz(conts,True)
         savename = filedialog.asksaveasfilename()
         np.save(savename,xyz)
         self.alert("Saved output to file {}".format(savename))
@@ -3923,7 +3935,7 @@ class pyEDScorbotTool:
         filename = filedialog.askopenfile(mode="r")
         real_name = filename.name.split("/")[-1]
         conts = np.load(filename.name)
-        xyz = c_to_xyz.cont_to_xyz(conts)
+        xyz = c_to_xyz.cont_to_xyz(conts,True)
         savename = filedialog.asksaveasfilename()
         np.save(savename,xyz)
         self.alert("Saved output to file {}".format(savename))
@@ -3956,7 +3968,16 @@ class pyEDScorbotTool:
         pass
     
     def angles_to_xyz(self):
-        pass
+        filename = filedialog.askopenfile(mode="r")
+        real_name = filename.name.split("/")[-1]
+        angles = np.load(filename.name)   
+        angles[:,0]=-angles[:,0]      
+        angles[:,1]=-angles[:,1]      
+        xyz,qs = a_to_xyz.angles_to_xyz(angles*(np.pi/180))
+        #savename = simpledialog.askstring("Output file name","Please write the name you want for the output file")
+        savename = filedialog.asksaveasfilename()
+        np.save(savename,xyz)
+        self.alert("Saved output to file {}".format(savename))
     
     def w_to_angles(self):
         
@@ -3989,7 +4010,7 @@ class pyEDScorbotTool:
 
         filename = filedialog.askopenfile(mode="r")
         angles = np.load(filename.name,allow_pickle=True)
-        plotangles(angles*(180/np.pi),label="Angle data",title="Angle Space")
+        plotangles(angles,label="Angle data",title="Angle Space")
         pass
 
 # if __name__ == "__main__":
