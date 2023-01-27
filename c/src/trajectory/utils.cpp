@@ -45,16 +45,17 @@ void init_mqtt_client(mosquitto *mosq, const char *broker_ip)
 {
     int rc;
 
-    rc = mosquitto_connect(mosq, broker_ip, 1883, 60);
+    rc = mosquitto_connect(mosq, broker_ip, 1883, 300);
     while (rc != 0)
     {
         printf("Client could not connect to broker! Error Code: %d\nTrying to reconnect...\n", rc);
-        rc = mosquitto_connect(mosq, broker_ip, 1883, 60);
+        rc = mosquitto_connect(mosq, broker_ip, 1883, 300);
 
         // mosquitto_destroy(mosq);
         // return -1;
     }
     printf("We are now connected to the broker!\n");
+    mosquitto_loop_start(mosq);
 
     // SUBSCRIBE!
 }
@@ -66,7 +67,8 @@ int publish(mosquitto *mosq, char *msg, int msg_len, const char *topic)
 }
 
 void end_mqtt_client(mosquitto *mosq)
-{
+{   
+    mosquitto_loop_stop(mosq,true);
     mosquitto_disconnect(mosq);
     mosquitto_destroy(mosq);
 
