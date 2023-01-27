@@ -40,7 +40,7 @@ def count_to_angle(motor,count):
         
 
         return f(count)
-def cont_to_angle(conts):
+def cont_to_angle(conts,timestamps=False,visual=False):
     
     qs = []
     cs = []
@@ -51,9 +51,15 @@ def cont_to_angle(conts):
         c2 = row[1]
         c3 = row[2]
         c4 = row[3]
-        ts = row[6]
-        q1 = -(count_to_angle(1,c1) * np.pi/180)
-        q2 = -(count_to_angle(2,c2) * np.pi/180)
+        if timestamps:
+            ts = row[6]
+        
+        if visual:
+            q1 = -(count_to_angle(1,c1) * np.pi/180)
+            q2 = -(count_to_angle(2,c2) * np.pi/180)
+        else:
+            q1 = (count_to_angle(1,c1) * np.pi/180)
+            q2 = (count_to_angle(2,c2) * np.pi/180)    
         q3 = count_to_angle(3,c3) * np.pi/180
         q4 = count_to_angle(4,c4) * np.pi/180
         
