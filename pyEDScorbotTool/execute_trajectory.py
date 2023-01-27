@@ -105,7 +105,9 @@ def send_trajectory(args):
     if args.conv:#Esto significa que hay que hacer la conversión
         traj = omegas_to_angles.w_to_angles(traj)
         pass
-    traj = angles_to_json.angles_to_json(traj)
+    orig_traj = traj
+    traj = angles_to_json.angles_to_json(orig_traj)
+    #traj2 = angles_to_json.angles_to_json(orig_traj,visual = False)
     n = traj.shape[0]
     f = open(ref_filename,"w")
     js = j.dump(traj.tolist(),f,indent=4)
