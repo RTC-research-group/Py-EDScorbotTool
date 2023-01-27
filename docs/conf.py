@@ -56,8 +56,15 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # a list of builtin themes.
 #
 
+import subprocess, os
 
+read_the_docs_build = os.environ.get('READTHEDOCS', None) == 'True'
 
+if read_the_docs_build:
+
+    subprocess.call('cd ../doxygen; doxygen', shell=True)
+breathe_projects = { "EDScorbot": "doxy/xml/" }
+breathe_default_project = "EDScorbot"
 numfig = True
 html_theme = 'sphinx_rtd_theme'
 
@@ -68,9 +75,7 @@ html_static_path = ['_static']
 html_logo = "../atc.png"
 html_favicon = "../atc.png"
 
-import subprocess
 subprocess.call('make clean', shell=True)
 subprocess.call('cd doxy; doxygen', shell=True)
 
-breathe_projects = { "EDScorbot": "doxy/xml/" }
-breathe_default_project = "EDScorbot"
+
