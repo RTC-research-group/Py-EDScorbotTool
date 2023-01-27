@@ -6,17 +6,22 @@
 Py-EDScorbotTool's documentation
 ============================================
 
+
+..  :maxdepth: 2
+..   :caption: Index
+.. REWORK IN PROGRESS
+   ..introduction
+   ..contents
+
 .. toctree::
    :maxdepth: 2
-   :caption: Index
+   :caption: Dataset
 
-   introduction
-   contents
-
+   dataset.rst
    
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
    :caption: Programming Reference
    
    pyapi
