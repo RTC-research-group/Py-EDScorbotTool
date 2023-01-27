@@ -9,7 +9,7 @@
 #include "mosquitto.h"
 #include "include/EDScorbot.hpp"
 #define PI 3.141592653589793
-#define SLEEP 250000
+//#define SLEEP 250000
 #define MAX_MQTT_MSG 200
 
 
@@ -25,7 +25,7 @@ typedef struct{
     int j4;
     int j5;
     int j6;
-    int timestamp;
+    long int timestamp;
 }
 robot_state;
 
@@ -36,7 +36,7 @@ robot_state;
  * @param filename Name of the Numpy array in json format
  * @param jX Arrays of floats to hold values from Numpy array  
  */
-void parse_jsonnp_array(char *filename, float *j1, float *j2,float *j3, float *j4,float *j5, float *j6);
+void parse_jsonnp_array(const char *filename, int *j1, int *j2,int *j3, int *j4,int *j5, int *j6);
 
 /**
  * @brief  Transform a trajectory from angular velocities (w, omega) to angles
@@ -56,7 +56,7 @@ void w_to_angles(float *j1_angles, float *j2_angles, float *j1, float *j2);
  * @param broker_ip IP of the broker the client will connect to
  */
 
-void init_mqtt_client(mosquitto *mosq, char *broker_ip);
+void init_mqtt_client(mosquitto *mosq,const char *broker_ip);
 
 /**
  * @brief Publish a message of arbitrary length (up to `MAX_MQTT_MSG`) to an arbitrary topic
@@ -67,7 +67,7 @@ void init_mqtt_client(mosquitto *mosq, char *broker_ip);
  * @param topic Topic to publish to
  * @return int 
  */
-int publish(mosquitto *mosq, char *msg, int msg_len, char *topic);
+int publish(mosquitto *mosq, char *msg, int msg_len, const char *topic);
 
 /**
  * @brief End mqtt session

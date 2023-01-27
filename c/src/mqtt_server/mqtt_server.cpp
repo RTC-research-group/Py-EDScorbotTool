@@ -23,7 +23,7 @@ typedef struct
 
 progress_info progress;
 
-void parse_command(char *command, int *t, char *m, char *url);
+void parse_command(char *command, int *t, char *m, char *url, int* n);
 void ftp_trajectory(char *url);
 void handle_signal(int s)
 {
@@ -47,30 +47,55 @@ void message_callback(struct mosquitto *mosq, void *obj, const struct mosquitto_
 		printf("got message for /EDScorbot/commands topic\n");
 #endif
 
-		int type;
+		int type,n;
 		char mode;
 		char url[100];
-		parse_command((char *)message->payload, &type, &mode, url);
+		parse_command((char *)message->payload, &type, &mode, url,&n);
 		progress.type = type;
 		progress.mode = mode;
 		progress.payload = url;
 		progress.last = 1;
-		
-		if(progress.type == 1){
+		char* cmd;
+		switch (progress.type)
+		{
+		case 1:
+			//Trajectory
 			if(progress.mode == 'S'){
-				char cmd[300];
-				snprintf(cmd,300,"/home/root/trajectory %s /home/root/initial_config.json &",progress.payload);
+				cmd = reinterpret_cast<char*>(malloc(512));
+				snprintf(cmd,512,"/home/root/trajectory %s %d -c /home/root/initial_config.json -p 100 &",progress.payload,n);
 				//printf("%s",cmd);
 				system(cmd);
 			}
-		}
+			break;
+		case 2:
+			//Move joints
+			cmd = reinterpret_cast<char*>(malloc(300));
+			//Not really progress nor n, don't know how to solve this right now :P
+			snprintf(cmd,300,"/home/root/sendRef %d %d",progress.mode,n);
+			system(cmd);
+			break;
+		case 3:
+			//Reset spid (ConfigureInit)
+			cmd = reinterpret_cast<char*>(malloc(20));
+			snprintf(cmd,20,"/home/root/reset");
+			system(cmd);
+			break;
+		case 4:
+			//Home
+			cmd = reinterpret_cast<char*>(malloc(20));
+			snprintf(cmd,20,"/home/root/home");
+			system(cmd);
+			break;
 
-		
-		
+		default:
+		//free(cmd);
+			break;
+		}		
+		free(cmd);
 	}
 }
 
-void parse_command(char *command, int *t, char *m, char *url)
+void parse_command(char *command, int *t, char *m, char *url, int* n)
 {
 
 	char *pch;
@@ -84,6 +109,8 @@ void parse_command(char *command, int *t, char *m, char *url)
 	pch = strtok(NULL, "[],");
 	// char buf[100];
 	strcpy(url, pch);
+	pch = strtok(NULL, "[],");
+	*n = atoi(pch);
 // url = buf;
 #ifdef EDS_VERBOSE
 
@@ -97,7 +124,7 @@ void parse_command(char *command, int *t, char *m, char *url)
 void *pub_progress(void *buf)
 {
 	char *payload = (char *)buf;
-	int rc = mosquitto_publish(mosq, NULL, "/EDScorbot/trajectory", strlen(payload), payload, 0, false);
+	int rc = mosquitto_publish(mosq, NULL, "/EDScorbot/trajectory", strlen(payload), payload, 1, false);
 	int *p = &rc;
 	void *v = (void *)p;
 	return v;

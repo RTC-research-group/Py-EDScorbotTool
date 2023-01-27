@@ -5,6 +5,7 @@ import tkinter as tk
 from tkinter import ttk,messagebox
 from tkinter.ttk import Progressbar
 from tkinter.constants import X
+from tkinter import simpledialog
 import usb.core
 import usb.util
 import usb.backend.libusb1
@@ -15,9 +16,58 @@ import time
 import logging
 import numpy as np
 import pickle as P
-# import cv2
+import paho.mqtt.client as mqtt
 import subprocess
+import matplotlib.pyplot as plt
+from visualization import *
+from tkinter import scrolledtext
 
+def on_connect(client, userdata, flags, rc):
+        global traj_name
+        global n
+        print("Connected with result code "+str(rc))
+
+        # Subscribing in on_connect() means that if we lose the connection and
+        # reconnect then subscriptions will be renewed.
+        client.subscribe("EDScorbot/trajectory")
+        topic = "/EDScorbot/commands"
+        
+ 
+        
+        
+
+        # The callback for when a PUBLISH message is received from the server.
+def on_message(client, userdata, msg):
+        
+        parsed = msg.payload.decode('utf8').lstrip('[').rstrip(']').split(',')
+        #print(parsed)
+        #t.update()
+        #global i
+        #i+=1
+
+        j1 = int(parsed[0])
+        j2 = int(parsed[1])
+        j3 = int(parsed[2])
+        j4 = int(parsed[3])
+        j5 = int(parsed[4])
+        j6 = int(parsed[5])
+        ts = int(parsed[6])
+        iter = int(parsed[7])
+        
+        
+        userdata['pos_data'].append([j1,j2,j3,j4,j5,j6,ts])
+
+        if int(iter) < 0:
+            arr = np.array(userdata['pos_data'])
+            
+            np.save("output_data.npy",arr[:-1])
+            userdata['progressbar'].stop()
+            #sys.exit()
+        if userdata['visible'] == True and iter > 0:
+            userdata['textbox'].insert(tk.END,msg.topic+" "+str(msg.payload) + "\n")
+            userdata['progressbar'].step()
+        print(msg.topic+" "+str(msg.payload))
+        
 class pyEDScorbotTool:
     '''
     py-EDScorbotTool software, replacement of jAER filter for EDScorbot
@@ -28,7 +78,7 @@ class pyEDScorbotTool:
     :ivar self.d: Dictionary in which there are stored the variables that allow for SPID configuration. Every input of the graphical interface corresponds to a variable that is stored in this dictionary. It contains three other dictionaries: Motor Config, Joints and Scan Parameters, which in turn hold the corresponding variables. The keys for the dictionaries are "Motor Config", "Joints" and "Scan Parameters", respectively.
     :ivar self.visible: Boolean variable that indicates whether the graphical interface should be rendered or not
     :ivar self.root: Root of the graphical interface's window
-    :ivar self.checked: Variable that holds the state of the checkbox that indicates whether USB is enabled or not.
+    :ivar self.checked_usb: Variable that holds the state of the checkbox that indicates whether USB is enabled or not.
     '''
     def __init__(self,visible=True):
         '''
@@ -46,7 +96,7 @@ class pyEDScorbotTool:
         
             #self.root = tk.Tk()
                 #Set the icon
-            self.root.iconphoto(False,tk.PhotoImage(file="./atc.png"))
+            self.root.iconphoto(False,tk.PhotoImage(file="atc.png"))
         else:
             self.root.withdraw()
         #Create dictionaries where the interface data will be stored
@@ -63,7 +113,7 @@ class pyEDScorbotTool:
         self.j5 = -1
         self.j6 = -1
         #Standalone variable to control if USB is enabled
-        self.checked = False
+        self.checked_usb = False
 
         #Set USB constants needed
         self.VID = 0x10c4
@@ -84,7 +134,7 @@ class pyEDScorbotTool:
         logging.basicConfig(filemode='w',level=logging.INFO)
 
         #Progress bar
-        #self.pb = None
+        #self.self.pb = None
 
 
         return
@@ -376,15 +426,56 @@ class pyEDScorbotTool:
             ttk.Button(labelframe,text="Reset J5 SPID",command=self.sendJ5FPGAReset).grid(row=2,column=6,sticky=(tk.W,tk.E))
             ttk.Button(labelframe,text="Reset J6 SPID",command=self.sendJ6FPGAReset).grid(row=3,column=6,sticky=(tk.W,tk.E))
             ttk.Button(labelframe,text="Trajectory",command=self.send_trajectory).grid(row=4,column=6,sticky=(tk.W,tk.E))
-            
+            ttk.Button(labelframe,text="Plot data",command=self.plot_data).grid(row=5,column=6,sticky=(tk.W,tk.E))
+    
+    def plot_data(self):
+        filename = filedialog.askopenfile(mode="r")
+        #check box for 2d or 3d
+        data = np.load(filename.name,allow_pickle=True)
+        df = pandas.DataFrame(data)
+        self.plot(df,2)
+
+    
+    def plot(self,data,dim):
+        
+        if dim == 2:
+            #plot normally
+            plt.plot(data[0][:-1])
+            plt.show()
+            pass
+        elif dim == 3:
+            plot3d(data[0],data[1],data[2])
+            #plot3d()
+            pass
+        else:
+            #give error/return 
+            pass
+        
+
+        pass
+
     def send_trajectory(self):
         
+        if self.checked_remote.get() == False:
+            self.alert("Remote mode must be activated")
+            return
+        
+
         filename = filedialog.askopenfile(mode="r")
         real_name = filename.name.split("/")[-1]
+        n = simpledialog.askinteger("Trajectory sender","Number of points of trajectory (integer)")
         cmd = "scp {} root@192.168.1.115:/home/root/{}".format(filename.name,real_name)
         os.system(cmd)
-        cmd = "python3 mqtt/client_traj.py -t {} &".format(real_name)
-        os.system(cmd)
+        #cmd = "python3 mqtt/client_traj.py -t {} -n 500 &".format(real_name)
+        #################################
+        #MUST BE PARAMETERIZED CORRECTLY#
+        #################################
+        self.pb["maximum"] = n
+        msg = "[1,S,/home/root/{},{}]".format(real_name,n)
+        
+        self.mqtt_client.publish(self.topic,msg,qos=0)
+        #os.system(cmd)
+        i = 0
 
         
         
@@ -402,19 +493,33 @@ class pyEDScorbotTool:
             labelframe.grid(column=col, row=row, sticky=(
                 tk.N, tk.W), padx=5, pady=5,rowspan=2)
             
-            pb = Progressbar(labelframe, orient='horizontal',mode='determinate',length=280,maximum=500).grid(row=1,column=1)
-            start_button = ttk.Button(
-            labelframe,
-            text='Start',
-            command=pb.start).grid(row=2,column=1)
+            self.pb = Progressbar(labelframe, orient='horizontal',mode='determinate',length=600,maximum=100)
+         #   a = self.pb.getvar("maximum")
+            self.pb.grid(row=1,column=1)
+            # self.pb.setvar("maximum","100")
+          #  a = self.pb.getvar("maximum")
+            # start_button = ttk.Button(
+            # labelframe,
+            # text='Start').grid(row=2,column=1)
             
+            
+    def render_textbox(self,row,col):
+
+        if self.visible:
+            labelframe = ttk.LabelFrame(self.root, text="Information")
+            labelframe.grid(column=col, row=row, sticky=(
+            tk.N, tk.W), padx=5, pady=5)
+            self.textbox = scrolledtext.ScrolledText(labelframe,height=7,width=90)
+            self.textbox.see(tk.END)
+            self.textbox.grid(column=1,row=1,sticky=(tk.W,tk.N))
+        
 
     def render_usbEnable(self,row,col):
         '''
         Create the checkbox that enables opening USB devices
 
-        The value of the box is stored in the checked
-        variable available in the class (self.checked)
+        The value of the box is stored in the checked_usb
+        variable available in the class (self.checked_usb)
 
         Args:
             row (int): Row of the grid in which the checkbox will be displayed
@@ -425,12 +530,15 @@ class pyEDScorbotTool:
             labelframe.grid(column=col, row=row, sticky=(
             tk.N, tk.W), padx=5, pady=5)
 
-        checked = tk.BooleanVar()
-
+        checked_usb = tk.BooleanVar()
+        checked_remote = tk.BooleanVar()
 
         if self.visible:
-            ttk.Checkbutton(labelframe,text="Open device",command=self.checkUSB,variable=checked,onvalue=True,offvalue=False).grid(column=1,row=3,sticky=(tk.W))
-        self.checked = checked
+            ttk.Checkbutton(labelframe,text="Open device",command=self.checkUSB,variable=checked_usb,onvalue=True,offvalue=False).grid(column=1,row=3,sticky=(tk.W))
+            ttk.Checkbutton(labelframe,text="Remote mode",command=self.checkRemote,variable=checked_remote,onvalue=True,offvalue=False).grid(column=2,row=3,sticky=(tk.W))
+
+        self.checked_usb = checked_usb
+        self.checked_remote = checked_remote
    
     def openUSB(self):
         '''
@@ -456,7 +564,7 @@ class pyEDScorbotTool:
             #If the device can't be found, tell the user and end execution
             if dev is None:
                 self.alert("Device not found, try again or check the connection")
-                self.checked.set(False)
+                self.checked_usb.set(False)
                 return None
                 
             #If the device was found, set configuration to default, claim the 
@@ -488,24 +596,78 @@ class pyEDScorbotTool:
         '''
         Check wether USB usage has been enabled or not
 
-        This function reads the checked self variable to determine 
+        This function reads the checked_usb self variable to determine 
         whether USB connection has been enabled or not
 
         If it has, then tries to connect to AERNode board and sets
-        self.dev to the device handler
+        self.dev to the device handlerconnect
         
         If it hasn't, it disconnects from the device
         '''
         #Check if USB is enabled
-        if self.checked.get() == False:
+        if self.checked_usb.get() == False:
             #If not, close the connection
             self.closeUSB()
         
         else:
             
             #If USB is enabled, try to connect to AERNode board
+            self.checked_remote.set(False)
             self.dev = self.openUSB()
+
+    def checkRemote(self):
+        '''
+        Check wether remote usage has been enabled or not
+
+        This function reads the checked_remote self variable to determine 
+        whether remote connection has been enabled or not
+
+        If it has, then tries to connect to MQTT broker and sets
+        self.mqtt to the mqtt client
+        
+        If it hasn't, it disconnects from the broker
+        '''
+        #Check if USB is enabled
+        if self.checked_remote.get() == False:
+            #If not, close the connection
+            self.close_mqtt()
             
+        
+        else:
+            
+            #If remote usage is enabled, try to connect to mqtt broker
+            self.checked_usb.set(False)
+            self.mqtt_client = self.open_mqtt("192.168.1.104")
+
+    
+
+    def open_mqtt(self,ip):
+
+        
+        client = mqtt.Client()
+        client.on_connect = on_connect
+        client.on_message = on_message
+        d = {
+            'visible':self.visible,
+            'textbox':self.textbox,
+            'pos_data':[],
+            'progressbar':self.pb
+        }
+        self.topic = "/EDScorbot/commands"
+        client.user_data_set(d)
+        client.connect("192.168.1.104", 1883, 60)
+        client.loop_start()
+        
+        return client
+    
+    
+    def close_mqtt(self):
+        self.mqtt_client.loop_stop()
+        self.mqtt_client.disconnect()
+        self.mqtt_client = None
+        pass
+
+
     def dumpConfig(self):
         '''
         Dump current configuration
@@ -686,7 +848,8 @@ class pyEDScorbotTool:
         self.render_usbEnable(5,1)
         self.render_dynapse2(3,3)
         #self.render_cameras(4,2)
-        #self.render_progressbar(3,4)
+        self.render_textbox(3,4)
+        self.render_progressbar(4,4)
         self.init_config()
         self.update()
         #And call mainloop to display GUI
@@ -749,7 +912,7 @@ class pyEDScorbotTool:
 
     def update(self,ref=None):
 
-        if self.checked.get():
+        if self.checked_usb.get():
 
                 self.j1 = self.Read_J1_gui()
                 self.j2 = self.Read_J2_gui()
@@ -794,12 +957,17 @@ class pyEDScorbotTool:
         the position with a reference of 0
         '''
 
-        if (((self.dev and self.checked.get()) == None) or (self.checked.get() == False)):
+        if self.checked_remote:
+            msg = "[3,S,-1,-1]"
+
+            self.mqtt_client.publish(self.topic,msg)
+
+        elif (((self.dev and self.checked_usb.get()) == None) or (self.checked_usb.get() == False)):
             self.alert("No device opened. Try checking USB option first")
             return
         else:
             
-            if self.checked.get():
+            if self.checked_usb.get():
                 for i in range(0,6):
                     self.sendCommand16(0xF7,0x0000,0x0000,True) #
                     #Motor 1
@@ -1231,11 +1399,11 @@ class pyEDScorbotTool:
         
         '''
 
-        if (((self.dev and self.checked.get()) == None) or (self.checked.get() == False)):
+        if (((self.dev and self.checked_usb.get()) == None) or (self.checked_usb.get() == False)):
             self.alert("No device opened. Try checking USB option first")
             return
         else:
-            if self.checked.get():
+            if self.checked_usb.get():
                 for i in range(0,6):
 
                     self.SendCommandJoint1(self.d["Motor Config"]["ref_M1"].get())
@@ -1306,7 +1474,7 @@ class pyEDScorbotTool:
             self.alert("There is no opened device. Try opening one first")
             return
         
-        if self.checked.get():
+        if self.checked_usb.get():
             for i in range (0,2):
                 self.SendCommandJoint1(self.d["Motor Config"]["ref_M1"].get())
                 self.SendCommandJoint2(self.d["Motor Config"]["ref_M2"].get())
@@ -1444,7 +1612,7 @@ class pyEDScorbotTool:
         scan_Step_Value = self.d["Scan Parameters"]["scan_Step_Value"].get()
         scan_Wait_Time = self.d["Scan Parameters"]["scan_Wait_Time"].get()
         motor = 1
-        if self.checked.get():
+        if self.checked_usb.get():
             
             #Fecha en str, formato: yyyy_MM_dd_HH_mm_ss
 
@@ -1534,7 +1702,7 @@ class pyEDScorbotTool:
         scan_Step_Value = self.d["Scan Parameters"]["scan_Step_Value"].get()
         scan_Wait_Time = self.d["Scan Parameters"]["scan_Wait_Time"].get()
         motor = 2
-        if self.checked.get():
+        if self.checked_usb.get():
             
             #Fecha en str, formato: yyyy_MM_dd_HH_mm_ss
 
@@ -1623,7 +1791,7 @@ class pyEDScorbotTool:
         scan_Step_Value = self.d["Scan Parameters"]["scan_Step_Value"].get()
         scan_Wait_Time = self.d["Scan Parameters"]["scan_Wait_Time"].get()
         motor = 3
-        if self.checked.get():
+        if self.checked_usb.get():
             
             #Fecha en str, formato: yyyy_MM_dd_HH_mm_ss
 
@@ -1712,7 +1880,7 @@ class pyEDScorbotTool:
         scan_Step_Value = self.d["Scan Parameters"]["scan_Step_Value"].get()
         scan_Wait_Time = self.d["Scan Parameters"]["scan_Wait_Time"].get()
         motor = 4
-        if self.checked.get():
+        if self.checked_usb.get():
             
             #Fecha en str, formato: yyyy_MM_dd_HH_mm_ss
 
@@ -1801,7 +1969,7 @@ class pyEDScorbotTool:
         scan_Step_Value = self.d["Scan Parameters"]["scan_Step_Value"].get()
         scan_Wait_Time = self.d["Scan Parameters"]["scan_Wait_Time"].get()
         motor = 5
-        if self.checked.get():
+        if self.checked_usb.get():
             
             #Fecha en str, formato: yyyy_MM_dd_HH_mm_ss
 
@@ -1890,7 +2058,7 @@ class pyEDScorbotTool:
         scan_Step_Value = self.d["Scan Parameters"]["scan_Step_Value"].get()
         scan_Wait_Time = self.d["Scan Parameters"]["scan_Wait_Time"].get()
         motor = 6
-        if self.checked.get():
+        if self.checked_usb.get():
             
             #Fecha en str, formato: yyyy_MM_dd_HH_mm_ss
 
@@ -1974,7 +2142,7 @@ class pyEDScorbotTool:
             self.alert("There is no opened device. Try opening one first")
             return
         
-        if self.checked.get():
+        if self.checked_usb.get():
             sensor_j1 = -1
             for i in range(0,10):
                 self.sendCommand16( 0xF1,  (0x00), (0x00), True); 
@@ -2003,7 +2171,7 @@ class pyEDScorbotTool:
             self.alert("There is no opened device. Try opening one first")
             return
         
-        if self.checked.get():
+        if self.checked_usb.get():
             sensor_j2 = -1
             for i in range(0,10):
                 self.sendCommand16( 0xF2,  (0x00), (0x00), True); 
@@ -2032,7 +2200,7 @@ class pyEDScorbotTool:
             self.alert("There is no opened device. Try opening one first")
             return
         
-        if self.checked.get():
+        if self.checked_usb.get():
             sensor_j3 = -1
             for i in range(0,10):
                 self.sendCommand16( 0xF3,  (0x00), (0x00), True); 
@@ -2061,7 +2229,7 @@ class pyEDScorbotTool:
             self.alert("There is no opened device. Try opening one first")
             return
         
-        if self.checked.get():
+        if self.checked_usb.get():
             sensor_j4 = -1
             for i in range(0,10):
                 self.sendCommand16( 0xF4,  (0x00), (0x00), True); 
@@ -2090,7 +2258,7 @@ class pyEDScorbotTool:
             self.alert("There is no opened device. Try opening one first")
             return
         
-        if self.checked.get():
+        if self.checked_usb.get():
             sensor_j5 = -1
             for i in range(0,10):
                 self.sendCommand16( 0xF5,  (0x00), (0x00), True); 
@@ -2119,7 +2287,7 @@ class pyEDScorbotTool:
             self.alert("There is no opened device. Try opening one first")
             return
         
-        if self.checked.get():
+        if self.checked_usb.get():
             sensor_j6 = -1
             for i in range(0,10):
                 self.sendCommand16( 0xF6,  (0x00), (0x00), True); 
@@ -2133,24 +2301,24 @@ class pyEDScorbotTool:
 
             return j6_pos
 
-    def CalculateXYZ(self,njoints=4):
-        j1 = self.count_to_angle(self.d["Joints"]["J1_sensor_value"].get())
-        j2 = self.count_to_angle(self.d["Joints"]["J2_sensor_value"].get())
-        j3 = self.count_to_angle(self.d["Joints"]["J3_sensor_value"].get())
-        j4 = self.count_to_angle(self.d["Joints"]["J4_sensor_value"].get())
-        j5 = self.count_to_angle(self.d["Joints"]["J5_sensor_value"].get())
-        j6 = self.count_to_angle(self.d["Joints"]["J6_sensor_value"].get())
-        l = [j1,j2,j3,j4,j5,j6]
-        l2 = []
-        for i in range(njoints):
-            l2.append(l[i])
+    # def CalculateXYZ(self,njoints=4):
+    #     j1 = self.count_to_angle(self.d["Joints"]["J1_sensor_value"].get())
+    #     j2 = self.count_to_angle(self.d["Joints"]["J2_sensor_value"].get())
+    #     j3 = self.count_to_angle(self.d["Joints"]["J3_sensor_value"].get())
+    #     j4 = self.count_to_angle(self.d["Joints"]["J4_sensor_value"].get())
+    #     j5 = self.count_to_angle(self.d["Joints"]["J5_sensor_value"].get())
+    #     j6 = self.count_to_angle(self.d["Joints"]["J6_sensor_value"].get())
+    #     l = [j1,j2,j3,j4,j5,j6]
+    #     l2 = []
+    #     for i in range(njoints):
+    #         l2.append(l[i])
 
 
-        xyz = inverse_kinematics(l2)
+    #     xyz = inverse_kinematics(l2)
 
 
 
-        return xyz
+    #     return xyz
         
 
     def Read_J1_gui(self):
@@ -2228,7 +2396,7 @@ class pyEDScorbotTool:
             self.alert("There is no opened device. Try opening one first")
             return
         else:
-            if self.checked.get():
+            if self.checked_usb.get():
                 for i in range(0,2):
                     self.sendCommand16( 0,  (0x00), (0x00), True) #LEDs M1
                     self.sendCommand16( 0x03,  (0x00),  (0x0f), True) #I banks disabled M1
@@ -2295,7 +2463,7 @@ class pyEDScorbotTool:
             self.alert("There is no opened device. Try opening one first")
             return
         else:
-            if self.checked.get():
+            if self.checked_usb.get():
                 for i in range(0,2):
                     if(joint==1):
                         self.sendCommand16( 0,  (0x00), (0x00), True) #LEDs M1
@@ -2436,7 +2604,7 @@ class pyEDScorbotTool:
             scan_Step_Value = self.d["Scan Parameters"]["scan_Step_Value"].get()
             scan_Wait_Time = self.d["Scan Parameters"]["scan_Wait_Time"].get()
 
-        if self.checked.get():
+        if self.checked_usb.get():
             
             #Fecha en str, formato: yyyy_MM_dd_HH_mm_ss
 
@@ -2586,7 +2754,7 @@ class pyEDScorbotTool:
             self.alert("There is no opened device. Try opening one first")
             return
         else:
-            if self.checked.get():
+            if self.checked_usb.get():
                 self.sendCommand16(0xF0,(0xFF),(0xFF), True)
                 self.sendCommand16(0xF0,(0xFF),(0xFF), True)
     
@@ -2598,7 +2766,7 @@ class pyEDScorbotTool:
             self.alert("There is no opened device. Try opening one first")
             return
         else:
-            if self.checked.get():
+            if self.checked_usb.get():
                 self.sendCommand16(0xF0,(0x00),(0x00), True)
                 self.sendCommand16(0xF0,(0x00),(0x00), True)
 
@@ -2611,7 +2779,7 @@ class pyEDScorbotTool:
         '''
         self.closeUSB()
         self.dev = self.openUSB()
-        self.checked.set(True)
+        self.checked_usb.set(True)
         
     def ConfigureLeds(self):
         '''
@@ -2621,7 +2789,7 @@ class pyEDScorbotTool:
             self.alert("There is no opened device. Try opening one first")
             return
         else:
-            if self.checked.get():
+            if self.checked_usb.get():
                 self.sendCommand16( 0,  (0x00), ((self.d["Motor Config"]["leds_M1"].get()) & 0xFF), True) #LEDs M1
                 self.sendCommand16( 0x20,  (0x00), ((self.d["Motor Config"]["leds_M2"].get()) & 0xFF), True) #LEDs M2
                 self.sendCommand16( 0x40,  (0x00), ((self.d["Motor Config"]["leds_M3"].get()) & 0xFF), True) #LEDs M3
@@ -2637,7 +2805,7 @@ class pyEDScorbotTool:
             self.alert("There is no opened device. Try opening one first")
             return
         else:
-            if self.checked.get():
+            if self.checked_usb.get():
                 self.sendCommand16( 0,  0,  0, False) #LEDs M1 off
                 self.sendCommand16( 0x20,  0,  0, False) #LEDs M2 off
                 self.sendCommand16( 0x40,  0,  0, False) #LEDs M3 off
@@ -2653,7 +2821,7 @@ class pyEDScorbotTool:
             self.alert("There is no opened device. Try opening one first")
             return
         else:
-            if self.checked.get():
+            if self.checked_usb.get():
                 scan_Wait_Time = self.d["Scan Parameters"]["scan_Wait_Time"]
                 refsM1 = [0,-200,0,200,0]
                 refsM2 = [0,-50,0,-50,0]
@@ -3067,6 +3235,12 @@ class pyEDScorbotTool:
         it has completely finished rendering the graphical 
         interface stuck in the process, so bear that in mind when using it
         '''
+        if self.checked_remote:
+            
+            msg = "[4,S,-1,-1]"
+
+            self.mqtt_client.publish(self.topic,msg)
+
         if self.dev==None:
             self.alert("There is no opened device. Try opening one first")
             return 
@@ -3289,7 +3463,8 @@ class pyEDScorbotTool:
             self.alert("Invalid config file")
             return
     
-    def ref_to_angle(self,motor,ref,strict=True):
+    @staticmethod
+    def ref_to_angle(motor,ref,strict=True):
         """
         Convert reference of motor to angle
 
@@ -3340,8 +3515,9 @@ class pyEDScorbotTool:
             ret = bounds[motor-1][0]*np.sign(ret)
 
         return ret
-            
-    def angle_to_ref(self,motor,angle,strict=False):
+    
+    @staticmethod   
+    def angle_to_ref(motor,angle):
         """
         Convert angle of motor to reference
 
@@ -3359,7 +3535,7 @@ class pyEDScorbotTool:
         """
         f = lambda x:x
 
-        bounds = [[400,-400],[700,-900],[300,-400],[1583,-1583]]
+        #bounds = [[400,-400],[700,-900],[300,-400],[1583,-1583]]
         ##############DEPRECATED#############
         #These are the inverse of the functions that appear in ref_to_angle function
         
@@ -3406,11 +3582,16 @@ class pyEDScorbotTool:
         to the 1st joint in order to move it,
         reference to angle are mapped in angle_to_ref function
         '''
+        if self.checked_remote:
+            msg = "[2,1,na,{}]".format(self.d["Motor Config"]["ref_M1"].get())
         
-        self.sendCommand16( 0x02,  ((self.d["Motor Config"]["ref_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M1"].get()) & 0xFF), True) #Ref M1 0
-        print("Reference sent:",self.d["Motor Config"]["ref_M1"].get())
-        self.sendCommand16( 0x02,  ((self.d["Motor Config"]["ref_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M1"].get()) & 0xFF), True) #Ref M1 0
-        self.sendCommand16( 0x02,  ((self.d["Motor Config"]["ref_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M1"].get()) & 0xFF), True) #Ref M1 0
+            self.mqtt_client.publish(self.topic,msg,qos=0)
+            pass
+        elif self.checked_usb:
+            self.sendCommand16( 0x02,  ((self.d["Motor Config"]["ref_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M1"].get()) & 0xFF), True) #Ref M1 0
+            print("Reference sent:",self.d["Motor Config"]["ref_M1"].get())
+            self.sendCommand16( 0x02,  ((self.d["Motor Config"]["ref_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M1"].get()) & 0xFF), True) #Ref M1 0
+            self.sendCommand16( 0x02,  ((self.d["Motor Config"]["ref_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M1"].get()) & 0xFF), True) #Ref M1 0
         # pass
 
     def SendCommandJoint2_lite(self):
@@ -3421,13 +3602,17 @@ class pyEDScorbotTool:
         to the 2nd joint in order to move it,
         reference to angle are mapped in angle_to_ref function
         '''
+        if self.checked_remote:
+            msg = "[2,2,na,{}]".format(self.d["Motor Config"]["ref_M2"].get())
         
-        self.sendCommand16( 0x22,  ((self.d["Motor Config"]["ref_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M2"].get()) & 0xFF), True) #Ref M2 0
-        print("Reference sent:",self.d["Motor Config"]["ref_M2"].get())
+            self.mqtt_client.publish(self.topic,msg,qos=0)
+        elif self.checked_usb:
+            self.sendCommand16( 0x22,  ((self.d["Motor Config"]["ref_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M2"].get()) & 0xFF), True) #Ref M2 0
+            print("Reference sent:",self.d["Motor Config"]["ref_M2"].get())
 
-        self.sendCommand16( 0x22,  ((self.d["Motor Config"]["ref_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M2"].get()) & 0xFF), True) #Ref M2 0
-        self.sendCommand16( 0x22,  ((self.d["Motor Config"]["ref_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M2"].get()) & 0xFF), True) #Ref M2 0
-        # pass
+            self.sendCommand16( 0x22,  ((self.d["Motor Config"]["ref_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M2"].get()) & 0xFF), True) #Ref M2 0
+            self.sendCommand16( 0x22,  ((self.d["Motor Config"]["ref_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M2"].get()) & 0xFF), True) #Ref M2 0
+            # pass
 
     def SendCommandJoint3_lite(self):
         '''
@@ -3437,12 +3622,16 @@ class pyEDScorbotTool:
         to the 3rd joint in order to move it,
         reference to angle are mapped in angle_to_ref function
         '''
+        if self.checked_remote:
+            msg = "[2,3,na,{}]".format(self.d["Motor Config"]["ref_M3"].get())
         
-        self.sendCommand16( 0x42,  ((self.d["Motor Config"]["ref_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M3"].get()) & 0xFF), True) #Ref M3 0
-        print("Reference sent:",self.d["Motor Config"]["ref_M3"].get())
-        self.sendCommand16( 0x42,  ((self.d["Motor Config"]["ref_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M3"].get()) & 0xFF), True) #Ref M3 0
-        self.sendCommand16( 0x42,  ((self.d["Motor Config"]["ref_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M3"].get()) & 0xFF), True) #Ref M3 0
-        # pass
+            self.mqtt_client.publish(self.topic,msg,qos=0)
+        elif self.checked_usb:
+            self.sendCommand16( 0x42,  ((self.d["Motor Config"]["ref_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M3"].get()) & 0xFF), True) #Ref M3 0
+            print("Reference sent:",self.d["Motor Config"]["ref_M3"].get())
+            self.sendCommand16( 0x42,  ((self.d["Motor Config"]["ref_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M3"].get()) & 0xFF), True) #Ref M3 0
+            self.sendCommand16( 0x42,  ((self.d["Motor Config"]["ref_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M3"].get()) & 0xFF), True) #Ref M3 0
+            # pass
         
     def SendCommandJoint4_lite(self):
         '''
@@ -3452,12 +3641,16 @@ class pyEDScorbotTool:
         to the 4th joint in order to move it,
         reference to angle are mapped in angle_to_ref function
         '''
+        if self.checked_remote:
+            msg = "[2,4,na,{}]".format(self.d["Motor Config"]["ref_M4"].get())
         
-        self.sendCommand16( 0x62,  ((self.d["Motor Config"]["ref_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M4"].get()) & 0xFF), True) #Ref M4 0
-        print("Reference sent:",self.d["Motor Config"]["ref_M4"].get())
-        self.sendCommand16( 0x62,  ((self.d["Motor Config"]["ref_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M4"].get()) & 0xFF), True) #Ref M4 0
-        self.sendCommand16( 0x62,  ((self.d["Motor Config"]["ref_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M4"].get()) & 0xFF), True) #Ref M4 0
-        # pass
+            self.mqtt_client.publish(self.topic,msg,qos=0)
+        elif self.checked_usb:
+            self.sendCommand16( 0x62,  ((self.d["Motor Config"]["ref_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M4"].get()) & 0xFF), True) #Ref M4 0
+            print("Reference sent:",self.d["Motor Config"]["ref_M4"].get())
+            self.sendCommand16( 0x62,  ((self.d["Motor Config"]["ref_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M4"].get()) & 0xFF), True) #Ref M4 0
+            self.sendCommand16( 0x62,  ((self.d["Motor Config"]["ref_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M4"].get()) & 0xFF), True) #Ref M4 0
+            # pass
 
     def SendCommandJoint5_lite(self):
         '''
@@ -3467,12 +3660,17 @@ class pyEDScorbotTool:
         to the 5th joint in order to move it,
         reference to angle are mapped in angle_to_ref function
         '''
+        if self.checked_remote:
+            msg = "[2,5,na,{}]".format(self.d["Motor Config"]["ref_M5"].get())
         
-        self.sendCommand16( 0x82,  ((self.d["Motor Config"]["ref_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M5"].get()) & 0xFF), True) #Ref M5 0
-        print("Reference sent:",self.d["Motor Config"]["ref_M5"].get())
-        self.sendCommand16( 0x82,  ((self.d["Motor Config"]["ref_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M5"].get()) & 0xFF), True) #Ref M5 0
-        self.sendCommand16( 0x82,  ((self.d["Motor Config"]["ref_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M5"].get()) & 0xFF), True) #Ref M5 0
-        pass
+            self.mqtt_client.publish(self.topic,msg,qos=0)
+        elif self.checked_usb:
+
+            self.sendCommand16( 0x82,  ((self.d["Motor Config"]["ref_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M5"].get()) & 0xFF), True) #Ref M5 0
+            print("Reference sent:",self.d["Motor Config"]["ref_M5"].get())
+            self.sendCommand16( 0x82,  ((self.d["Motor Config"]["ref_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M5"].get()) & 0xFF), True) #Ref M5 0
+            self.sendCommand16( 0x82,  ((self.d["Motor Config"]["ref_M5"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M5"].get()) & 0xFF), True) #Ref M5 0
+            pass
 
     def SendCommandJoint6_lite(self):
         '''
@@ -3482,11 +3680,15 @@ class pyEDScorbotTool:
         to the 6th joint in order to move it,
         reference to angle are mapped in angle_to_ref function
         '''
+        if self.checked_remote:
+            msg = "[2,6,na,{}]".format(self.d["Motor Config"]["ref_M6"].get())
         
-        self.sendCommand16( 0xA2,  ((self.d["Motor Config"]["ref_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M6"].get()) & 0xFF), True) #Ref M6 0
-        self.sendCommand16( 0xA2,  ((self.d["Motor Config"]["ref_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M6"].get()) & 0xFF), True) #Ref M6 0
-        self.sendCommand16( 0xA2,  ((self.d["Motor Config"]["ref_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M6"].get()) & 0xFF), True) #Ref M6 0
-        # pass
+            self.mqtt_client.publish(self.topic,msg,qos=0)
+        elif self.checked_usb:
+            self.sendCommand16( 0xA2,  ((self.d["Motor Config"]["ref_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M6"].get()) & 0xFF), True) #Ref M6 0
+            self.sendCommand16( 0xA2,  ((self.d["Motor Config"]["ref_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M6"].get()) & 0xFF), True) #Ref M6 0
+            self.sendCommand16( 0xA2,  ((self.d["Motor Config"]["ref_M6"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["ref_M6"].get()) & 0xFF), True) #Ref M6 0
+            # pass
 
     def send_dynapse2(self):
         '''
@@ -3547,9 +3749,10 @@ class pyEDScorbotTool:
                 error.append(rmse)
             
                 
-        return error
-
-    def count_to_ref(self,motor,count):
+        return erro
+        
+    @staticmethod
+    def count_to_ref(motor,count):
         """
         Convert counter of motor to reference
 
@@ -3582,7 +3785,8 @@ class pyEDScorbotTool:
 
         return f(count)
 
-    def ref_to_count(self,motor,ref):
+    @staticmethod
+    def ref_to_count(motor,ref):
         """
         Convert reference of motor to counter (estimated) absolute position
 
@@ -3612,8 +3816,9 @@ class pyEDScorbotTool:
             return 0
 
         return f(ref)
-        
-    def count_to_angle(self,motor,count):
+    
+    @staticmethod
+    def count_to_angle(motor,count):
         """
         Convert counter of motor to estimated angle
 

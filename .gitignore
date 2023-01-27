@@ -137,3 +137,7 @@ docs/doxy/xml
 
 c/src/json
 c/json
+
+docs/
+
+.vscode

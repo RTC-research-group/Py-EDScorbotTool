@@ -43,8 +43,8 @@ target_include_directories(mqtt_server PUBLIC "../")
 target_include_directories(mqtt_server PUBLIC "/home/enrique/mosquitto-2.0.14/include")
 
 #TARGET_LINK_LIBRARIES(test_target PRIVATE ${DV_LIBRARIES})
-
-TARGET_LINK_LIBRARIES(mqtt_server PRIVATE nlohmann_json::nlohmann_json ../compiled_libs_armhf/libmosquitto.a -lpthread)
+#message("###########DIRECTORIO###########3: ${CMAKE_CURRENT_SOURCE_DIR}")
+TARGET_LINK_LIBRARIES(mqtt_server PRIVATE nlohmann_json::nlohmann_json ${CMAKE_CURRENT_SOURCE_DIR}/../../compiled_libs_armhf/libmosquitto.a -lpthread)
 
 #TARGET_LINK_LIBRARIES(mqtt_server )
 
