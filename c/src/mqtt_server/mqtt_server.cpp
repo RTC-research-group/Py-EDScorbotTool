@@ -71,7 +71,7 @@ void message_callback(struct mosquitto *mosq, void *obj, const struct mosquitto_
 				for (int i = 0; i < l; i++)
 				{
 					out_fname[i] = progress.payload[i];
-					if (l - i < 6)
+					if (l - i < 7)
 					{
 						char aux[15] = "_out_cont.json";
 						strcat(out_fname,aux);
@@ -79,8 +79,8 @@ void message_callback(struct mosquitto *mosq, void *obj, const struct mosquitto_
 					}
 				}
 
-				snprintf(cmd, 512, "/home/root/trajectory %s %d -c /home/root/initial_config.json -p 100 -cont %s > last_log.txt &", progress.payload, n,out_fname);
-				// printf("%s",cmd);
+				snprintf(cmd, 512, "/home/root/trajectory -c /home/root/initial_config.json -n %d -p 100 -cont %s %s > log.txt &", n,out_fname,progress.payload);
+				printf("%s",cmd);
 				system(cmd);
 			}
 			break;
@@ -168,8 +168,8 @@ int main(int argc, char *argv[])
 	mosquitto_lib_init();
 
 	memset(clientid, 0, 24);
-	snprintf(clientid, 23, "mysql_log_%d", getpid());
-	mosq = mosquitto_new(clientid, true, 0);
+	snprintf(clientid, 23, "mqtt_server_%d", getpid());
+	mosq = mosquitto_new(clientid, true, NULL);
 	progress.last = 0;
 	if (mosq)
 	{
@@ -186,10 +186,11 @@ int main(int argc, char *argv[])
 			if (run && rc)
 			{
 				printf("connection error!\n");
-				sleep(10);
+				sleep(1);
 				mosquitto_reconnect(mosq);
 			}
 		}
+		mosquitto_loop_stop(mosq,true);
 		mosquitto_destroy(mosq);
 	}
 
