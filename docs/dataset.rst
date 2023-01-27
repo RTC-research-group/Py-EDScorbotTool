@@ -242,9 +242,13 @@ We can divide the different data conversions in different steps, as each one has
 
 * 3D Coordinates |srarr| Joint angles
 
-  This conversion is due to the controller's interface not being able to recognize 3D points in space as its input. An ideal method would be for the controller to accept **Joint angles** as inputs. 
-  For this step, check the script provided `here <>`_. These scripts make use of the robot's inverse kinematics equations (described `in here <>`_) to transform in between these data types. The result should be an array in 
-  **[q1,q2,q3,q4]** format with **N** number of known points.
+  This conversion is due to the controller's interface not being able to recognize 3D points in space as its input. An ideal method would be for the controller to accept **(X,Y,Z)** coordinates as inputs. 
+  However, the controller doesn't work this way, so first we need to obtain the joint angles **(qX)** that make the robot perform a specific trajectory. For this step, we need to use the concept of **Inverse Kinematics**.
+  There are several methods when calculating the inverse kinematics of a robot, including both numerical methods and analytical methods. Currently, only one method has been used to record trajectories
+  ant it has been the numerical one, using the utilities provided in the `visual_kinematics <https://github.com/dbddqy/visual_kinematics>`_ package. More information on this on the **Data Analysis** section.
+  The result should be an array in  **[q1,q2,q3,q4]** format with **N** number of known points. 
+
+  .. For this step, check the script provided `here <>`_. These scripts make use of the robot's inverse kinematics equations (described `in here <>`_) to transform in between these data types.
 
 * Joint angles |srarr| Digital Input (Reference)
 
