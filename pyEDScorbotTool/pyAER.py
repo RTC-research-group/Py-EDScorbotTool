@@ -403,7 +403,7 @@ class pyEDScorbotTool:
             ttk.Button(labelframe,text="Count to angles (from npy)",command=self.count_to_angles_npy).grid(row=5,column=1,sticky=(tk.W,tk.E))
             ttk.Button(labelframe,text="Count to XYZ (from json)",command=self.count_to_xyz_json).grid(row=6,column=1,sticky=(tk.W,tk.E))
             ttk.Button(labelframe,text="Count to angles (from json)",command=self.count_to_angles_json).grid(row=7,column=1,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Send Trajectory",command=self.send_trajectory).grid(row=8,column=1,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Send Trajectory",command=self.send_trajectory_button).grid(row=8,column=1,sticky=(tk.W,tk.E))
             ttk.Button(labelframe,text="Plot 3D trajectory",command=self.plot_traj_3d).grid(row=9,column=1,sticky=(tk.W,tk.E))
             ttk.Button(labelframe,text="Plot counters",command=self.plot_counters).grid(row=10,column=1,sticky=(tk.W,tk.E))
             ttk.Button(labelframe,text="Plot angles",command=self.plot_angles).grid(row=1,column=2,sticky=(tk.W,tk.E))
@@ -478,16 +478,12 @@ class pyEDScorbotTool:
 
         pass
 
-    def send_trajectory(self):
-        
+    def send_trajectory(self,filename,n):
         if self.checked_remote.get() == False:
             self.alert("Remote mode must be activated")
             return
-        
 
-        filename = filedialog.askopenfile(mode="r")
         real_name = filename.name.split("/")[-1]
-        n = simpledialog.askinteger("Trajectory sender","Number of points of trajectory (integer)")
         cmd = "scp -i /media/HDD/home/enrique/Proyectos/SMALL/zynq/zynq {} root@192.168.1.115:/home/root/{}".format(filename.name,real_name)
         os.system(cmd)
         #cmd = "python3 mqtt/client_traj.py -t {} -n 500 &".format(real_name)
@@ -498,8 +494,19 @@ class pyEDScorbotTool:
         msg = "[1,S,/home/root/{},{}]".format(real_name,n)
         self.filename = real_name
         self.mqtt_client.publish(self.topic,msg,qos=0)
-        #os.system(cmd)
-        i = 0
+        
+        
+
+    def send_trajectory_button(self):
+        
+        if self.checked_remote.get() == False:
+            self.alert("Remote mode must be activated")
+            return
+        
+
+        filename = filedialog.askopenfile(mode="r")
+        n = simpledialog.askinteger("Trajectory sender","Number of points of trajectory (integer)")
+        self.send_trajectory(filename,n)
 
         
         
