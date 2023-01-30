@@ -1,8 +1,9 @@
 from tkinter import EW
-import pyAER
+from .pyAER import pyEDScorbotTool
 import argparse
 
-if __name__ == "__main__":
+
+def launch_gui():
 
     parser = argparse.ArgumentParser(description="Launch pyEDScorbotTool")
     parser.add_argument("-c",'--config',type=str,help="Configuration File in json format",default=None)
@@ -10,7 +11,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    config = pyAER.pyEDScorbotTool(visible=(not args.scripting))
+    config = pyEDScorbotTool(visible=(not args.scripting))
     config.render_gui()
 
     pass
