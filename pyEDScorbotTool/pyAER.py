@@ -8,9 +8,9 @@ from tkinter.ttk import Progressbar
 from tkinter.constants import X
 from tkinter import simpledialog
 
-import usb.core
-import usb.util
-import usb.backend.libusb1
+# import usb.core
+# import usb.util
+# import usb.backend.libusb1
 import json
 from tkinter import filedialog
 import datetime
@@ -564,57 +564,57 @@ class pyEDScorbotTool:
         self.checked_usb = checked_usb
         self.checked_remote = checked_remote
    
-    def openUSB(self):
-        '''
-        Try to open USB connection with robot infrastructure
+    # def openUSB(self):
+    #     '''
+    #     Try to open USB connection with robot infrastructure
 
-        This function tries to open a connection with
-        the AERNode USB board and claim its interface 
-        to initiate communication and returns the connection
-        to the device found
+    #     This function tries to open a connection with
+    #     the AERNode USB board and claim its interface 
+    #     to initiate communication and returns the connection
+    #     to the device found
 
-        Returns:
-            Device handler if connection was successful
-            None if the connection couldn't be established
-        '''
+    #     Returns:
+    #         Device handler if connection was successful
+    #         None if the connection couldn't be established
+    #     '''
 
-        try:
-            dev = usb.core.find(idVendor=self.VID,idProduct=self.PID)
-        except usb.core.NoBackendError:
+    #     try:
+    #         dev = usb.core.find(idVendor=self.VID,idProduct=self.PID)
+    #     except usb.core.NoBackendError:
             
-            be = usb.backend.libusb1.get_backend(find_library = lambda x:"/lib/x86_64-linux-gnu/libusb-1.0.so.0")
-            dev = usb.core.find(idVendor=self.VID,idProduct=self.PID,backend=be)
-        finally:
-            #If the device can't be found, tell the user and end execution
-            if dev is None:
-                self.alert("Device not found, try again or check the connection")
-                self.checked_usb.set(False)
-                return None
+    #         be = usb.backend.libusb1.get_backend(find_library = lambda x:"/lib/x86_64-linux-gnu/libusb-1.0.so.0")
+    #         dev = usb.core.find(idVendor=self.VID,idProduct=self.PID,backend=be)
+    #     finally:
+    #         #If the device can't be found, tell the user and end execution
+    #         if dev is None:
+    #             self.alert("Device not found, try again or check the connection")
+    #             self.checked_usb.set(False)
+    #             return None
                 
-            #If the device was found, set configuration to default, claim the 
-            #default interface and attach the handler to dev
-            else:
+    #         #If the device was found, set configuration to default, claim the 
+    #         #default interface and attach the handler to dev
+    #         else:
                 
-                dev.set_configuration()
-                usb.util.claim_interface(dev,0)
+    #             dev.set_configuration()
+    #             usb.util.claim_interface(dev,0)
                 
-                print("Device found and initialized successfully")
+    #             print("Device found and initialized successfully")
 
-                return dev
+    #             return dev
 
-    def closeUSB(self):
-        '''
-        Close USB connection
+    # def closeUSB(self):
+    #     '''
+    #     Close USB connection
 
-        This function releases the interface claimed
-        and then detaches the handle to the device
-        '''
-        if(self.dev != None):
-            usb.util.release_interface(self.dev,0)
-            usb.util.dispose_resources(self.dev)
-            self.dev = None
+    #     This function releases the interface claimed
+    #     and then detaches the handle to the device
+    #     '''
+    #     if(self.dev != None):
+    #         usb.util.release_interface(self.dev,0)
+    #         usb.util.dispose_resources(self.dev)
+    #         self.dev = None
 
-        print("Device disconnected successfully")
+    #     print("Device disconnected successfully")
      
     def checkUSB(self):
         '''
