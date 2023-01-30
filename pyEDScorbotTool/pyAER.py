@@ -7,7 +7,7 @@ from tkinter import ttk,messagebox
 from tkinter.ttk import Progressbar
 from tkinter.constants import X
 from tkinter import simpledialog
-
+import tqdm
 import usb.core
 import usb.util
 import usb.backend.libusb1
@@ -23,16 +23,16 @@ import subprocess
 import matplotlib.pyplot as plt
 #from visualization import *
 from tkinter import scrolledtext
-from utils.transformations import count_to_angle  as c_to_a
-from utils.transformations import cont_to_xyz as c_to_xyz
-from utils.transformations import angles_to_json as a_to_j
-from utils.transformations import angles_to_refs as a_to_r
-from utils.transformations import angles_to_xyz as a_to_xyz
-from utils.transformations import pad_trajectory 
-from utils.transformations import omegas_to_angles as w_to_a
-from utils.visualization.xyz import plot3d
-from utils.visualization.angles import plotangles
-from utils.visualization.counters import plotcounters
+from .utils.transformations import count_to_angle  as c_to_a
+from .utils.transformations import cont_to_xyz as c_to_xyz
+from .utils.transformations import angles_to_json as a_to_j
+from .utils.transformations import angles_to_refs as a_to_r
+from .utils.transformations import angles_to_xyz as a_to_xyz
+from .utils.transformations import pad_trajectory 
+from .utils.transformations import omegas_to_angles as w_to_a
+from .utils.visualization.xyz import plot3d
+from .utils.visualization.angles import plotangles
+from .utils.visualization.counters import plotcounters
 import pandas
 
 def on_connect(client, userdata, flags, rc):
@@ -88,6 +88,10 @@ def on_message(client, userdata, msg):
         if userdata['visible'] == True and iter > 0:
             userdata['textbox'].insert(tk.END,msg.topic+" "+str(msg.payload) + "\n")
             userdata['progressbar'].step()
+        elif userdata['visible'] == False and iter>0:
+            userdata['progressbar'].update()
+
+
         print(msg.topic+" "+str(msg.payload))
         
 class pyEDScorbotTool:
@@ -102,7 +106,7 @@ class pyEDScorbotTool:
     :ivar self.root: Root of the graphical interface's window
     :ivar self.checked_usb: Variable that holds the state of the checkbox that indicates whether USB is enabled or not.
     '''
-    def __init__(self,visible=True):
+    def __init__(self,visible=True,remote=False):
         '''
         Constructor
 
@@ -118,7 +122,7 @@ class pyEDScorbotTool:
         
             #self.root = tk.Tk()
                 #Set the icon
-            self.root.iconphoto(False,tk.PhotoImage(file="atc.png"))
+            self.root.iconphoto(False,tk.PhotoImage(file="./pyEDScorbotTool/atc.png"))
         else:
             self.root.withdraw()
         #Create dictionaries where the interface data will be stored
@@ -136,7 +140,7 @@ class pyEDScorbotTool:
         self.j6 = -1
         #Standalone variable to control if USB is enabled
         self.checked_usb = False
-
+        self.checked_remote = remote
         #Set USB constants needed
         self.VID = 0x10c4
         self.PID = 0x0000
@@ -490,7 +494,10 @@ class pyEDScorbotTool:
         #################################
         #MUST BE PARAMETERIZED CORRECTLY#
         #################################
-        self.pb["maximum"] = n
+        if self.visible:
+            self.pb["maximum"] = n
+        else:
+            self.pb.total = n
         msg = "[1,S,/home/root/{},{}]".format(real_name,n)
         self.filename = real_name
         self.mqtt_client.publish(self.topic,msg,qos=0)
@@ -659,15 +666,20 @@ class pyEDScorbotTool:
         If it hasn't, it disconnects from the broker
         '''
         #Check if USB is enabled
-        if self.checked_remote.get() == False:
-            #If not, close the connection
-            self.close_mqtt()
-            
+
+        if self.visible:
+
+            if self.checked_remote.get() == False:
+                #If not, close the connection
+                self.close_mqtt()
+        elif self.checked_remote == False:
+                self.close_mqtt()
         
         else:
             
             #If remote usage is enabled, try to connect to mqtt broker
-            self.checked_usb.set(False)
+            if self.visible:
+                self.checked_usb.set(False)
             self.mqtt_client = self.open_mqtt("192.168.1.104")
             #self.mqtt_client = self.open_mqtt("150.214.140.189")
 
@@ -679,6 +691,9 @@ class pyEDScorbotTool:
         client = mqtt.Client()
         client.on_connect = on_connect
         client.on_message = on_message
+        if not self.visible:
+            self.textbox = None
+            self.pb = tqdm.tqdm()
         d = {
             'visible':self.visible,
             'textbox':self.textbox,
@@ -3475,7 +3490,7 @@ class pyEDScorbotTool:
         directly from the latest master branch of the repository 
         '''
         try:
-            f = open('./initial_config.json')
+            f = open('./pyEDScorbotTool/initial_config.json')
             j = json.loads(f.read())
 
         except FileNotFoundError:
