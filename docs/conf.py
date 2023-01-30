@@ -72,8 +72,8 @@ html_theme = 'sphinx_rtd_theme'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
-html_logo = "../atc.png"
-html_favicon = "../atc.png"
+html_logo = "../pyEDScorbotTool/atc.png"
+html_favicon = "../pyEDScorbotTool/atc.png"
 
 subprocess.call('make clean', shell=True)
 subprocess.call('cd doxy; doxygen', shell=True)
