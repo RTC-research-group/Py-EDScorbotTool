@@ -23,16 +23,16 @@ import subprocess
 import matplotlib.pyplot as plt
 #from visualization import *
 from tkinter import scrolledtext
-from utils.transformations import count_to_angle  as c_to_a
-from utils.transformations import cont_to_xyz as c_to_xyz
-from utils.transformations import angles_to_json as a_to_j
-from utils.transformations import angles_to_refs as a_to_r
-from utils.transformations import angles_to_xyz as a_to_xyz
-from utils.transformations import pad_trajectory 
-from utils.transformations import omegas_to_angles as w_to_a
-from utils.visualization.xyz import plot3d
-from utils.visualization.angles import plotangles
-from utils.visualization.counters import plotcounters
+from .utils.transformations import count_to_angle  as c_to_a
+from .utils.transformations import cont_to_xyz as c_to_xyz
+from .utils.transformations import angles_to_json as a_to_j
+from .utils.transformations import angles_to_refs as a_to_r
+from .utils.transformations import angles_to_xyz as a_to_xyz
+from .utils.transformations import pad_trajectory 
+from .utils.transformations import omegas_to_angles as w_to_a
+from .utils.visualization.xyz import plot3d
+from .utils.visualization.angles import plotangles
+from .utils.visualization.counters import plotcounters
 import pandas
 
 def on_connect(client, userdata, flags, rc):
