@@ -106,7 +106,7 @@ class pyEDScorbotTool:
     :ivar self.root: Root of the graphical interface's window
     :ivar self.checked_usb: Variable that holds the state of the checkbox that indicates whether USB is enabled or not.
     '''
-    def __init__(self,visible=True,remote=False):
+    def __init__(self,visible=True,remote=False,config_file=""):
         '''
         Constructor
 
@@ -148,7 +148,7 @@ class pyEDScorbotTool:
         self.ENDPOINT_IN = 0x81
         self.PACKET_LENGTH = 64
         
-        self.filename = ""
+        self.config_file = './pyEDScorbotTool/initial_config.json'
 
         #Handle for USB connection
         self.dev = None
@@ -564,18 +564,18 @@ class pyEDScorbotTool:
             col (int): Column of the grid in which the checkbox will be displayed
         '''
         if self.visible:
-            labelframe = ttk.LabelFrame(self.root, text="USB")
+            labelframe = ttk.LabelFrame(self.root, text="Remote")
             labelframe.grid(column=col, row=row, sticky=(
             tk.N, tk.W), padx=5, pady=5)
 
-        checked_usb = tk.BooleanVar()
+        #checked_usb = tk.BooleanVar()
         checked_remote = tk.BooleanVar()
 
         if self.visible:
-            ttk.Checkbutton(labelframe,text="Open device",command=self.checkUSB,variable=checked_usb,onvalue=True,offvalue=False).grid(column=1,row=3,sticky=(tk.W))
-            ttk.Checkbutton(labelframe,text="Remote mode",command=self.checkRemote,variable=checked_remote,onvalue=True,offvalue=False).grid(column=2,row=3,sticky=(tk.W))
+            #ttk.Checkbutton(labelframe,text="Open device",command=self.checkUSB,variable=checked_usb,onvalue=True,offvalue=False).grid(column=1,row=3,sticky=(tk.W))
+            ttk.Checkbutton(labelframe,text="Open MQTT connection",command=self.checkRemote,variable=checked_remote,onvalue=True,offvalue=False).grid(column=1,row=3,sticky=(tk.W))
 
-        self.checked_usb = checked_usb
+        #self.checked_usb = checked_usb
         self.checked_remote = checked_remote
    
     def openUSB(self):
@@ -899,7 +899,7 @@ class pyEDScorbotTool:
         self.render_textbox(3,4)
         self.render_progressbar(4,4)
         self.init_config()
-        self.update()
+        #self.update()
         #And call mainloop to display GUI
         if self.visible:
             self.root.mainloop()
@@ -3490,7 +3490,7 @@ class pyEDScorbotTool:
         directly from the latest master branch of the repository 
         '''
         try:
-            f = open('./pyEDScorbotTool/initial_config.json')
+            f = open(self.config_file)
             j = json.loads(f.read())
 
         except FileNotFoundError:
