@@ -1,2 +1,3 @@
 breathe==4.34.0
 visual-kinematics
+paho-mqtt==1.6.1
