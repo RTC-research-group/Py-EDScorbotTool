@@ -539,9 +539,9 @@ class pyEDScorbotTool:
             self.alert("Remote mode must be activated")
             return
 
-        real_name = filename.name.split("/")[-1]
-        cmd = "scp -i /media/HDD/home/enrique/Proyectos/SMALL/zynq/zynq {} root@192.168.1.115:/home/root/{}".format(filename.name,real_name)
-        os.system(cmd)
+        
+        real_name = filename.split("/")[-1]
+        
         #cmd = "python3 mqtt/client_traj.py -t {} -n 500 &".format(real_name)
         #################################
         #MUST BE PARAMETERIZED CORRECTLY#
@@ -565,6 +565,9 @@ class pyEDScorbotTool:
 
         filename = filedialog.askopenfile(mode="r")
         n = simpledialog.askinteger("Trajectory sender","Number of points of trajectory (integer)")
+        real_name = filename.name.split("/")[-1]
+        cmd = "scp -i /media/HDD/home/enrique/Proyectos/SMALL/zynq/zynq {} root@192.168.1.115:/home/root/{}".format(filename.name,real_name)
+        os.system(cmd)
         self.send_trajectory(filename,n)
 
         
@@ -4161,6 +4164,9 @@ def send_trajectory_cli():
     #1.- convert to json
     handler = pyEDScorbotTool(visible=False,remote=True,savename=output_file)
     client = handler.open_mqtt(ip)
+    real_name = input_file.split("/")[-1]
+    cmd = "scp -i /media/HDD/home/enrique/Proyectos/SMALL/zynq/zynq {} root@192.168.1.115:/home/root/{}".format(input_file,real_name)
+    os.system(cmd)
     handler.send_trajectory(input_file,n)
     
     
