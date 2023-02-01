@@ -112,7 +112,10 @@ def on_message(client, userdata, msg):
         arr = np.array(userdata['pos_data'])
         userdata['pos_data'] = []
         #name of folder in localhost where to save the data 
-        savename = filedialog.asksaveasfilename()
+        if userdata['visible']:
+            savename = filedialog.asksaveasfilename()
+        else:
+            savename = userdata['savename']
         np.save(savename,arr[:-1])
         #np.save("output_data.npy",arr[:-1])
         if userdata['visible']:
@@ -151,7 +154,7 @@ class pyEDScorbotTool:
     :ivar self.checked_usb: Variable that holds the state of the checkbox that indicates whether USB is enabled or not.
     
     '''
-    def __init__(self,visible=True,remote=False,config_file=""):
+    def __init__(self,visible=True,remote=False,config_file="",savename="out.npy"):
         '''
         Constructor
 
@@ -193,7 +196,10 @@ class pyEDScorbotTool:
         self.ENDPOINT_IN = 0x81
         self.PACKET_LENGTH = 64
         
-        self.config_file = './pyEDScorbotTool/initial_config.json'
+        if config_file == "":
+            self.config_file = './pyEDScorbotTool/initial_config.json'
+        else:
+            self.config_gile = config_file
 
         #Handle for USB connection
         self.dev = None
@@ -206,6 +212,7 @@ class pyEDScorbotTool:
         self.updating = True
         logging.basicConfig(filemode='w',level=logging.INFO)
 
+        self.savename = savename
         #Progress bar
         #self.self.pb = None
 
@@ -739,12 +746,14 @@ class pyEDScorbotTool:
         if not self.visible:
             self.textbox = None
             self.pb = tqdm.tqdm()
+            
         d = {
             'visible':self.visible,
             'textbox':self.textbox,
             'pos_data':[],
             'progressbar':self.pb,
-            'filename':self.filename
+            'filename':self.filename,
+            'savename':self.savename
         }
         self.topic = "/EDScorbot/commands"
         client.user_data_set(d)
@@ -893,19 +902,19 @@ class pyEDScorbotTool:
     
 
     
-    def render_cameras(self,row,col):
+    # def render_cameras(self,row,col):
         
-        if self.visible:
-            labelframe = ttk.LabelFrame(self.root, text="Cameras")
-            labelframe.grid(column=col, row=row, sticky=(
-            tk.N, tk.W), padx=5, pady=5)
-        camera1_enabled = tk.BooleanVar()
-        camera2_enabled = tk.BooleanVar()
-        if self.visible:
-            ttk.Checkbutton(labelframe,text="Camera 1 (Front)",command=self.openCamera1,variable=camera1_enabled,onvalue=True,offvalue=False).grid(column=1,row=1,sticky=(tk.W))
-            ttk.Checkbutton(labelframe,text="Camera 2 (Side)",command=self.openCamera2,variable=camera2_enabled,onvalue=True,offvalue=False).grid(column=1,row=2,sticky=(tk.W))
-        self.cam1_enable = camera1_enabled
-        self.cam2_enable = camera2_enabled
+    #     if self.visible:
+    #         labelframe = ttk.LabelFrame(self.root, text="Cameras")
+    #         labelframe.grid(column=col, row=row, sticky=(
+    #         tk.N, tk.W), padx=5, pady=5)
+    #     camera1_enabled = tk.BooleanVar()
+    #     camera2_enabled = tk.BooleanVar()
+    #     if self.visible:
+    #         ttk.Checkbutton(labelframe,text="Camera 1 (Front)",command=self.openCamera1,variable=camera1_enabled,onvalue=True,offvalue=False).grid(column=1,row=1,sticky=(tk.W))
+    #         ttk.Checkbutton(labelframe,text="Camera 2 (Side)",command=self.openCamera2,variable=camera2_enabled,onvalue=True,offvalue=False).grid(column=1,row=2,sticky=(tk.W))
+    #     self.cam1_enable = camera1_enabled
+    #     self.cam2_enable = camera2_enabled
 
     def render_gui(self):
         '''
@@ -950,57 +959,57 @@ class pyEDScorbotTool:
             self.root.mainloop()
         
 
-    def openCamera1(self):
+    # def openCamera1(self):
 
-        if(self.cam1_enable.get()):
+    #     if(self.cam1_enable.get()):
 
-            self.camera1 = cv2.VideoCapture('/dev/video0')
+    #         self.camera1 = cv2.VideoCapture('/dev/video0')
                 
-        else:
-            try:
-                self.camera1.release()
-                cv2.destroyWindow('front')
-            except:
-                pass
+    #     else:
+    #         try:
+    #             self.camera1.release()
+    #             cv2.destroyWindow('front')
+    #         except:
+    #             pass
 
         
 
-    def openCamera2(self):
+    # def openCamera2(self):
 
-        if(self.cam2_enable.get()):
+    #     if(self.cam2_enable.get()):
 
-            self.camera2 = cv2.VideoCapture('/dev/video2')
+    #         self.camera2 = cv2.VideoCapture('/dev/video2')
                 
-        else:
-            try:
-                self.camera2.release()
-                cv2.destroyWindow('side')
-            except:
-                pass
-    def toggle_record(self,filename=None):
-        if self.record:
-            date = datetime.datetime.now()
-            if filename == None:
-                timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
-            else:
-                timeStamp=filename
+    #     else:
+    #         try:
+    #             self.camera2.release()
+    #             cv2.destroyWindow('side')
+    #         except:
+    #             pass
+    # def toggle_record(self,filename=None):
+    #     if self.record:
+    #         date = datetime.datetime.now()
+    #         if filename == None:
+    #             timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
+    #         else:
+    #             timeStamp=filename
             
-            P.dump(self.array,open(timeStamp + '.pkl','wb'))
-            self.array = []
-        self.record = not self.record
+    #         P.dump(self.array,open(timeStamp + '.pkl','wb'))
+    #         self.array = []
+    #     self.record = not self.record
 
-    def print_updates(self,):
+    # def print_updates(self,):
         
-        self.j1 = self.execute_script("bash/readJoint.bash 1")
-        self.j2 = self.execute_script("bash/readJoint.bash 2")
-        self.j3 = self.execute_script("bash/readJoint.bash 3")
-        self.j4 = self.execute_script("bash/readJoint.bash 4")
-        self.j5 = self.execute_script("bash/readJoint.bash 5")
-        self.j6 = self.execute_script("bash/readJoint.bash 6")
+    #     self.j1 = self.execute_script("bash/readJoint.bash 1")
+    #     self.j2 = self.execute_script("bash/readJoint.bash 2")
+    #     self.j3 = self.execute_script("bash/readJoint.bash 3")
+    #     self.j4 = self.execute_script("bash/readJoint.bash 4")
+    #     self.j5 = self.execute_script("bash/readJoint.bash 5")
+    #     self.j6 = self.execute_script("bash/readJoint.bash 6")
 
-        print("Joint\tPosition\tHex\nJ1\t{}\t{}\nJ2\t{}\t{}\nJ3\t{}\t{}\nJ4\t{}\t{}\nJ5\t{}\t{}\nJ6\t{}\t{}\n"
-        .format(self.j1,hex(self.j1),self.j2,hex(self.j2),self.j3,hex(self.j3),self.j4,hex(self.j4),self.j5,hex(self.j5),self.j6,hex(self.j6))
-        ,end='/r')
+    #     print("Joint\tPosition\tHex\nJ1\t{}\t{}\nJ2\t{}\t{}\nJ3\t{}\t{}\nJ4\t{}\t{}\nJ5\t{}\t{}\nJ6\t{}\t{}\n"
+    #     .format(self.j1,hex(self.j1),self.j2,hex(self.j2),self.j3,hex(self.j3),self.j4,hex(self.j4),self.j5,hex(self.j5),self.j6,hex(self.j6))
+    #     ,end='/r')
 
 
     def update(self,ref=None):
@@ -2874,124 +2883,124 @@ class pyEDScorbotTool:
         self.dev = self.openUSB()
         self.checked_usb.set(True)
         
-    def ConfigureLeds(self):
-        '''
-        Under development
-        '''
-        if self.dev==None:
-            self.alert("There is no opened device. Try opening one first")
-            return
-        else:
-            if self.checked_usb.get():
-                self.sendCommand16( 0,  (0x00), ((self.d["Motor Config"]["leds_M1"].get()) & 0xFF), True) #LEDs M1
-                self.sendCommand16( 0x20,  (0x00), ((self.d["Motor Config"]["leds_M2"].get()) & 0xFF), True) #LEDs M2
-                self.sendCommand16( 0x40,  (0x00), ((self.d["Motor Config"]["leds_M3"].get()) & 0xFF), True) #LEDs M3
-                self.sendCommand16( 0x60,  (0x00), ((self.d["Motor Config"]["leds_M4"].get()) & 0xFF), True) #LEDs M4
-                self.sendCommand16( 0x80,  (0x00), ((self.d["Motor Config"]["leds_M5"].get()) & 0xFF), True) #LEDs M5
-                self.sendCommand16( 0xA0,  (0x00), ((self.d["Motor Config"]["leds_M6"].get()) & 0xFF), True) #LEDs M6
+    # def ConfigureLeds(self):
+    #     '''
+    #     Under development
+    #     '''
+    #     if self.dev==None:
+    #         self.alert("There is no opened device. Try opening one first")
+    #         return
+    #     else:
+    #         if self.checked_usb.get():
+    #             self.sendCommand16( 0,  (0x00), ((self.d["Motor Config"]["leds_M1"].get()) & 0xFF), True) #LEDs M1
+    #             self.sendCommand16( 0x20,  (0x00), ((self.d["Motor Config"]["leds_M2"].get()) & 0xFF), True) #LEDs M2
+    #             self.sendCommand16( 0x40,  (0x00), ((self.d["Motor Config"]["leds_M3"].get()) & 0xFF), True) #LEDs M3
+    #             self.sendCommand16( 0x60,  (0x00), ((self.d["Motor Config"]["leds_M4"].get()) & 0xFF), True) #LEDs M4
+    #             self.sendCommand16( 0x80,  (0x00), ((self.d["Motor Config"]["leds_M5"].get()) & 0xFF), True) #LEDs M5
+    #             self.sendCommand16( 0xA0,  (0x00), ((self.d["Motor Config"]["leds_M6"].get()) & 0xFF), True) #LEDs M6
 
-    def SwitchOffLEDS(self):
-        '''
-        Under development
-        '''
-        if self.dev==None:
-            self.alert("There is no opened device. Try opening one first")
-            return
-        else:
-            if self.checked_usb.get():
-                self.sendCommand16( 0,  0,  0, False) #LEDs M1 off
-                self.sendCommand16( 0x20,  0,  0, False) #LEDs M2 off
-                self.sendCommand16( 0x40,  0,  0, False) #LEDs M3 off
-                self.sendCommand16( 0x60,  0,  0, False) #LEDs M4 off
-                self.sendCommand16( 0x80,  0,  0, False) #LEDs M5 off
-                self.sendCommand16( 0xA0,  0,  0, False) #LEDs M6 off
+    # def SwitchOffLEDS(self):
+    #     '''
+    #     Under development
+    #     '''
+    #     if self.dev==None:
+    #         self.alert("There is no opened device. Try opening one first")
+    #         return
+    #     else:
+    #         if self.checked_usb.get():
+    #             self.sendCommand16( 0,  0,  0, False) #LEDs M1 off
+    #             self.sendCommand16( 0x20,  0,  0, False) #LEDs M2 off
+    #             self.sendCommand16( 0x40,  0,  0, False) #LEDs M3 off
+    #             self.sendCommand16( 0x60,  0,  0, False) #LEDs M4 off
+    #             self.sendCommand16( 0x80,  0,  0, False) #LEDs M5 off
+    #             self.sendCommand16( 0xA0,  0,  0, False) #LEDs M6 off
 
-    def Draw8xy(self):
-        '''
-        Under development
-        '''
-        if self.dev==None:
-            self.alert("There is no opened device. Try opening one first")
-            return
-        else:
-            if self.checked_usb.get():
-                scan_Wait_Time = self.d["Scan Parameters"]["scan_Wait_Time"]
-                refsM1 = [0,-200,0,200,0]
-                refsM2 = [0,-50,0,-50,0]
-                refsM3 = [0, -200,    0, -200,    0]
-                refsM4 = [0, -200,    0, -200,    0]
+    # def Draw8xy(self):
+    #     '''
+    #     Under development
+    #     '''
+    #     if self.dev==None:
+    #         self.alert("There is no opened device. Try opening one first")
+    #         return
+    #     else:
+    #         if self.checked_usb.get():
+    #             scan_Wait_Time = self.d["Scan Parameters"]["scan_Wait_Time"]
+    #             refsM1 = [0,-200,0,200,0]
+    #             refsM2 = [0,-50,0,-50,0]
+    #             refsM3 = [0, -200,    0, -200,    0]
+    #             refsM4 = [0, -200,    0, -200,    0]
                 
-                date = datetime.datetime.now()
-                timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
-                #Abrir archivo de log con el nombre de la fecha
-                filename='./logs/8xy' + timeStamp + '.log'
-                logger_file = logging.FileHandler(filename)
-                logger = logging.getLogger("logger_8xy")
-                logger.addHandler(logger_file)  
-                logger.info("CITEC ED-BioRob Print 8 x,y Log file") #Se usa esta funcion??
+    #             date = datetime.datetime.now()
+    #             timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
+    #             #Abrir archivo de log con el nombre de la fecha
+    #             filename='./logs/8xy' + timeStamp + '.log'
+    #             logger_file = logging.FileHandler(filename)
+    #             logger = logging.getLogger("logger_8xy")
+    #             logger.addHandler(logger_file)  
+    #             logger.info("CITEC ED-BioRob Print 8 x,y Log file") #Se usa esta funcion??
 
-                self.sendCommand16( 0x03,  (0x00),  ((3)&0xFF), True) #I banks disabled M1
-                self.sendCommand16( 0x07,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
-                self.sendCommand16( 0x08,  (0x00),  ((3)&0xFF), True) #D banks disabled M1
-                self.sendCommand16( 0x0C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
-                self.sendCommand16( 0x12,  ((self.d["Motor Config"]["spike_expansor_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M1"].get()) & 0xFF), True) #spike expansor M1
-                self.sendCommand16( 0x13,  (0x00),  ((3)&0xFF), True) #EI bank enabled M1
-                self.sendCommand16( 0x17,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
-                self.sendCommand16( 0x02,  ((refsM1[0] >> 8) & 0xFF),  ((refsM1[0]) & 0xFF), True) #Ref M1 0
+    #             self.sendCommand16( 0x03,  (0x00),  ((3)&0xFF), True) #I banks disabled M1
+    #             self.sendCommand16( 0x07,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
+    #             self.sendCommand16( 0x08,  (0x00),  ((3)&0xFF), True) #D banks disabled M1
+    #             self.sendCommand16( 0x0C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
+    #             self.sendCommand16( 0x12,  ((self.d["Motor Config"]["spike_expansor_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M1"].get()) & 0xFF), True) #spike expansor M1
+    #             self.sendCommand16( 0x13,  (0x00),  ((3)&0xFF), True) #EI bank enabled M1
+    #             self.sendCommand16( 0x17,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
+    #             self.sendCommand16( 0x02,  ((refsM1[0] >> 8) & 0xFF),  ((refsM1[0]) & 0xFF), True) #Ref M1 0
                 
-                self.sendCommand16( 0x23,  (0x00),  ((3)&0xFF), True) #I banks disabled M1
-                self.sendCommand16( 0x27,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M1
-                self.sendCommand16( 0x28,  (0x00),  ((3)&0xFF), True) #D banks disabled M1
-                self.sendCommand16( 0x2C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M1
-                self.sendCommand16( 0x32,  ((self.d["Motor Config"]["spike_expansor_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M2"].get()) & 0xFF), True) #spike expansor M1
-                self.sendCommand16( 0x33,  (0x00),  ((3)&0xFF), True) #EI bank enabled M1
-                self.sendCommand16( 0x37,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M1
-                self.sendCommand16( 0x22,  ((refsM2[0] >> 8) & 0xFF),  ((refsM2[0]) & 0xFF), True) #Ref M1 0
+    #             self.sendCommand16( 0x23,  (0x00),  ((3)&0xFF), True) #I banks disabled M1
+    #             self.sendCommand16( 0x27,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M1
+    #             self.sendCommand16( 0x28,  (0x00),  ((3)&0xFF), True) #D banks disabled M1
+    #             self.sendCommand16( 0x2C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M1
+    #             self.sendCommand16( 0x32,  ((self.d["Motor Config"]["spike_expansor_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M2"].get()) & 0xFF), True) #spike expansor M1
+    #             self.sendCommand16( 0x33,  (0x00),  ((3)&0xFF), True) #EI bank enabled M1
+    #             self.sendCommand16( 0x37,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M1
+    #             self.sendCommand16( 0x22,  ((refsM2[0] >> 8) & 0xFF),  ((refsM2[0]) & 0xFF), True) #Ref M1 0
                 
-                self.sendCommand16( 0x43,  (0x00),  ((3)&0xFF), True) #I banks disabled M1
-                self.sendCommand16( 0x47,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M1
-                self.sendCommand16( 0x48,  (0x00),  ((3)&0xFF), True) #D banks disabled M1
-                self.sendCommand16( 0x4C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M1
-                self.sendCommand16( 0x52,  ((self.d["Motor Config"]["spike_expansor_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M3"].get()) & 0xFF), True) #spike expansor M1
-                self.sendCommand16( 0x53,  (0x00),  ((3)&0xFF), True) #EI bank enabled M1
-                self.sendCommand16( 0x57,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M1
-                self.sendCommand16( 0x42,  ((refsM3[0] >> 8) & 0xFF),  ((refsM3[0]) & 0xFF), True) #Ref M1 0
+    #             self.sendCommand16( 0x43,  (0x00),  ((3)&0xFF), True) #I banks disabled M1
+    #             self.sendCommand16( 0x47,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M1
+    #             self.sendCommand16( 0x48,  (0x00),  ((3)&0xFF), True) #D banks disabled M1
+    #             self.sendCommand16( 0x4C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M1
+    #             self.sendCommand16( 0x52,  ((self.d["Motor Config"]["spike_expansor_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M3"].get()) & 0xFF), True) #spike expansor M1
+    #             self.sendCommand16( 0x53,  (0x00),  ((3)&0xFF), True) #EI bank enabled M1
+    #             self.sendCommand16( 0x57,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M1
+    #             self.sendCommand16( 0x42,  ((refsM3[0] >> 8) & 0xFF),  ((refsM3[0]) & 0xFF), True) #Ref M1 0
                 
-                self.sendCommand16( 0x63,  (0x00),  ((3)&0xFF), True) #I banks disabled M4
-                self.sendCommand16( 0x67,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
-                self.sendCommand16( 0x68,  (0x00),  ((3)&0xFF), True) #D banks disabled M4
-                self.sendCommand16( 0x6C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
-                self.sendCommand16( 0x72,  ((self.d["Motor Config"]["spike_expansor_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M4"].get()) & 0xFF), True) #spike expansor M4
-                self.sendCommand16( 0x73,  (0x00),  ((3)&0xFF), True) #EI bank enabled M4
-                self.sendCommand16( 0x77,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
-                self.sendCommand16( 0x62,  ((refsM4[0] >> 8) & 0xFF),  ((refsM4[0]) & 0xFF), True) #Ref M4 0
+    #             self.sendCommand16( 0x63,  (0x00),  ((3)&0xFF), True) #I banks disabled M4
+    #             self.sendCommand16( 0x67,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
+    #             self.sendCommand16( 0x68,  (0x00),  ((3)&0xFF), True) #D banks disabled M4
+    #             self.sendCommand16( 0x6C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
+    #             self.sendCommand16( 0x72,  ((self.d["Motor Config"]["spike_expansor_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M4"].get()) & 0xFF), True) #spike expansor M4
+    #             self.sendCommand16( 0x73,  (0x00),  ((3)&0xFF), True) #EI bank enabled M4
+    #             self.sendCommand16( 0x77,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
+    #             self.sendCommand16( 0x62,  ((refsM4[0] >> 8) & 0xFF),  ((refsM4[0]) & 0xFF), True) #Ref M4 0
 
-                logger.info("Time\tM1 Ref\tJ1 Pos\tM2 Ref\tJ2 Pos\tM3 Ref\tJ3 Pos\tM4 Ref\tJ4 Pos\t")
-                start = self.millis_now()
-                now = self.millis_now()
+    #             logger.info("Time\tM1 Ref\tJ1 Pos\tM2 Ref\tJ2 Pos\tM3 Ref\tJ3 Pos\tM4 Ref\tJ4 Pos\t")
+    #             start = self.millis_now()
+    #             now = self.millis_now()
                 
-                while(abs(now-start)< 3000):
-                    lap = self.millis_now()
-                    while(abs(now-lap)<100):
-                        now = self.millis_now()
-                    logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),refsM1[0],self.Read_J1_pos(),refsM2[0],self.Read_J2_pos(),refsM3[0],self.Read_J3_pos(),refsM4[0],self.Read_J4_pos()))
-                    now = self.millis_now()
+    #             while(abs(now-start)< 3000):
+    #                 lap = self.millis_now()
+    #                 while(abs(now-lap)<100):
+    #                     now = self.millis_now()
+    #                 logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),refsM1[0],self.Read_J1_pos(),refsM2[0],self.Read_J2_pos(),refsM3[0],self.Read_J3_pos(),refsM4[0],self.Read_J4_pos()))
+    #                 now = self.millis_now()
                 
-                for j in range(0,2):
-                    for i in range(0,5):
-                        self.sendCommand16( 0x62,  ((refsM4[i] >> 8) & 0xFF),  ((refsM4[i]) & 0xFF), True) #Ref M4 0
-                        self.sendCommand16( 0x42,  ((refsM3[i] >> 8) & 0xFF),  ((refsM3[i]) & 0xFF), True) #Ref M4 0
-                        self.sendCommand16( 0x22,  ((refsM2[i] >> 8) & 0xFF),  ((refsM2[i]) & 0xFF), True) #Ref M4 0
-                        self.sendCommand16( 0x02,  ((refsM1[i] >> 8) & 0xFF),  ((refsM1[i]) & 0xFF), True) #Ref M4 0
+    #             for j in range(0,2):
+    #                 for i in range(0,5):
+    #                     self.sendCommand16( 0x62,  ((refsM4[i] >> 8) & 0xFF),  ((refsM4[i]) & 0xFF), True) #Ref M4 0
+    #                     self.sendCommand16( 0x42,  ((refsM3[i] >> 8) & 0xFF),  ((refsM3[i]) & 0xFF), True) #Ref M4 0
+    #                     self.sendCommand16( 0x22,  ((refsM2[i] >> 8) & 0xFF),  ((refsM2[i]) & 0xFF), True) #Ref M4 0
+    #                     self.sendCommand16( 0x02,  ((refsM1[i] >> 8) & 0xFF),  ((refsM1[i]) & 0xFF), True) #Ref M4 0
 
-                        start2 = self.millis_now()
-                        now = self.millis_now()
-                        while(abs(now-start2) < scan_Wait_Time):
-                            lap = self.millis_now()
-                            while(abs(now-lap) < 100):
-                                now = self.millis_now()
-                            logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),refsM1[i],self.Read_J1_pos(),refsM2[i],self.Read_J2_pos(),refsM3[i],self.Read_J3_pos(),refsM4[i],self.Read_J4_pos()))
-                            now = self.millis_now()
+    #                     start2 = self.millis_now()
+    #                     now = self.millis_now()
+    #                     while(abs(now-start2) < scan_Wait_Time):
+    #                         lap = self.millis_now()
+    #                         while(abs(now-lap) < 100):
+    #                             now = self.millis_now()
+    #                         logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),refsM1[i],self.Read_J1_pos(),refsM2[i],self.Read_J2_pos(),refsM3[i],self.Read_J3_pos(),refsM4[i],self.Read_J4_pos()))
+    #                         now = self.millis_now()
     
     def search_Joint_home(self,JOINTNUM,pol):
         '''
@@ -4136,3 +4145,22 @@ class pyEDScorbotTool:
     
 #     pass
 
+def send_trajectory_cli():
+    from argparse import ArgumentParser
+    parser = ArgumentParser()
+    parser.add_argument("input_file",type=str,action="store",help="Numpy file (.npy or pickled) with angles in format (q1,q2,q3,q4) to be used as trajectory")
+    parser.add_argument("--output_file","-o",type=str,action="store",help="Name of the output file",default="out_cont.npy")
+    parser.add_argument("--broker_ip","-bip",type=str,action="store",help="IP of the broker we want to connect to",default="192.168.1.104")#TO BE CHANGED
+
+    args = parser.parse_args()
+    input_file = args.input_file
+    output_file = args.output_file
+    ip = args.broker_ip
+    arr = np.load(input_file,allow_pickle=True)
+    n = arr.shape[0]
+    #1.- convert to json
+    handler = pyEDScorbotTool(visible=False,remote=True,savename=output_file)
+    client = handler.open_mqtt(ip)
+    handler.send_trajectory(input_file,n)
+    
+    
