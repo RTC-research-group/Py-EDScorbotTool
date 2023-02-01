@@ -140,13 +140,16 @@ class pyEDScorbotTool:
     '''
     py-EDScorbotTool software, replacement of jAER filter for EDScorbot
 
-    This class is used for establishing a communication with ED-Scorbot 
-    Robot in order to be able to control it via neuromorphic control, also called SPID
+    This class is used for establishing a communication with ED-Scorbot  
+    Robot framework in order to be able to control it remotely. It also provides
+    some functionality that helps convert data to and from the different data 
+    formats that are needed to use to move the robot.
 
     :ivar self.d: Dictionary in which there are stored the variables that allow for SPID configuration. Every input of the graphical interface corresponds to a variable that is stored in this dictionary. It contains three other dictionaries: Motor Config, Joints and Scan Parameters, which in turn hold the corresponding variables. The keys for the dictionaries are "Motor Config", "Joints" and "Scan Parameters", respectively.
     :ivar self.visible: Boolean variable that indicates whether the graphical interface should be rendered or not
     :ivar self.root: Root of the graphical interface's window
     :ivar self.checked_usb: Variable that holds the state of the checkbox that indicates whether USB is enabled or not.
+    
     '''
     def __init__(self,visible=True,remote=False,config_file=""):
         '''
@@ -3943,8 +3946,10 @@ class pyEDScorbotTool:
     
     def traj_to_json(self):
         '''
-        [[q1],q2],q3],q4] to [r1,r2,r3,r4,r5,r6] with padding
-        input file is .npy in qx format
+        This function asks the user to select a numpy file with the specified format below and converts it to JSON format compatible with the C/C++ runtime.
+        The name of the output file is also provided by the user. 
+        [q1],q2],q3],q4] to [r1,r2,r3,r4,r5,r6] with padding (0s for unused joints)
+        input file is .npy in [q1],q2],q3],q4] format
         '''
         
         filename = filedialog.askopenfile(mode="r")
@@ -3965,7 +3970,12 @@ class pyEDScorbotTool:
 
 
     def angles_to_ref(self):
-        
+        '''
+        This function asks the user to select a numpy file with the specified format below and converts it to their equivalent references per joint, maintaining format.
+        The name of the output file is also provided by the user. 
+        [q1],q2],q3],q4] to [r1],r2],r3],r4]
+        input file is .npy in [q1],q2],q3],q4] format
+        '''
         
         filename = filedialog.askopenfile(mode="r")
         real_name = filename.name.split("/")[-1]
@@ -3981,7 +3991,12 @@ class pyEDScorbotTool:
         pass
     
     def count_to_xyz_json(self):
-       
+        '''
+        This function asks the user to select a JSON counters file with the specified format below and converts it a 3D trajectory, point per point.
+        The name of the output file is also provided by the user. 
+        [j1,j2,j3,j4,j5,j6,timestamp] to [x,y,z]
+        input file is .json [j1,j2,j3,j4,j5,j6,timestamp] format
+        '''
         
         filename = filedialog.askopenfile(mode="r")
         real_name = filename.name.split("/")[-1]
@@ -3994,7 +4009,12 @@ class pyEDScorbotTool:
         pass
 
     def count_to_xyz_npy(self):
-       
+        '''
+        This function asks the user to select a numpy counters file with the specified format below and converts it to a 3D trajectory, point per point.
+        The name of the output file is also provided by the user. 
+        [j1,j2,j3,j4,j5,j6] to [x,y,z]
+        input file is .json [j1,j2,j3,j4,j5,j6] format
+        '''
         
         filename = filedialog.askopenfile(mode="r")
         real_name = filename.name.split("/")[-1]
@@ -4008,7 +4028,12 @@ class pyEDScorbotTool:
 
 
     def count_to_angles_json(self):
-        
+        '''
+        This function asks the user to select a JSON counters file with the specified format below and converts it to their angle equivalent, point per point.
+        The name of the output file is also provided by the user.
+        [j1,j2,j3,j4,j5,j6,timestamp] to [q1,q2,q3,q4]
+        input file is .json [j1,j2,j3,j4,j5,j6,timestamp] format
+        '''
         
         filename = filedialog.askopenfile(mode="r")
         real_name = filename.name.split("/")[-1]
@@ -4020,7 +4045,12 @@ class pyEDScorbotTool:
         pass
 
     def count_to_angles_npy(self):
-        
+        '''
+        This function asks the user to select a numpy counters file with the specified format below and converts it to their angle equivalent, point per point.
+        The name of the output file is also provided by the user. 
+        [j1,j2,j3,j4,j5,j6,timestamp] to [x,y,z]
+        input file is .npy [j1,j2,j3,j4,j5,j6] format
+        '''
         
         filename = filedialog.askopenfile(mode="r")
         real_name = filename.name.split("/")[-1]
@@ -4032,6 +4062,12 @@ class pyEDScorbotTool:
         pass
     
     def angles_to_xyz(self):
+        '''
+        This function asks the user to select a numpy abgles file with the specified format below and converts it a 3D trajectory, point per point.
+        The name of the output file is also provided by the user. 
+        [q1,q2,q3,q4] to [x,y,z]
+        input file is .npy [q1,q2,q3,q4] format
+        '''
         filename = filedialog.askopenfile(mode="r")
         real_name = filename.name.split("/")[-1]
         angles = np.load(filename.name)   
@@ -4044,7 +4080,12 @@ class pyEDScorbotTool:
         self.alert("Saved output to file {}".format(savename))
     
     def w_to_angles(self):
-        
+        '''
+        This function asks the user to select a numpy trajectory file with data in units of angular velocity, with the specified format below and converts it to a position-based trajectory, point per point.
+        The name of the output file is also provided by the user. 
+        [w1],w2],w3],w4] to [q1],q2],q3],q4]
+        input file is .npy [w1],w2],w3],w4] format
+        '''
         
         filename = filedialog.askopenfile(mode="r")
         real_name = filename.name.split("/")[-1]
@@ -4056,12 +4097,19 @@ class pyEDScorbotTool:
         self.alert("Saved output to file {}".format(savename))
 
     def plot_traj_3d(self):
-
+        '''
+        This function asks the user to select a numpy trajectory file with the specified format below and represents the 3D trajectory in a matplotlib plot
+        input file is .npy [x,y,z] format
+        '''
         filename = filedialog.askopenfile(mode="r")
         xyz = np.load(filename.name,allow_pickle=True)
         plot3d(xyz[:,0],xyz[:,1],xyz[:,2],label="Trajectory data",title="3D Trajectory",order=False)
     
     def plot_counters(self):
+        '''
+        This function asks the user to select a counters trajectory file with the specified format below and represents them in a matplotlib plot
+        input file is .npy or .json [j1,j2,j3,j4,j5,j6] format
+        '''
         filename = filedialog.askopenfile(mode="r")
         if filename.name.lower().endswith('.json'):
             conts = np.array(json.load(open(filename.name,'r')))
@@ -4071,7 +4119,10 @@ class pyEDScorbotTool:
             self.alert("You tried to open an invalid file")
         plotcounters(conts[:,:-1],label="Counter data",title="")
     def plot_angles(self):
-
+        '''
+        This function asks the user to select an angles file with the specified format below and represents them in a matplotlib plot
+        input file is .npy [q1],q2],q3],q4] format
+        '''
         filename = filedialog.askopenfile(mode="r")
         angles = np.load(filename.name,allow_pickle=True)
         plotangles(angles,label="Angle data",title="Angle Space")
