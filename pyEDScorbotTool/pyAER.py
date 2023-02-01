@@ -36,64 +36,106 @@ from .utils.visualization.counters import plotcounters
 import pandas
 
 def on_connect(client, userdata, flags, rc):
-        global traj_name
-        global n
-        print("Connected with result code "+str(rc))
+    '''
+        Callback for successful connection of MQTT client "client" to a broker
 
-        # Subscribing in on_connect() means that if we lose the connection and
-        # reconnect then subscriptions will be renewed.
-        client.subscribe("EDScorbot/trajectory")
-        topic = "/EDScorbot/commands"
-        
- 
-        
-        
+        Prints out a success message and subscribes to "EDScorbot/trajectory" topic. 
+
+        Not a part of pyEDScorbotTool class. pyEDScorbot creates a paho-mqtt client and uses this and 
+        the on_message callbacks to manage itself, there is no need for these functions to go inside 
+        pyEDScorbot class.
+
+        Args:
+            client: The client that has successfully connected to a broker and has this function as its on_connect member
+            userdata: Dictionary that can contain arbitrary user data. The dictionary must have been defined when creating the mqtt client
+            and passed to it via the user_data_set function, which lets us pass a dictionary we have created as the userdata parameter to the client. 
+            This is needed to achieve parameterization within the MQTT processes, as the names of files that have to be transferred are themselves parameters which
+            are needed to be retrieved by some part of the MQTT callbacks.
+            flags: Not used
+            rc: Result code of connection
+            
+
+        '''
+    global traj_name
+    global n
+    print("Connected with result code "+str(rc))
+    
+    # Subscribing in on_connect() means that if we lose the connection and
+    # reconnect then subscriptions will be renewed.
+    client.subscribe("EDScorbot/trajectory")
+    topic = "/EDScorbot/commands"
+    
+
+    
+    
 
         # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
-        
-        parsed = msg.payload.decode('utf8').lstrip('[').rstrip(']').split(',')
-        #print(parsed)
-        #t.update()
-        #global i
-        #i+=1
+    '''
+        Callback for successful receival of message from "EDScorbot/trajectory" topic.
 
-        j1 = int(parsed[0])
-        j2 = int(parsed[1])
-        j3 = int(parsed[2])
-        j4 = int(parsed[3])
-        j5 = int(parsed[4])
-        j6 = int(parsed[5])
-        ts = int(parsed[6])
-        iter = int(parsed[7])
-        
-        
-        userdata['pos_data'].append([j1,j2,j3,j4,j5,j6,ts])
+        Takes the message/payload and extracts the relevant information from it. The expected format of these messages is [j1,j2,j3,j4,j5,j6,timestamp,iteration].
+        Trajectory information is stored in the userdata parameter to ensure proper collection throughout the entire trajectory.
+        When iteration < 0, trajectory has finished executing and all information collected is saved in a NumPy file (which can be set in `userdata['filename']`)
 
-        if int(iter) < 0:
-            arr = np.array(userdata['pos_data'])
-            userdata['pos_data'] = []
-           #name of folder in localhost where to save the data 
-            savename = filedialog.asksaveasfilename()
-            np.save(savename,arr[:-1])
-            #np.save("output_data.npy",arr[:-1])
-            userdata['progressbar'].stop()
-           #name of ouput file in remote server 
-            out_fname = userdata['filename'][:-5] + "_out_cont.json"
-            cmd = "scp -i /media/HDD/home/enrique/Proyectos/SMALL/zynq/zynq root@192.168.1.115:/home/root/refs_out_cont.json {}".format(os.path.join(savename,"out_cont.json"))
-            #cmd = "scp -i /media/HDD/home/enrique/Proyectos/SMALL/zynq/zynq {} root@192.168.1.115:/home/root/{}".format(filename.name,real_name)
-            os.system(cmd)
+        Not a part of pyEDScorbotTool class. pyEDScorbot creates a paho-mqtt client and uses this and 
+        the on_connect callbacks to manage itself, there is no need for these functions to go inside 
+        pyEDScorbot class.
+
+        Args:
+            client: The client that has successfully subscribed to and received a message from the "EDScorbot/trajectory" topic
+            userdata: Check `on_connect` description 
+            msg: Message that has been received from the topic, as a bytes object
             
-            #sys.exit()
-        if userdata['visible'] == True and iter > 0:
-            userdata['textbox'].insert(tk.END,msg.topic+" "+str(msg.payload) + "\n")
-            userdata['progressbar'].step()
-        elif userdata['visible'] == False and iter>0:
-            userdata['progressbar'].update()
+            
 
+        '''
+    parsed = msg.payload.decode('utf8').lstrip('[').rstrip(']').split(',')
+    #print(parsed)
+    #t.update()
+    #global i
+    #i+=1
 
-        print(msg.topic+" "+str(msg.payload))
+    j1 = int(parsed[0])
+    j2 = int(parsed[1])
+    j3 = int(parsed[2])
+    j4 = int(parsed[3])
+    j5 = int(parsed[4])
+    j6 = int(parsed[5])
+    ts = int(parsed[6])
+    iter = int(parsed[7])
+    
+    
+    userdata['pos_data'].append([j1,j2,j3,j4,j5,j6,ts])
+
+    if int(iter) < 0:
+        arr = np.array(userdata['pos_data'])
+        userdata['pos_data'] = []
+        #name of folder in localhost where to save the data 
+        savename = filedialog.asksaveasfilename()
+        np.save(savename,arr[:-1])
+        #np.save("output_data.npy",arr[:-1])
+        if userdata['visible']:
+
+            userdata['progressbar'].stop()
+        else:
+            userdata['progressbar'].close()
+        #name of ouput file in remote server 
+        out_fname = userdata['filename'][:-5] + "_out_cont.json"
+        cmd = "scp -i /media/HDD/home/enrique/Proyectos/SMALL/zynq/zynq root@192.168.1.115:/home/root/refs_out_cont.json {}".format(os.path.join(savename,"out_cont.json"))
+        #cmd = "scp -i /media/HDD/home/enrique/Proyectos/SMALL/zynq/zynq {} root@192.168.1.115:/home/root/{}".format(filename.name,real_name)
+        os.system(cmd)
         
+        #sys.exit()
+    if userdata['visible'] == True and iter > 0:
+        userdata['textbox'].insert(tk.END,msg.topic+" "+str(msg.payload) + "\n")
+        userdata['progressbar'].step()
+    elif userdata['visible'] == False and iter>0:
+        userdata['progressbar'].update()
+
+
+    print(msg.topic+" "+str(msg.payload))
+    
 class pyEDScorbotTool:
     '''
     py-EDScorbotTool software, replacement of jAER filter for EDScorbot
