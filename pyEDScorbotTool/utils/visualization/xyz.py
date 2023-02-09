@@ -26,8 +26,7 @@ def plot3d(x,y,z,label,title,order=False):
 
     plt.show()
         
-
-if __name__== '__main__':
+def main():
     parser = ArgumentParser()
     parser.add_argument("input_file",type=str,action="store",help="Numpy file with xyz output transformed from EDScorbot execution. Data file can include timestamps")
     parser.add_argument("--output_file","-o",type=str,action="store",help="Name of the output figure",default="3d_out.jpg")
@@ -50,3 +49,6 @@ if __name__== '__main__':
     xyz = np.load(input_file,allow_pickle=True)
     plot3d(xyz[:,0],xyz[:,1],xyz[:,2],label=label,title=title,order=order)
 
+if __name__ == "__main__":
+    import sys
+    sys.exit(main())
