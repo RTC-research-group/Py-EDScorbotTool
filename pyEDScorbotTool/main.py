@@ -15,3 +15,6 @@ def launch_gui():
     config.render_gui()
 
     pass
+
+if __name__ == "__main__":
+    launch_gui()
