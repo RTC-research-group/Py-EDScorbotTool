@@ -42,7 +42,7 @@ def cont_to_xyz_cli(args):
 
     pass
 
-if __name__== '__main__':
+def main():
 
     parser = ArgumentParser()
     parser.add_argument("input_file",type=str,action="store",help="JSON file with counters output in EDScorbot format n tuples of (j1,j2,j3,j4,j5,j6,timestamp) elements")
