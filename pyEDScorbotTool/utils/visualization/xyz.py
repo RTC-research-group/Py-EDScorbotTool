@@ -3,9 +3,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def plot3d(x,y,z,label,title,order=False):
+def plot3d(x,y,z,label="",title="",order=False,finish=True,f=None):
 
+    
     fig = plt.figure(figsize=(10,10))
+    
 
     ax = plt.axes(projection='3d')
     ax.set_title(title)
@@ -23,6 +25,36 @@ def plot3d(x,y,z,label,title,order=False):
     ax.set_zlim(0,1)
 
     ax.legend(loc='best')
+
+    
+    plt.show()
+
+def compare_plots(x1,y1,z1,x2,y2,z2,label1,label2,title,order=False):
+    
+    fig = plt.figure(figsize=(10,10))
+    
+
+    ax = plt.axes(projection='3d')
+    ax.set_title(title)
+    if order:
+        rang = np.arange(1,x1.shape[0]+1)*0.001
+        ax.scatter(x1,y1,z1,marker=".",label=label1,s=rang)
+        ax.scatter(x2,y2,z2,marker=",",label=label2,s=rang)
+    else:
+        ax.plot(x1,y1,z1,marker=".",label=label1)
+        ax.plot(x2,y2,z2,marker=",",label=label2)
+    ax.set_xlabel('X', linespacing=4)
+    ax.set_ylabel('Y', linespacing=4)
+    ax.set_zlabel('Z', linespacing=4)
+
+    ax.set_xlim(-1,1)
+    ax.set_ylim(-1,1)
+    ax.set_zlim(0,1)
+
+    ax.legend(loc='best')
+
+    
+    plt.show()
 
     plt.show()
         
