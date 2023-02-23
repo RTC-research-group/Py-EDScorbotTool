@@ -54,7 +54,7 @@ def cont_to_angle(conts,timestamps=False,visual=False):
         if timestamps:
             ts = row[6]
         
-        if visual:
+        if not visual:
             q1 = -(count_to_angle(1,c1) * np.pi/180)
             q2 = -(count_to_angle(2,c2) * np.pi/180)
         else:
@@ -65,8 +65,11 @@ def cont_to_angle(conts,timestamps=False,visual=False):
         
         qs.append([q1,q2,q3,q4])
         cs.append([c1,c2,c3,c4])
-        timestamps.append(ts)
-    return np.array(qs),np.array(cs),np.array(timestamps)
+        try:
+            timestamps.append(ts)
+        except:
+            pass 
+    return np.array(qs),np.array(cs)#,np.array(timestamps)
 
 
 
