@@ -8,7 +8,7 @@ import numpy as np
 import json as j
 
 def cont_to_xyz(cont,visual):
-    qs,cs,timestamps= cont_to_angle(cont,visual)
+    qs,cs= cont_to_angle(cont,visual)
 
     xyz,_ = angles_to_xyz(qs)
     return xyz
