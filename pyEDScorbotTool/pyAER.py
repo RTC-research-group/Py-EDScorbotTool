@@ -30,10 +30,12 @@ from .utils.transformations import angles_to_refs as a_to_r
 from .utils.transformations import angles_to_xyz as a_to_xyz
 from .utils.transformations import pad_trajectory 
 from .utils.transformations import omegas_to_angles as w_to_a
-from .utils.visualization.xyz import plot3d
+from .utils.visualization.xyz import plot3d,compare_plots
 from .utils.visualization.angles import plotangles
 from .utils.visualization.counters import plotcounters
+
 import pandas
+from pathlib import Path
 
 def on_connect(client, userdata, flags, rc):
     '''
@@ -103,6 +105,7 @@ def on_message(client, userdata, msg):
     j5 = int(parsed[4])
     j6 = int(parsed[5])
     ts = int(parsed[6])
+    global iter
     iter = int(parsed[7])
     
     
@@ -114,30 +117,44 @@ def on_message(client, userdata, msg):
         #name of folder in localhost where to save the data 
         if userdata['visible']:
             savename = filedialog.asksaveasfilename()
-        else:
-            savename = userdata['savename']
-        np.save(savename,arr[:-1])
-        #np.save("output_data.npy",arr[:-1])
-        if userdata['visible']:
-
             userdata['progressbar'].stop()
         else:
+            savename = userdata['savename']
             userdata['progressbar'].close()
+        np.save(savename,arr[:-1])
+        base = Path(os.environ['HOME'])
+        filename = base / Path(".tmp") / Path("trajectory_exec.txt")
+        os.mkdir(filename.parent)
+        with open(filename,'w') as f:
+            f.write("0")
+        #np.save("output_data.npy",arr[:-1])
+        
+
+            
+        
+            
         #name of ouput file in remote server 
-        out_fname = userdata['filename'][:-5] + "_out_cont.json"
-        cmd = "scp -i /media/HDD/home/enrique/Proyectos/SMALL/zynq/zynq root@192.168.1.115:/home/root/refs_out_cont.json {}".format(os.path.join(savename,"out_cont.json"))
+        fname = Path(userdata['filename'])
+        out_json_fname = fname.stem + "_out_cont.json"
+        json_abspath = fname.parent / out_json_fname
+        
+        #out_fname = userdata['filename'][:-5] + "_out_cont.json"
+        cmd = "scp -i /media/HDD/home/enrique/Proyectos/SMALL/zynq/zynq root@192.168.1.115:/home/root/{} {}".format(out_json_fname,json_abspath)
         #cmd = "scp -i /media/HDD/home/enrique/Proyectos/SMALL/zynq/zynq {} root@192.168.1.115:/home/root/{}".format(filename.name,real_name)
         os.system(cmd)
         
         #sys.exit()
     if userdata['visible'] == True and iter > 0:
         userdata['textbox'].insert(tk.END,msg.topic+" "+str(msg.payload) + "\n")
+        userdata['textbox'].see("end")
         userdata['progressbar'].step()
+        print(msg.topic+" "+str(msg.payload))
     elif userdata['visible'] == False and iter>0:
         userdata['progressbar'].update()
+        userdata['progressbar'].write(msg.topic+" "+str(msg.payload))
 
 
-    print(msg.topic+" "+str(msg.payload))
+    
     
 class pyEDScorbotTool:
     '''
@@ -148,11 +165,13 @@ class pyEDScorbotTool:
     some functionality that helps convert data to and from the different data 
     formats that are needed to use to move the robot.
 
-    :ivar self.d: Dictionary in which there are stored the variables that allow for SPID configuration. Every input of the graphical interface corresponds to a variable that is stored in this dictionary. It contains three other dictionaries: Motor Config, Joints and Scan Parameters, which in turn hold the corresponding variables. The keys for the dictionaries are "Motor Config", "Joints" and "Scan Parameters", respectively.
-    :ivar self.visible: Boolean variable that indicates whether the graphical interface should be rendered or not
-    :ivar self.root: Root of the graphical interface's window
-    :ivar self.checked_usb: Variable that holds the state of the checkbox that indicates whether USB is enabled or not.
-    
+    Args:
+        visible (bool): Boolean variable that indicates whether the graphical interface should be rendered or not. Default: True
+        remote (bool): Boolean variable to connect to MQTT broker in pyEDScorbotTool constructor. Usually used for non-GUI mode. Default: False
+        config_file (str): When specified, a string indicating if a custom configuration file should be used. Default: empty string (looks for initial_config.json)
+        savename (str): When specified, the name of the output .npy file that is generated after a trajectory is executed. Usually used for non-GUI mode. Default: `out.npy`
+        
+        
     '''
     def __init__(self,visible=True,remote=False,config_file="",savename="out.npy"):
         '''
@@ -161,7 +180,7 @@ class pyEDScorbotTool:
         Initializes GUI by creating the root Tk object, sets icon of the app,
         initializes data structures to hold the value of all variables that 
         are displayed, creating a dictionary (self.d) to access their values
-        and sets constants and handles needed for USB connection
+        and sets constants and handles needed for remote connection
         '''
         #Initialize GUI: create root Tk object
         self.visible = visible
@@ -170,9 +189,12 @@ class pyEDScorbotTool:
         
             #self.root = tk.Tk()
                 #Set the icon
-            self.root.iconphoto(False,tk.PhotoImage(file="./pyEDScorbotTool/atc.png"))
+            parent_folder = Path(__file__).parent
+            img_path = parent_folder / "atc.png"
+            self.root.iconphoto(False,tk.PhotoImage(file=img_path))
         else:
             self.root.withdraw()
+            self.filename=""
         #Create dictionaries where the interface data will be stored
         self.d = {}
         self.d["Motor Config"] = {}
@@ -197,7 +219,8 @@ class pyEDScorbotTool:
         self.PACKET_LENGTH = 64
         
         if config_file == "":
-            self.config_file = './pyEDScorbotTool/initial_config.json'
+            parent_folder = Path(__file__).parent
+            self.config_file = parent_folder / "initial_config.json"
         else:
             self.config_gile = config_file
 
@@ -213,6 +236,8 @@ class pyEDScorbotTool:
         logging.basicConfig(filemode='w',level=logging.INFO)
 
         self.savename = savename
+        self.filename = ""
+        self.mqtt_client = None
         #Progress bar
         #self.self.pb = None
 
@@ -222,6 +247,8 @@ class pyEDScorbotTool:
     def millis_now(self):
         '''
         This function returns the time at the moment of the call in milliseconds
+        Returns:
+            int: current time in milliseconds from 1/1/1970
         
         '''
         return (time.time()*1000) #time.time() returns seconds, so mult. by 1000 to get ms
@@ -463,7 +490,7 @@ class pyEDScorbotTool:
             ttk.Button(labelframe,text="Plot 3D trajectory",command=self.plot_traj_3d).grid(row=9,column=1,sticky=(tk.W,tk.E))
             ttk.Button(labelframe,text="Plot counters",command=self.plot_counters).grid(row=10,column=1,sticky=(tk.W,tk.E))
             ttk.Button(labelframe,text="Plot angles",command=self.plot_angles).grid(row=1,column=2,sticky=(tk.W,tk.E))
-            # ttk.Button(labelframe,text="ScanMotor6",command=self.scanMotor6).grid(row=2,column=2,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Compare plots",command=self.plt_compare).grid(row=2,column=2,sticky=(tk.W,tk.E))
             # ttk.Button(labelframe,text="Search_Home",command=self.search_Home_all).grid(row=3,column=2,sticky=(tk.W,tk.E))
             # ttk.Button(labelframe,text="Send_Home",command=self.send_Home_all).grid(row=4,column=2,sticky=(tk.W,tk.E))
             # ttk.Button(labelframe,text="SendFPGAReset",command=self.SendFPGAReset).grid(row=5,column=2,sticky=(tk.W,tk.E))
@@ -535,10 +562,14 @@ class pyEDScorbotTool:
         pass
 
     def send_trajectory(self,filename,n):
-        if self.checked_remote.get() == False:
-            self.alert("Remote mode must be activated")
-            return
 
+        if self.visible:
+            if self.checked_remote.get() == False:
+                self.alert("Remote mode must be activated")
+                return
+            elif self.checked_remote == False:
+                print("Remote mode must be activated")
+                return 
         
         real_name = filename.split("/")[-1]
         
@@ -553,7 +584,15 @@ class pyEDScorbotTool:
         msg = "[1,S,/home/root/{},{}]".format(real_name,n)
         self.filename = real_name
         self.mqtt_client.publish(self.topic,msg,qos=0)
-        
+        base = Path(os.environ['HOME'])
+        filename = base / Path(".tmp") / Path("trajectory_exec.txt")
+        try:
+            os.mkdir(filename.parent)
+        except FileExistsError as e:
+            pass
+
+        with open(filename,'w') as f:
+            f.write("1")
         
 
     def send_trajectory_button(self):
@@ -562,13 +601,18 @@ class pyEDScorbotTool:
             self.alert("Remote mode must be activated")
             return
         
+            
 
         filename = filedialog.askopenfile(mode="r")
         n = simpledialog.askinteger("Trajectory sender","Number of points of trajectory (integer)")
+        self.filename = filename.name
+        if type(self.mqtt_client) == type(None):
+            self.mqtt_client = self.open_mqtt("192.168.1.104")
         real_name = filename.name.split("/")[-1]
+
         cmd = "scp -i /media/HDD/home/enrique/Proyectos/SMALL/zynq/zynq {} root@192.168.1.115:/home/root/{}".format(filename.name,real_name)
         os.system(cmd)
-        self.send_trajectory(filename,n)
+        self.send_trajectory(filename.name,n)
 
         
         
@@ -721,21 +765,26 @@ class pyEDScorbotTool:
         If it hasn't, it disconnects from the broker
         '''
         #Check if USB is enabled
-
+        #GUI is visible
         if self.visible:
 
             if self.checked_remote.get() == False:
                 #If not, close the connection
-                self.close_mqtt()
-        elif self.checked_remote == False:
-                self.close_mqtt()
-        
+                self.close_mqtt()        
+            
+                
+
         else:
             
             #If remote usage is enabled, try to connect to mqtt broker
-            if self.visible:
-                self.checked_usb.set(False)
-            self.mqtt_client = self.open_mqtt("192.168.1.104")
+            if self.checked_remote == False:
+                self.close_mqtt()
+
+
+            else:
+                self.mqtt_client = self.open_mqtt("192.168.1.104")
+                
+            
             #self.mqtt_client = self.open_mqtt("150.214.140.189")
 
     
@@ -748,7 +797,7 @@ class pyEDScorbotTool:
         client.on_message = on_message
         if not self.visible:
             self.textbox = None
-            self.pb = tqdm.tqdm()
+            self.pb = tqdm.tqdm(file=sys.stdout,leave=False)
             
         d = {
             'visible':self.visible,
@@ -3811,50 +3860,50 @@ class pyEDScorbotTool:
         # pass
 
 
-    def devmem(self,addr,length,data=None):
-        cmd = "devmem " + hex(addr) + " " + str(length)
-        if data is not None:
-            cmd += " " + str(data)
+    # def devmem(self,addr,length,data=None):
+    #     cmd = "devmem " + hex(addr) + " " + str(length)
+    #     if data is not None:
+    #         cmd += " " + str(data)
 
-        print("Executing command: ",cmd)  
+    #     print("Executing command: ",cmd)  
 
-        #system(cmd)
-        proc = subprocess.Popen(cmd.split(' '), stdout=subprocess.PIPE)
-        tmp = proc.stdout.read()
-        return tmp
+    #     #system(cmd)
+    #     proc = subprocess.Popen(cmd.split(' '), stdout=subprocess.PIPE)
+    #     tmp = proc.stdout.read()
+    #     return tmp
   
-    def execute_script(self,script):
-        cmd = script
-        proc = proc = subprocess.Popen(cmd.split(' '), stdout=subprocess.PIPE)
-        tmp = proc.stdout.read()
-        return tmp
+    # def execute_script(self,script):
+    #     cmd = script
+    #     proc = proc = subprocess.Popen(cmd.split(' '), stdout=subprocess.PIPE)
+    #     tmp = proc.stdout.read()
+    #     return tmp
         
 
-    def calculate_error(self,motor, gt, cmd, t='ref'):
-        if t not in ['ref','angle','counter']:
-            raise TypeError('Type not supported. Type must be one of ["ref","angle","counter"]')
-        else:
-            if t=='ref':
-                #Convert ground truth to ref
-                gt = self.count_to_ref(motor,gt)
-                pass
-            elif t =='angle':
-                #Convert both to angles
-                cmd = self.ref_to_angle(motor,cmd)
-                gt = self.count_to_angle(motor,gt)
-                pass
-            elif t=='counter':
-                #Convert commanded to counter 
-                cmd = self.ref_to_count(motor,cmd)
-                pass
+    # def calculate_error(self,motor, gt, cmd, t='ref'):
+    #     if t not in ['ref','angle','counter']:
+    #         raise TypeError('Type not supported. Type must be one of ["ref","angle","counter"]')
+    #     else:
+    #         if t=='ref':
+    #             #Convert ground truth to ref
+    #             gt = self.count_to_ref(motor,gt)
+    #             pass
+    #         elif t =='angle':
+    #             #Convert both to angles
+    #             cmd = self.ref_to_angle(motor,cmd)
+    #             gt = self.count_to_angle(motor,gt)
+    #             pass
+    #         elif t=='counter':
+    #             #Convert commanded to counter 
+    #             cmd = self.ref_to_count(motor,cmd)
+    #             pass
         
-            error = []
-            for ground_truth,command in zip(gt,cmd):
-                rmse = np.sqrt(np.mean((command - ground_truth)**2))
-                error.append(rmse)
+    #         error = []
+    #         for ground_truth,command in zip(gt,cmd):
+    #             rmse = np.sqrt(np.mean((command - ground_truth)**2))
+    #             error.append(rmse)
             
                 
-        return error
+    #     return error
         
     @staticmethod
     def count_to_ref(motor,count):
@@ -4139,6 +4188,18 @@ class pyEDScorbotTool:
         angles = np.load(filename.name,allow_pickle=True)
         plotangles(angles,label="Angle data",title="Angle Space")
         pass
+    
+    def plt_compare(self):
+        filename1 = filedialog.askopenfile(mode="r",title="Source XYZ")
+        filename2 = filedialog.askopenfile(mode="r",title="Output XYZ")
+        
+        xyz1 = np.load(filename1.name,allow_pickle=True)
+        xyz2 = np.load(filename2.name,allow_pickle=True)
+        p = Path(filename1.name)
+        compare_plots(xyz1[:,0],xyz1[:,1],xyz1[:,2],xyz2[:,0],xyz2[:,1],xyz2[:,2],label1="Commanded",label2="Collected",title="3D comparison\n({})".format(p.parent.name))
+
+    
+
 
 # if __name__ == "__main__":
 
@@ -4149,6 +4210,8 @@ class pyEDScorbotTool:
 #     pass
 
 def send_trajectory_cli():
+    global iter
+    iter = 1
     from argparse import ArgumentParser
     parser = ArgumentParser()
     parser.add_argument("input_file",type=str,action="store",help="Numpy file (.npy or pickled) with angles in format (q1,q2,q3,q4) to be used as trajectory")
@@ -4156,17 +4219,33 @@ def send_trajectory_cli():
     parser.add_argument("--broker_ip","-bip",type=str,action="store",help="IP of the broker we want to connect to",default="192.168.1.104")#TO BE CHANGED
 
     args = parser.parse_args()
-    input_file = args.input_file
-    output_file = args.output_file
+    input_file = Path(args.input_file)
+    output_file = Path(args.output_file)
+
     ip = args.broker_ip
     arr = np.load(input_file,allow_pickle=True)
     n = arr.shape[0]
     #1.- convert to json
     handler = pyEDScorbotTool(visible=False,remote=True,savename=output_file)
-    client = handler.open_mqtt(ip)
-    real_name = input_file.split("/")[-1]
-    cmd = "scp -i /media/HDD/home/enrique/Proyectos/SMALL/zynq/zynq {} root@192.168.1.115:/home/root/{}".format(input_file,real_name)
-    os.system(cmd)
-    handler.send_trajectory(input_file,n)
+    handler.filename = input_file
+    handler.mqtt_client = handler.open_mqtt(ip)
+    arr = np.load(input_file)
+    df = pandas.DataFrame(arr)
+    out = a_to_j.angles_to_json(df)
+    real_name = input_file.name.split("/")[-1]
+    mid_json_fname = input_file.stem + "_refs.json"
+    json_abspath = input_file.parent / mid_json_fname
+    f = open(json_abspath,"w")
     
+    js = json.dump(out.tolist(),f,indent=4)
+        
+    f.close()
+    
+    cmd = "scp -i /media/HDD/home/enrique/Proyectos/SMALL/zynq/zynq {} root@192.168.1.115:/home/root/{}".format(json_abspath,mid_json_fname)
+    os.system(cmd)
+    
+    handler.send_trajectory(json_abspath.name,n)
+    
+    while(iter >= 0):
+        time.sleep(0.25)
     
