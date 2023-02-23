@@ -7,6 +7,24 @@ sys.path.append(os.path.abspath("/media/HDD/home/enrique/Proyectos/SMALL/dataset
 #from pyAER import pyEDScorbotTool
 from visual_kinematics.RobotSerial import RobotSerial
 
+def direcKin(q1,q2,q3,q4):
+    a1 = 5.0
+    a2 = 30
+    a3 = 35
+    a4 = 22
+    d1 = 35.85
+    d2 = -9.8
+    d3 = 6.5
+    x= a1*np.cos(q1) + a2*np.cos(q1)*np.cos(q2) - a3*np.sin(q2)*np.sin(q3)*np.cos(q1) + a3*np.cos(q1)*np.cos(q2)*np.cos(q3) + a4*(-np.sin(q2)*np.sin(q3)*np.cos(q1) + np.cos(q1)*np.cos(q2)*np.cos(q3))*np.cos(q4) + a4*(-np.sin(q2)*np.cos(q1)*np.cos(q3) - np.sin(q3)*np.cos(q1)*np.cos(q2))*np.sin(q4) - d2*np.sin(q1) - d3*np.sin(q1)
+
+
+    y= a1*np.sin(q1) + a2*np.sin(q1)*np.cos(q2) - a3*np.sin(q1)*np.sin(q2)*np.sin(q3) + a3*np.sin(q1)*np.cos(q2)*np.cos(q3) + a4*(-np.sin(q1)*np.sin(q2)*np.sin(q3) + np.sin(q1)*np.cos(q2)*np.cos(q3))*np.cos(q4) + a4*(-np.sin(q1)*np.sin(q2)*np.cos(q3) - np.sin(q1)*np.sin(q3)*np.cos(q2))*np.sin(q4) + d2*np.cos(q1) + d3*np.cos(q1)
+
+
+    z= -a2*np.sin(q2) - a3*np.sin(q2)*np.cos(q3) - a3*np.sin(q3)*np.cos(q2) + a4*(np.sin(q2)*np.sin(q3) - np.cos(q2)*np.cos(q3))*np.sin(q4) + a4*(-np.sin(q2)*np.cos(q3) - np.sin(q3)*np.cos(q2))*np.cos(q4) + d1
+
+    return x,y,z
+
 def angles_to_xyz(angles):
 
     dh_params = np.array([[0.3585, 0.05, -0.5 * np.pi, 23.6*(np.pi/180)],
@@ -15,7 +33,16 @@ def angles_to_xyz(angles):
                       [0., 0.22, 0., 0.]])
     robot = RobotSerial(dh_params)
     
-    
+    if angles.shape[1] != 4:
+        aux = np.zeros(shape=(angles.shape[0],4)) 
+        try:
+            aux [:,0] = angles[:,0]  
+            aux [:,1] = angles[:,1]  
+            aux [:,2] = angles[:,2]  
+            aux [:,3] = angles[:,3]  
+        except:
+            pass
+        angles = aux
     qs = []
     xyz = []
     
@@ -28,8 +55,10 @@ def angles_to_xyz(angles):
         
         theta = np.array([q1,q2,q3,q4])
         f = robot.forward(theta)      
-        #xyz.append(DirecKinScorbot(q1,q2,q3,q4))
-        xyz.append(f.t_3_1.reshape([3, ]))
+        
+        x,y,z = direcKin(q1,q2,q3,q4)
+        xyz.append([x/100,y/100,z/100])
+       # xyz.append(f.t_3_1.reshape([3, ]))
         qs.append([q1,q2,q3,q4])
         
     return np.array(xyz),(np.array(qs)*(180/np.pi))
