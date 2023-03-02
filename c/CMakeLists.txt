@@ -13,6 +13,11 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(argparse)
 
+execute_process(
+    COMMAND bash "-c" "../mosquitto_build.sh" 
+    OUTPUT_VARIABLE FOO
+)
+
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++17)
