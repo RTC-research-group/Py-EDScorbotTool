@@ -24,7 +24,7 @@ typedef struct
 
 progress_info progress;
 
-void parse_command(char *command, int *t, char *m, char *url, int *n);
+void parse_command(char *command, int *t, char *m, char *url, int *n,int* sleep);
 void ftp_trajectory(char *url);
 void handle_signal(int s)
 {
@@ -48,15 +48,20 @@ void message_callback(struct mosquitto *mosq, void *obj, const struct mosquitto_
 		printf("got message for /EDScorbot/commands topic\n");
 #endif
 
-		int type, n;
+		int type, n, sleep;
 		char mode;
 		char url[100];
-		parse_command((char *)message->payload, &type, &mode, url, &n);
+		parse_command((char *)message->payload, &type, &mode, url, &n,&sleep);
 		progress.type = type;
 		progress.mode = mode;
 		progress.payload = url;
 		progress.last = 1;
 		char *cmd, *out_fname;
+		//[1,S,/home/root/puntos.json]
+		//type = 1
+		// mode = S
+		//url = /home/root/puntos.json
+		
 		switch (progress.type)
 		{
 		case 1:
@@ -79,7 +84,7 @@ void message_callback(struct mosquitto *mosq, void *obj, const struct mosquitto_
 					}
 				}
 
-				snprintf(cmd, 512, "/home/root/trajectory -c /home/root/initial_config.json -n %d -p 100 -cont %s %s > log.txt &", n,out_fname,progress.payload);
+				snprintf(cmd, 512, "/home/root/trajectory -c /home/root/initial_config.json -n %d -p 100 -cont %s -s %d %s > log.txt &", n,out_fname,sleep*1000,progress.payload);
 				printf("%s",cmd);
 				system(cmd);
 			}
@@ -112,7 +117,7 @@ void message_callback(struct mosquitto *mosq, void *obj, const struct mosquitto_
 	}
 }
 
-void parse_command(char *command, int *t, char *m, char *url, int *n)
+void parse_command(char *command, int *t, char *m, char *url, int *n,int *sleep)
 {
 
 	char *pch;
@@ -128,12 +133,15 @@ void parse_command(char *command, int *t, char *m, char *url, int *n)
 	strcpy(url, pch);
 	pch = strtok(NULL, "[],");
 	*n = atoi(pch);
+	pch = strtok(NULL, "[],");
+	*sleep = atoi(pch);
 // url = buf;
 #ifdef EDS_VERBOSE
 
 	printf("type: %d\n", type);
 	printf("mode: %c\n", mode);
 	printf("url: %s\n", url);
+	printf("n: %d\n", *n);
 
 #endif
 }
