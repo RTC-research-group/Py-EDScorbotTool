@@ -132,6 +132,7 @@ dmypy.json
 
 c/src/json
 c/json
+c/mosquitto
 
 docs/
 
