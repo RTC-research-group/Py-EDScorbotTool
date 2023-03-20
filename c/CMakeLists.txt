@@ -18,6 +18,8 @@ FetchContent_MakeAvailable(argparse)
 add_compile_options(-std=c++17)
 
 add_subdirectory("json")
+add_subdirectory("mosquitto")
+
 #add_subdirectory("src/include")
 add_subdirectory("src/trajectory")
 add_subdirectory("src/mqtt_server")
