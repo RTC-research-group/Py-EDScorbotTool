@@ -60,6 +60,7 @@ def on_connect(client, userdata, flags, rc):
         '''
     global traj_name
     global n
+    
     print("Connected with result code "+str(rc))
     
     # Subscribing in on_connect() means that if we lose the connection and
@@ -92,6 +93,7 @@ def on_message(client, userdata, msg):
             
 
         '''
+    
     parsed = msg.payload.decode('utf8').lstrip('[').rstrip(']').split(',')
     #print(parsed)
     #t.update()
@@ -110,8 +112,10 @@ def on_message(client, userdata, msg):
     
     
     userdata['pos_data'].append([j1,j2,j3,j4,j5,j6,ts])
-
+    global running
+    
     if int(iter) < 0:
+        running = False
         arr = np.array(userdata['pos_data'])
         userdata['pos_data'] = []
         #name of folder in localhost where to save the data 
@@ -123,8 +127,8 @@ def on_message(client, userdata, msg):
             userdata['progressbar'].close()
         np.save(savename,arr[:-1])
         base = Path(os.environ['HOME'])
-        filename = base / Path(".tmp") / Path("trajectory_exec.txt")
-        os.mkdir(filename.parent)
+        filename = base / Path(".tmp") / Path("trajectory_execution.txt")
+        os.makedirs(filename.parent,exist_ok=True)
         with open(filename,'w') as f:
             f.write("0")
         #np.save("output_data.npy",arr[:-1])
@@ -145,11 +149,14 @@ def on_message(client, userdata, msg):
         
         #sys.exit()
     if userdata['visible'] == True and iter > 0:
+        
+        running = True
         userdata['textbox'].insert(tk.END,msg.topic+" "+str(msg.payload) + "\n")
         userdata['textbox'].see("end")
         userdata['progressbar'].step()
         print(msg.topic+" "+str(msg.payload))
     elif userdata['visible'] == False and iter>0:
+        running = True
         userdata['progressbar'].update()
         userdata['progressbar'].write(msg.topic+" "+str(msg.payload))
 
@@ -173,7 +180,7 @@ class pyEDScorbotTool:
         
         
     '''
-    def __init__(self,visible=True,remote=False,config_file="",savename="out.npy"):
+    def __init__(self,visible=True,remote=False,config_file="",savename="out_cont.npy"):
         '''
         Constructor
 
@@ -491,7 +498,7 @@ class pyEDScorbotTool:
             ttk.Button(labelframe,text="Plot counters",command=self.plot_counters).grid(row=10,column=1,sticky=(tk.W,tk.E))
             ttk.Button(labelframe,text="Plot angles",command=self.plot_angles).grid(row=1,column=2,sticky=(tk.W,tk.E))
             ttk.Button(labelframe,text="Compare plots",command=self.plt_compare).grid(row=2,column=2,sticky=(tk.W,tk.E))
-            # ttk.Button(labelframe,text="Search_Home",command=self.search_Home_all).grid(row=3,column=2,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Fix center & Plot",command=self.plot_center).grid(row=3,column=2,sticky=(tk.W,tk.E))
             # ttk.Button(labelframe,text="Send_Home",command=self.send_Home_all).grid(row=4,column=2,sticky=(tk.W,tk.E))
             # ttk.Button(labelframe,text="SendFPGAReset",command=self.SendFPGAReset).grid(row=5,column=2,sticky=(tk.W,tk.E))
             # ttk.Button(labelframe,text="SetAERIN_ref",command=self.SetAERIN_ref).grid(row=6,column=2,sticky=(tk.W,tk.E))
@@ -561,7 +568,7 @@ class pyEDScorbotTool:
 
         pass
 
-    def send_trajectory(self,filename,n):
+    def send_trajectory(self,filename,n,sleep):
 
         if self.visible:
             if self.checked_remote.get() == False:
@@ -581,11 +588,11 @@ class pyEDScorbotTool:
             self.pb["maximum"] = n
         else:
             self.pb.total = n
-        msg = "[1,S,/home/root/{},{}]".format(real_name,n)
+        msg = "[1,S,/home/root/{},{},{}]".format(real_name,n,sleep)
         self.filename = real_name
         self.mqtt_client.publish(self.topic,msg,qos=0)
         base = Path(os.environ['HOME'])
-        filename = base / Path(".tmp") / Path("trajectory_exec.txt")
+        filename = base / Path(".tmp") / Path("trajectory_execution.txt")
         try:
             os.mkdir(filename.parent)
         except FileExistsError as e:
@@ -4197,9 +4204,27 @@ class pyEDScorbotTool:
         xyz2 = np.load(filename2.name,allow_pickle=True)
         p = Path(filename1.name)
         compare_plots(xyz1[:,0],xyz1[:,1],xyz1[:,2],xyz2[:,0],xyz2[:,1],xyz2[:,2],label1="Commanded",label2="Collected",title="3D comparison\n({})".format(p.parent.name))
-
     
+    @staticmethod 
+    def fix_center(orig,out):
+        diff_x = out[0,0] - orig[0,0]  
+        diff_y = out[0,1] - orig[0,1]  
+        diff_z = out[0,2] - orig[0,2]  
 
+        out[:,0] = out[:,0]-diff_x
+        out[:,1] = out[:,1]-diff_y
+        out[:,2] = out[:,2]-diff_z  
+
+        return out
+
+    def plot_center(self):
+        filename1 = filedialog.askopenfile(mode="r",title="Source XYZ")
+        filename2 = filedialog.askopenfile(mode="r",title="Output XYZ")
+        xyz1 = np.load(filename1.name,allow_pickle=True)
+        xyz2 = np.load(filename2.name,allow_pickle=True)
+
+        out = self.fix_center(xyz1,xyz2)
+        compare_plots(xyz1[:,0],xyz1[:,1],xyz1[:,2],out[:,0],out[:,1],out[:,2],label1="Commanded",label2="Collected",title="3D comparison")
 
 # if __name__ == "__main__":
 
@@ -4211,30 +4236,31 @@ class pyEDScorbotTool:
 
 def send_trajectory_cli():
     global iter
+    global running
     iter = 1
     from argparse import ArgumentParser
     parser = ArgumentParser()
-    parser.add_argument("input_file",type=str,action="store",help="Numpy file (.npy or pickled) with angles in format (q1,q2,q3,q4) to be used as trajectory")
+    parser.add_argument("input_dir",type=str,action="store",help="Numpy file (.npy or pickled) with angles in format (q1,q2,q3,q4) to be used as trajectory")
     parser.add_argument("--output_file","-o",type=str,action="store",help="Name of the output file",default="out_cont.npy")
-    parser.add_argument("--broker_ip","-bip",type=str,action="store",help="IP of the broker we want to connect to",default="192.168.1.104")#TO BE CHANGED
+    parser.add_argument("--broker_ip","-ip",type=str,action="store",help="IP of the broker we want to connect to",default="192.168.1.104")#TO BE CHANGED
 
     args = parser.parse_args()
-    input_file = Path(args.input_file)
+    input_dir = Path(args.input_dir)
     output_file = Path(args.output_file)
 
     ip = args.broker_ip
-    arr = np.load(input_file,allow_pickle=True)
+    arr = np.load(input_dir,allow_pickle=True)
     n = arr.shape[0]
     #1.- convert to json
     handler = pyEDScorbotTool(visible=False,remote=True,savename=output_file)
-    handler.filename = input_file
+    handler.filename = input_dir
     handler.mqtt_client = handler.open_mqtt(ip)
-    arr = np.load(input_file)
+    arr = np.load(input_dir)
     df = pandas.DataFrame(arr)
     out = a_to_j.angles_to_json(df)
-    real_name = input_file.name.split("/")[-1]
-    mid_json_fname = input_file.stem + "_refs.json"
-    json_abspath = input_file.parent / mid_json_fname
+    real_name = input_dir.name.split("/")[-1]
+    mid_json_fname = input_dir.stem + "_refs.json"
+    json_abspath = input_dir.parent / mid_json_fname
     f = open(json_abspath,"w")
     
     js = json.dump(out.tolist(),f,indent=4)
@@ -4248,4 +4274,105 @@ def send_trajectory_cli():
     
     while(iter >= 0):
         time.sleep(0.25)
+    
+
+def process_dataset_dir():
+    #añadir logging
+    from argparse import ArgumentParser
+    import pandas as pd
+    parser = ArgumentParser()
+    parser.add_argument("input_dir",type=str,action="store",help="Root directory with dataset structure")
+    parser.add_argument("weight",type=str,action="store",help="Name of the output file",default="out_cont.npy")
+    parser.add_argument("--broker_ip","-ip",type=str,action="store",help="IP of the broker we want to connect to",default="192.168.1.104")#TO BE CHANGED
+    parser.add_argument("--visual_kin","-vk",action="store_true",help="Flag to indicate if trajectories were generated with visual kinematics framework",default=False)#TO BE CHANGED
+    args = parser.parse_args()
+    input_dir = Path(args.input_dir)
+   # output_file = Path(args.output_file)
+
+    ip = args.broker_ip
+    weight = args.weight
+    visual = args.visual_kin
+    # 
+    handler = pyEDScorbotTool(visible=False,remote=True,savename="out_cont.npy")
+    handler.mqtt_client = handler.open_mqtt(ip)
+    global running
+    with open("/media/lara/Dataset_SMALL/Shared/wpython.txt",'w') as f:
+            f.write("2")
+    for angle_path in sorted(input_dir.rglob("angles.npy")):
+        out_path = angle_path.parent / "out_cont.npy"
+        if out_path.exists():
+            continue
+        arr = np.load(angle_path,allow_pickle=True)
+        n = arr.shape[0]
+        #df = pd.DataFrame(arr)
+        padded_refs = a_to_j.angles_to_json(arr,visual=visual)
+        real_name = angle_path.name
+        mid_json_fname = angle_path.stem+"_refs.json"
+        json_abspath = angle_path.parent/mid_json_fname
+        f = open(json_abspath,"w")
+    
+        js = json.dump(padded_refs.tolist(),f,indent=4)
+        
+        f.close()
+        #escribir los datos con open -- write --close
+        #cmd = "echo {} > /media/lara/Dataset_SMALL/Shared/current.txt".format(angle_path.parent)
+        with open("/media/lara/Dataset_SMALL/Shared/wpython.txt",'w') as f:
+            f.write("{}".format(Path(*angle_path.parts[3:]).parent))
+        #os.system(cmd)
+        handler.mqtt_client._userdata['savename'] = angle_path.parent / "out_cont.npy"
+        handler.mqtt_client._userdata['filename'] = angle_path.parent / json_abspath.name
+        
+        print("Echo dir > current.txt")
+        state = 0
+        while state != 1:
+            with open('/media/lara/Dataset_SMALL/Shared/wjaer.txt','r',encoding='ascii') as f:
+                r = f.readline()
+                try:
+                    state = int(r)
+                except ValueError:
+                    state = 0
+                    pass
+                time.sleep(0.1)
+        
+        with open("/media/lara/Dataset_SMALL/Shared/wpython.txt",'w') as f:
+            f.write("2")
+
+        print("State = 1")       
+            
+
+
+        cmd = "scp -i /media/HDD/home/enrique/Proyectos/SMALL/zynq/zynq {} root@192.168.1.115:/home/root/{}".format(json_abspath,mid_json_fname)
+        os.system(cmd)
+        running = True
+        print("Scp json --> zynq")
+
+        cmd = '/bin/bash /media/HDD/home/enrique/Proyectos/SMALL/scripts_camaras/run_all_record.bash {}'.format(angle_path.parent)
+        os.system(cmd)
+        print("Camaras grabando")
+
+        handler.send_trajectory(json_abspath.name,n,angle_path.parent.name)
+        print("Trayectoria enviada")
+        while running:
+            while state != 2:
+                with open('/media/lara/Dataset_SMALL/Shared/wjaer.txt','r',encoding="ascii") as f:
+                    r = f.readline()
+                    try:
+                        state = int(r)
+                    except ValueError:
+                        state = 0
+                        pass
+                time.sleep(1)
+        
+        # base = Path(os.environ['HOME'])
+        # filename = base / Path(".tmp") / Path("trajectory_execution.txt")
+        # os.makedirs(filename.parent,exist_ok=True)
+        # with open(filename,'w') as f:
+        #     f.write("0")
+
+        #cmd = "echo 0 > /media/lara/Dataset_SMALL/Shared/current.txt"
+        # with open("/media/lara/Dataset_SMALL/Shared/wpython.txt",'w') as f:
+        #     f.write("0")
+    #1.- convert to json
+    
+   # handler.filename = input_dir
     
