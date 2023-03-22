@@ -619,7 +619,7 @@ class pyEDScorbotTool:
 
         cmd = "scp -i /media/HDD/home/enrique/Proyectos/SMALL/zynq/zynq {} root@192.168.1.115:/home/root/{}".format(filename.name,real_name)
         os.system(cmd)
-        self.send_trajectory(filename.name,n)
+        self.send_trajectory(filename.name,n,sleep=125)
 
         
         
