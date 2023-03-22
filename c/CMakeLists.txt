@@ -14,7 +14,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(argparse)
 
 execute_process(
-    COMMAND bash "-c" "../mosquitto_build.sh" 
+    COMMAND bash "-c" "./mosquitto_build.sh" 
     OUTPUT_VARIABLE FOO
 )
 
@@ -56,7 +56,8 @@ add_executable(send_home src/scripts/send_0.cpp src/EDScorbot/EDScorbot.cpp src/
 add_executable(sendRef src/scripts/sendRefJx.cpp src/EDScorbot/EDScorbot.cpp src/EDScorbot/devmem.cpp ${HEADER_FILES})
 
 #add_executable(trajectory src/trajectory.cpp src/EDScorbot.cpp src/devmem.cpp)
-# add_executable(mqtt_client src/mqtt_client.c)
+add_executable(mqtt_client src/test_scripts/mqtt_client.cpp ${HEADER_FILES})
+add_executable(mqtt_parser_json src/test_scripts/mqtt_json_parser.cpp ${HEADER_FILES})
 
 
 
@@ -90,6 +91,9 @@ target_include_directories(send_home PUBLIC "src" "./")
 target_include_directories(test_argparse PUBLIC "src" "./")
 
 target_include_directories(sendRef PUBLIC "src" "./" "${CMAKE_CURRENT_SOURCE_DIR}/json/single_include/")
+target_include_directories(mqtt_client PUBLIC "src" "./" "${CMAKE_CURRENT_SOURCE_DIR}/json/single_include/")
+target_include_directories(mqtt_parser_json PUBLIC "src" "./" "${CMAKE_CURRENT_SOURCE_DIR}/json/single_include/")
+
 
 #target_include_directories(reset PUBLIC "c/src/include")
 
@@ -121,11 +125,20 @@ TARGET_LINK_LIBRARIES(test_argparse PUBLIC argparse)
 TARGET_LINK_LIBRARIES(test_argparse PRIVATE argparse nlohmann_json::nlohmann_json)
 
 
+#TARGET_LINK_LIBRARIES(mqtt_client PRIVATE nlohmann_json::nlohmann_json ${CMAKE_CURRENT_SOURCE_DIR}/../../lib/libmosquitto_static.a -lpthread)
+
+
+#librerias compiladas para x86-x64 
+#TARGET_LINK_LIBRARIES(mqtt_client PRIVATE nlohmann_json::nlohmann_json /home/enrique/mosquitto/build/lib/libmosquitto_static.a -lpthread)
+
+
 
 SET(CMAKE_BUILD_TYPE "Debug")
 # TARGET_LINK_LIBRARIES(server PRIVATE nlohmann_json::nlohmann_json)
 #TARGET_LINK_LIBRARIES(trajectory PRIVATE nlohmann_json::nlohmann_json)
-# TARGET_LINK_LIBRARIES(mqtt_client /home/enrique/Trabajo/Py-EDScorbotTool/c/compiled_libs_armhf/libmosquitto.a -lpthread)
+#librerías compiladas para armhf 
+TARGET_LINK_LIBRARIES(mqtt_client PRIVATE nlohmann_json::nlohmann_json /home/enrique/mosquitto/build/lib/libmosquitto_static.a -lpthread) 
+TARGET_LINK_LIBRARIES(mqtt_parser_json PRIVATE nlohmann_json::nlohmann_json  /home/enrique/mosquitto/build/lib/libmosquitto_static.a -lpthread)
 
 
 
