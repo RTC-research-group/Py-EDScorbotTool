@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.10)
 project(edscorbot_runtime)
 
 
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(Mosquitto IMPORTED_TARGET libmosquitto REQUIRED)
+#find_package(PkgConfig REQUIRED)
+#pkg_check_modules(Mosquitto IMPORTED_TARGET libmosquitto REQUIRED)
 
 
 ## Compile as C++11, supported in ROS Kinetic and newer
@@ -38,14 +38,17 @@ add_executable(mqtt_server mqtt_server.cpp ../EDScorbot/EDScorbot.cpp ../EDScorb
 
 
 
-target_include_directories(mqtt_server PUBLIC "../../json/single_include/")
+#target_include_directories(mqtt_server PUBLIC "../../json/single_include/")
 target_include_directories(mqtt_server PUBLIC "../")
 #target_include_directories(mqtt_server PUBLIC "/home/enrique/mosquitto-2.0.14/include")
-target_include_directories(mqtt_server PUBLIC "../../mosquitto/include")
+
+# commented because i have compiled mosquitto and included the header files in the project
+#target_include_directories(mqtt_server PUBLIC "../../mosquitto/include")
 
 #TARGET_LINK_LIBRARIES(test_target PRIVATE ${DV_LIBRARIES})
 #message("###########DIRECTORIO###########3: ${CMAKE_CURRENT_SOURCE_DIR}")
-TARGET_LINK_LIBRARIES(mqtt_server PRIVATE nlohmann_json::nlohmann_json ${CMAKE_CURRENT_SOURCE_DIR}/../../lib/libmosquitto_static.a -lpthread)
+#TARGET_LINK_LIBRARIES(mqtt_server PRIVATE nlohmann_json::nlohmann_json ${CMAKE_CURRENT_SOURCE_DIR}/../../lib/libmosquitto_static.a -lpthread)
+TARGET_LINK_LIBRARIES(mqtt_server PRIVATE /home/adalberto/Downloads/tmp/mosquitto/lib/libmosquitto.a -lpthread)
 
 #TARGET_LINK_LIBRARIES(mqtt_server )
 

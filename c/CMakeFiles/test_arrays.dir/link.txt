@@ -1,0 +1,1 @@
+/usr/bin/c++  -fPIC --static  -DEDS_VERBOSE -g CMakeFiles/test_arrays.dir/src/test_scripts/test_arrays.cpp.o -o test_arrays 

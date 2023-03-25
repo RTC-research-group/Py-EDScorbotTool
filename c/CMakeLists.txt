@@ -13,18 +13,19 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(argparse)
 
-execute_process(
-    COMMAND bash "-c" "../mosquitto_build.sh" 
-    OUTPUT_VARIABLE FOO
-)
+#execute_process(
+#    COMMAND bash "-c" "../mosquitto_build.sh" 
+#    OUTPUT_VARIABLE FOO
+#)
 
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++17)
 
-add_subdirectory("json")
+#add_subdirectory("json")
 #add_subdirectory("src/include")
-add_subdirectory("src/trajectory")
+# remove trajectory dolfer due to compilation problems(dependencies)
+#add_subdirectory("src/trajectory")
 add_subdirectory("src/mqtt_server")
 #set(nlohmann_json_DIR "/home/enrique/Trabajo/Py-EDScorbotTool/c/src/json/cmake")
 #find_package(nlohmann_json 3.10.5 REQUIRED)
@@ -58,6 +59,12 @@ add_executable(sendRef src/scripts/sendRefJx.cpp src/EDScorbot/EDScorbot.cpp src
 #add_executable(trajectory src/trajectory.cpp src/EDScorbot.cpp src/devmem.cpp)
 # add_executable(mqtt_client src/mqtt_client.c)
 
+#executable for mocked server
+add_executable(mocked_server src/mqtt_server/mocked_server.cpp)
+
+#executable for conversion tests of objects, json and strings (new model)
+
+add_executable(tests_json_objects src/test_scripts/test_json_objects.cpp)
 
 
 #add_library(image_generator SHARED src/Image_generator.cpp)
@@ -89,7 +96,14 @@ target_include_directories(send_home PUBLIC "src" "./")
 
 target_include_directories(test_argparse PUBLIC "src" "./")
 
-target_include_directories(sendRef PUBLIC "src" "./" "${CMAKE_CURRENT_SOURCE_DIR}/json/single_include/")
+#target_include_directories(sendRef PUBLIC "src" "./" "${CMAKE_CURRENT_SOURCE_DIR}/json/single_include/")
+target_include_directories(sendRef PUBLIC "src" "./")
+
+target_include_directories(mocked_server PUBLIC "src")
+target_include_directories(tests_json_objects PUBLIC "src")
+
+TARGET_LINK_LIBRARIES(mocked_server PRIVATE /home/adalberto/Downloads/tmp/mosquitto/lib/libmosquitto.a -lpthread )
+
 
 #target_include_directories(reset PUBLIC "c/src/include")
 
@@ -109,16 +123,18 @@ target_include_directories(sendRef PUBLIC "src" "./" "${CMAKE_CURRENT_SOURCE_DIR
 
 #TARGET_LINK_LIBRARIES(test_target PRIVATE ${DV_LIBRARIES})
 # TARGET_LINK_LIBRARIES(test_edscorbot PRIVATE nlohmann_json::nlohmann_json)
-TARGET_LINK_LIBRARIES(read_joints PRIVATE nlohmann_json::nlohmann_json)
-TARGET_LINK_LIBRARIES(test_json PRIVATE nlohmann_json::nlohmann_json)
 
-TARGET_LINK_LIBRARIES(home PRIVATE nlohmann_json::nlohmann_json)
+## commented because nlohmann lib has been compiled and installed with make install
+#TARGET_LINK_LIBRARIES(read_joints PRIVATE nlohmann_json::nlohmann_json)
+#TARGET_LINK_LIBRARIES(test_json PRIVATE nlohmann_json::nlohmann_json)
 
-TARGET_LINK_LIBRARIES(reset PRIVATE nlohmann_json::nlohmann_json)
-TARGET_LINK_LIBRARIES(send_home PRIVATE nlohmann_json::nlohmann_json)
+#TARGET_LINK_LIBRARIES(home PRIVATE nlohmann_json::nlohmann_json)
 
-TARGET_LINK_LIBRARIES(test_argparse PUBLIC argparse)
-TARGET_LINK_LIBRARIES(test_argparse PRIVATE argparse nlohmann_json::nlohmann_json)
+#TARGET_LINK_LIBRARIES(reset PRIVATE nlohmann_json::nlohmann_json)
+#TARGET_LINK_LIBRARIES(send_home PRIVATE nlohmann_json::nlohmann_json)
+
+#TARGET_LINK_LIBRARIES(test_argparse PUBLIC argparse)
+#TARGET_LINK_LIBRARIES(test_argparse PRIVATE argparse nlohmann_json::nlohmann_json)
 
 
 

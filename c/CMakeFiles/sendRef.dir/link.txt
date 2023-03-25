@@ -1,0 +1,1 @@
+/usr/bin/c++  -fPIC --static  -DEDS_VERBOSE -g CMakeFiles/sendRef.dir/src/scripts/sendRefJx.cpp.o CMakeFiles/sendRef.dir/src/EDScorbot/EDScorbot.cpp.o CMakeFiles/sendRef.dir/src/EDScorbot/devmem.cpp.o -o sendRef 

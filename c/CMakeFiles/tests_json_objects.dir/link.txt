@@ -1,0 +1,1 @@
+/usr/bin/c++  -fPIC --static  -DEDS_VERBOSE -g CMakeFiles/tests_json_objects.dir/src/test_scripts/test_json_objects.cpp.o -o tests_json_objects 
