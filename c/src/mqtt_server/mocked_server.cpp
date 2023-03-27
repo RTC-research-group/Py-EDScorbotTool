@@ -2,12 +2,14 @@
 #include <iostream>
 #include <string>
 #include <thread>
+#include <unistd.h>
 #include "../impl/server-impls.cpp"
 #include "mosquitto.h"
-
+#include "include/devmem.hpp"
+#define DEFAULT_SLEEP 125000 //microseconds
 // the server with all implementations
-//#define mqtt_host "192.168.1.104"
-#define mqtt_host "localhost"
+#define mqtt_host "192.168.1.104"
+//#define mqtt_host "localhost"
 #define mqtt_port 1883
 
 static int run = 1;
@@ -40,13 +42,12 @@ void subscribe_all_topics()
     mosquitto_subscribe(mosq, NULL, "EDScorbot/commands", 0);
 }
 
-void *publish_message(const char *topic, const char *buf)
+int publish_message(const char *topic, const char *buf)
 {
     char *payload = (char *)buf;
 	int rc = mosquitto_publish(mosq, NULL, topic, strlen(payload), payload, 1, false);
-	int *p = &rc;
-	void *v = (void *)p;
-	return v;
+	//int *p = &rc;
+	return rc;
 }
 
 void parse_command(char *command, int *t, char *m, char *url, int *n,int *sleep)
@@ -100,6 +101,8 @@ void handle_commands_message(const struct mosquitto_message *message){
 							output.client = owner;
 							publish_message("EDScorbot/commands",output.to_json().dump().c_str());
 							std::cout << "Moving arm to home..." << std::endl;
+							//Ejecucion del home
+							//system("/home/root/home");
 							sleep(4);
 							std::cout << "Home position reached" << std::endl;
 							output.signal = ARM_HOME_SEARCHED;
@@ -132,7 +135,7 @@ void handle_commands_message(const struct mosquitto_message *message){
 							if(owner == client){	
 								Trajectory traj = receivedCommand.trajectory;
 								std::thread thread_trajectory(apply_trajectory_and_publish,traj);
-								thread_trajectory.detach();
+								thread_trajectory.join();
 							} else {
 								//other client is trying to move the arm ==> ignore
 							}
@@ -165,17 +168,38 @@ void handle_commands_message(const struct mosquitto_message *message){
 						}
 						
 						break;
+						//incluir default
+					//default:
 				}
 }
 
+//point is [j1,j2,j3,j4]
 void move_to_point_and_publish(Point point) {
     std::cout << "Moving arm to point " << point.to_json().dump() << std::endl;
 	sleep(1);
 	//TODO
 	// invoke command to move the arm to a specific position (point with degrees)
 	// gets the values and build a real point 
-	Point realPoint = point; //change this assignment with the real point coordinates
+	//system("/home/root/sendRef ")
+	int i;
+	for(i = 0;i<4;i++){
+		int ref = angle_to_ref(i+1,point.coordinates[i]);
+		char cmd[256];
+		snprintf(cmd,256,"/home/root/sendRef %d %d",i,ref);
+		system(cmd);
+
+	}
+	usleep(DEFAULT_SLEEP);
+
+	int* dev = open_devmem();
 	MovedObject output = MovedObject();
+	for (i = 0; i<6;i++){
+		
+		output.content.coordinates[i] = dev[i+1];
+	}
+	Point realPoint = point; //change this assignment with the real point coordinates
+	
+
 	output.client = owner;
     output.error = error_state;
     output.content = realPoint; //
