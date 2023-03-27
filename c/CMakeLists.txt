@@ -99,10 +99,11 @@ target_include_directories(test_argparse PUBLIC "src" "./")
 #target_include_directories(sendRef PUBLIC "src" "./" "${CMAKE_CURRENT_SOURCE_DIR}/json/single_include/")
 target_include_directories(sendRef PUBLIC "src" "./")
 
-target_include_directories(mocked_server PUBLIC "src")
-target_include_directories(tests_json_objects PUBLIC "src")
+target_include_directories(mocked_server PUBLIC "src" "${CMAKE_CURRENT_SOURCE_DIR}/json/single_include/")
+target_include_directories(tests_json_objects PUBLIC "src" "${CMAKE_CURRENT_SOURCE_DIR}/json/single_include/")
 
-TARGET_LINK_LIBRARIES(mocked_server PRIVATE /home/adalberto/Downloads/tmp/mosquitto/lib/libmosquitto.a -lpthread )
+ #TARGET_LINK_LIBRARIES(mocked_server PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/compiled_libs_x86/libmosquitto_static.a" -lpthread )
+TARGET_LINK_LIBRARIES(mocked_server PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/compiled_libs_armhf/libmosquitto.a" -lpthread )
 
 
 #target_include_directories(reset PUBLIC "c/src/include")
