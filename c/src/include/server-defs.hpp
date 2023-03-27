@@ -10,6 +10,9 @@ const std::string META_INFO = "metainfo";
 const std::string COMMANDS = "EDScorbot/commands";
 const std::string MOVED = "EDScorbot/moved";
 
+int angle_to_ref(int motor, float angle);
+double ref_to_angle(int motor, int ref);
+
 //global flag representing error state of the robot
 static bool error_state = false;
 
@@ -76,6 +79,8 @@ class JointInfo {
         }
 };
 
+
+//Objetos para comunicar meta informacion --> topic metainfo
 class MetaInfoObject {
     public:
         MetaInfoSignal signal; 
@@ -210,11 +215,11 @@ static Client owner = Client();
 
 class Point {
     public:
-        std::list<double> coordinates;
+        std::vector<double> coordinates;
         Point() {
-            coordinates = std::list<double>();
+            coordinates = {0,0,0,0};
         }
-        Point(std::list<double> coords){
+        Point(std::vector<double> coords){
             coordinates = coords;
         }
 
@@ -256,6 +261,9 @@ class Point {
             }
 
             return result;
+        }
+        std::vector<double> to_xyz(){
+            
         }
 };
 
@@ -322,9 +330,12 @@ class Trajectory {
 
             return result;
         }
+        void execute(){
+            
+        }
 };
 
-
+//Objetos para comunicar comands --> topic EDScorbot/commands
 class CommandObject {
     public:
         CommandsSignal signal;
@@ -420,6 +431,7 @@ class CommandObject {
         }
 };
 
+//Objetos para comunicar ejecucion trayectoria --> topic EDScorbot/moved
 class MovedObject {
     public:
         Client client;
@@ -468,22 +480,61 @@ class MovedObject {
 };
    
 
+
+
+int angle_to_ref(int motor, float angle)
+{
+    switch (motor)
+    {
+    case 1:
+        return int(-3 * angle);
+    case 2:
+        return int(-9.4 * angle);
+    case 3:
+        return int(-3.1 * angle);
+    case 4:
+        return int(-17.61158871 * angle);
+    default:
+        puts("Maximum actionable joint is J4 for them moment");
+        break;
+    }
+    return 0;
+}
+
+double ref_to_angle(int motor, int ref)
+{
+    switch (motor)
+    {
+    case 1:
+        return ((-1 / 3) * ref);
+    case 2:
+        return ((-1 / 9.4) * ref);
+    case 3:
+        return ((-1 / 3.1) * ref);
+    case 4:
+        return (-0.056780795 * ref);
+    default:
+        puts("Maximum actionable joint is J4 for them moment");
+        break;
+    }
+    return 0;
+}
+
 // joints informed in static way
 const std::list<JointInfo> METAINFOS = 
 {
-    JointInfo(-450, 500),
-    JointInfo(-950, 800),
-    JointInfo(-350, 350),
-    JointInfo(-1500, 1600),
+    JointInfo(ref_to_angle(1,-450), ref_to_angle(1,500)),
+    JointInfo(ref_to_angle(2,-950), ref_to_angle(2,800)),
+    JointInfo(ref_to_angle(3,-350), ref_to_angle(3,350)),
+    JointInfo(ref_to_angle(4,-1500), ref_to_angle(4,1600)),
     JointInfo(-360, 360),
     JointInfo(0, 100)
 };
 
-
 //signatures of useful functions
 void handle_response(struct mosquitto *mosq, void *obj, const struct mosquitto_message *message);
 
-void *publish_message(const char *topic, const char *buf);
+int publish_message(const char *topic, const char *buf);
 
 bool has_signal(std::string message);
 
