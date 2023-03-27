@@ -15,6 +15,7 @@ def direcKin(q1,q2,q3,q4):
     d1 = 35.85
     d2 = -9.8
     d3 = 6.5
+    
     x= a1*np.cos(q1) + a2*np.cos(q1)*np.cos(q2) - a3*np.sin(q2)*np.sin(q3)*np.cos(q1) + a3*np.cos(q1)*np.cos(q2)*np.cos(q3) + a4*(-np.sin(q2)*np.sin(q3)*np.cos(q1) + np.cos(q1)*np.cos(q2)*np.cos(q3))*np.cos(q4) + a4*(-np.sin(q2)*np.cos(q1)*np.cos(q3) - np.sin(q3)*np.cos(q1)*np.cos(q2))*np.sin(q4) - d2*np.sin(q1) - d3*np.sin(q1)
 
 
@@ -26,11 +27,16 @@ def direcKin(q1,q2,q3,q4):
     return x,y,z
 
 def angles_to_xyz(angles):
-
-    dh_params = np.array([[0.3585, 0.05, -0.5 * np.pi, 23.6*(np.pi/180)],
-                      [-0.098, 0.3, 0., -22*(np.pi/180)],
-                      [0.065, 0.35, 0., 22.4*(np.pi/180)],
-                      [0., 0.22, 0., 0.]])
+                           #d,         a,          alpha,        theta
+    dh_params = np.array([[0.3585   , 0.05      , 0.5 * np.pi   , -23.6*(np.pi/180)],
+                          [-0.098   , 0.3       , np.pi         , 22*(np.pi/180)],
+                          [0.065    , 0.35      , 0.            , 22.4*(np.pi/180)],
+                          [0.       ,  0.22     , 0.            , 0.]])
+    
+    # dh_params = np.array([[0.3585   , 0.05      , -0.5 * np.pi  , 23.6*(np.pi/180)],
+    #                       [-0.098   , 0.3       , 0.            , -22*(np.pi/180)],
+    #                       [0.065    , 0.35      , 0.            , 22.4*(np.pi/180)],
+    #                       [0.       ,  0.22     , 0.            , 0.]])
     robot = RobotSerial(dh_params)
     
     if angles.shape[1] != 4:
