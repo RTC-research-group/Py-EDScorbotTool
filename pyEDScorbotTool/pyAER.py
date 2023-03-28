@@ -4296,8 +4296,13 @@ def process_dataset_dir():
     handler = pyEDScorbotTool(visible=False,remote=True,savename="out_cont.npy")
     handler.mqtt_client = handler.open_mqtt(ip)
     global running
-    with open("/media/lara/Dataset_SMALL/Shared/wpython.txt",'w') as f:
-            f.write("2")
+    written = 0
+    while written == 0:
+        try:
+            with open("/media/lara/Dataset_SMALL/Shared/wpython.txt",'w') as f:
+                    written = f.write("2")
+        except Exception:
+            pass
     for angle_path in sorted(input_dir.rglob("angles.npy")):
         out_path = angle_path.parent / "out_cont.npy"
         if out_path.exists():
@@ -4316,8 +4321,15 @@ def process_dataset_dir():
         f.close()
         #escribir los datos con open -- write --close
         #cmd = "echo {} > /media/lara/Dataset_SMALL/Shared/current.txt".format(angle_path.parent)
-        with open("/media/lara/Dataset_SMALL/Shared/wpython.txt",'w') as f:
-            f.write("{}".format(Path(*angle_path.parts[3:]).parent))
+
+        written = 0
+
+        while written == 0:
+            try:
+                with open("/media/lara/Dataset_SMALL/Shared/wpython.txt",'w') as f:
+                    written = f.write("{}".format(Path(*angle_path.parts[3:]).parent))
+            except Exception:
+                pass
         #os.system(cmd)
         handler.mqtt_client._userdata['savename'] = angle_path.parent / "out_cont.npy"
         handler.mqtt_client._userdata['filename'] = angle_path.parent / json_abspath.name
@@ -4333,11 +4345,15 @@ def process_dataset_dir():
                     state = 0
                     pass
                 time.sleep(0.1)
-        
-        with open("/media/lara/Dataset_SMALL/Shared/wpython.txt",'w') as f:
-            f.write("2")
+        written = 0
+        while written == 0:
+            try:
+                with open("/media/lara/Dataset_SMALL/Shared/wpython.txt",'w') as f:
+                    written = f.write("2")
+            except Exception:
+                pass
 
-        print("State = 1")       
+       # print("State = 1")       
             
 
 
