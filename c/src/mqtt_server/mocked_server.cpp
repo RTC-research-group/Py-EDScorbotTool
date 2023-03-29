@@ -102,8 +102,19 @@ void handle_commands_message(const struct mosquitto_message *message){
 							publish_message("EDScorbot/commands",output.to_json().dump().c_str());
 							std::cout << "Moving arm to home..." << std::endl;
 							//Ejecucion del home
-							//system("/home/root/home");
-							sleep(4);
+							system("/home/root/home &");
+							
+							int home_exec;
+							char* aux = getenv("HOME_EXEC");
+							home_exec = atoi(aux);
+
+							while(home_exec){
+								sleep(1);
+								aux = getenv("HOME_EXEC");
+								home_exec = atoi(aux);
+							}
+
+							//sleep(4);
 							std::cout << "Home position reached" << std::endl;
 							output.signal = ARM_HOME_SEARCHED;
 							publish_message("EDScorbot/commands",output.to_json().dump().c_str());
@@ -366,10 +377,11 @@ int main(int argc, char *argv[])
 		MetaInfoObject mi = initial_metainfoobj();
 		publish_message("metainfo",mi.to_json().dump().c_str());
 		std::cout << "Metainfo published " << mi.to_json().dump().c_str() << std::endl;
-
+		
+		rc = mosquitto_loop_start(mosq);
 		while (run)
 		{
-			rc = mosquitto_loop(mosq, -1, 1);
+			
 			if (run && rc)
 			{
 				printf("connection error!\n");

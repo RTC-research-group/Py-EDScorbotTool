@@ -8,7 +8,7 @@ int main(int argc, char* argv[])
 {   
     
     argparse::ArgumentParser parser("reset");
-    parser.add_argument("-c", "--config_file").help("Optional. Configuration file in JSON format. This file can be used to configure each joint's controller parameters. Default is 'initial_config.json'").default_value(std::string("initial_config.json"));
+    parser.add_argument("-c", "--config_file").help("Optional. Configuration file in JSON format. This file can be used to configure each joint's controller parameters. Default is 'initial_config.json'").default_value(std::string("/home/root/initial_config.json"));
     parser.add_argument("-v", "--verbose").help("Increase verbosity of output").default_value(false).implicit_value(true);
 
     try
@@ -26,9 +26,13 @@ int main(int argc, char* argv[])
     bool verbose = parser.get<bool>("--verbose");
     EDScorbot handler(config_file);
 
+
+
     EDScorbotJoint *joint;
 
     handler.initJoints();
+
+    putenv("HOME_EXEC=1");
 
     puts("J3");
     handler.searchHome(handler.j3,verbose);
@@ -39,6 +43,7 @@ int main(int argc, char* argv[])
  
     puts("Waiting for PID to stabilize");
     usleep(15000000);
+    putenv("HOME_EXEC=0");
     EDScorbotJoint *joints[6] = {&handler.j1, &handler.j2, &handler.j3, &handler.j4, &handler.j5, &handler.j6};
 
     int i;
