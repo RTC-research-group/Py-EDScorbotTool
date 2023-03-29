@@ -48,6 +48,7 @@ SET(HEADER_FILES src/include/EDScorbot.hpp)
 add_executable(read_joints src/EDScorbot/EDScorbot.cpp src/scripts/read_joints.cpp src/EDScorbot/devmem.cpp ${HEADER_FILES})
 add_executable(test_arrays src/test_scripts/test_arrays.cpp)
 add_executable(test_argparse src/test_scripts/test_argparse.cpp)
+add_executable(test_putenv src/test_scripts/test_putenv.cpp)
 
 # add_executable(receive_server src/receive_server.cpp)
 add_executable(test_json src/test_scripts/test_json.cpp)
@@ -60,7 +61,7 @@ add_executable(sendRef src/scripts/sendRefJx.cpp src/EDScorbot/EDScorbot.cpp src
 # add_executable(mqtt_client src/mqtt_client.c)
 
 #executable for mocked server
-add_executable(mocked_server src/mqtt_server/mocked_server.cpp)
+add_executable(mocked_server src/mqtt_server/mocked_server.cpp src/EDScorbot/devmem.cpp)
 
 #executable for conversion tests of objects, json and strings (new model)
 
@@ -87,7 +88,7 @@ target_include_directories(read_joints PUBLIC "src")
 target_include_directories(test_json PUBLIC "src")
 
 # target_include_directories(home PUBLIC "c/json/single_include/")
-target_include_directories(home PUBLIC "src" "./")
+target_include_directories(home PUBLIC "src" "./" "${CMAKE_CURRENT_SOURCE_DIR}/json/single_include/")
 
 
 # target_include_directories(reset PUBLIC "c/json/single_include/")
@@ -95,6 +96,7 @@ target_include_directories(reset PUBLIC "src" "./")
 target_include_directories(send_home PUBLIC "src" "./")
 
 target_include_directories(test_argparse PUBLIC "src" "./")
+target_include_directories(test_putenv PUBLIC "src" "./")
 
 #target_include_directories(sendRef PUBLIC "src" "./" "${CMAKE_CURRENT_SOURCE_DIR}/json/single_include/")
 target_include_directories(sendRef PUBLIC "src" "./")
