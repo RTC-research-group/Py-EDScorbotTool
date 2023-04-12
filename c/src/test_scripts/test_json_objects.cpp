@@ -66,7 +66,17 @@ void test_commandobject_to_str(CommandObject c){
 void test_str_to_commandobj(std::string json_str,CommandObject expected){
     std::cout << std::endl << "Testing conversion from str to commandobj" << std::endl;
     std::cout << "String: " << json_str << std::endl;
-    assert(CommandObject::from_json_string(json_str) == expected);
+
+    CommandObject co = CommandObject::from_json_string(json_str);
+    json js = co.to_json();
+    std::string str = js.dump();
+    const char* c = str.c_str();
+    
+    json js2 = expected.to_json();
+    std::string str2 = js2.dump();
+    const char* c2 = str2.c_str();
+    
+    assert(co == expected);
     std::cout << " (PASSED)" << std::endl;
 }
 

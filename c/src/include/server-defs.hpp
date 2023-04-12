@@ -56,7 +56,7 @@ class JointInfo {
         }
 
         json to_json(){
-            json result = json();
+            json result;
 
             result["minimum"] = this->minimum;
             result["maximum"] = this->maximum;
@@ -128,7 +128,7 @@ class MetaInfoObject {
         }
             
         json to_json(){
-            json result = json();
+            json result;
 
             result["signal"] = this->signal;
             result["name"] = this->name;
@@ -180,7 +180,8 @@ class Client {
         }
 
         bool is_valid(){
-            return strcmp(this->id.c_str(),"") != 0;
+            bool ret = (strcmp(this->id.c_str(),"") != 0);
+            return ret;
         }
 
         bool operator == (Client other){
@@ -188,7 +189,7 @@ class Client {
         }
 
         json to_json(){
-            json result = json();
+            json result;
 
             result["id"] = this->id;
 
@@ -217,7 +218,7 @@ class Point {
     public:
         std::vector<double> coordinates;
         Point() {
-            coordinates = {0,0,0,0};
+            coordinates = {};
         }
         Point(std::vector<double> coords){
             coordinates = coords;
@@ -232,7 +233,7 @@ class Point {
         }
         
         json to_json(){
-            json result = json();
+            json result;
             json coords = json::array();
             
             for (double coord:coordinates) {
@@ -262,6 +263,7 @@ class Point {
 
             return result;
         }
+
         std::vector<double> to_xyz(){
             
         }
@@ -299,7 +301,7 @@ class Trajectory {
         }
 
         json to_json(){
-            json result = json();
+            json result;
             json pts = json::array();
             
             for (Point point:points) {
@@ -390,7 +392,7 @@ class CommandObject {
         }
         
         json to_json(){
-            json result = json();
+            json result;
             result["signal"] = signal;
             if(client.is_valid()){
                 result["client"] = client.to_json();
@@ -454,7 +456,7 @@ class MovedObject {
         }
 
         json to_json(){
-            json result = json();
+            json result;
             result["client"] = client.to_json();
             result["error"] = error_state;
             result["content"] = content.to_json();
@@ -546,6 +548,6 @@ void handle_metainfo_message(std::string mesage);
 
 void handle_commands_message(std::string mesage);
 
-void move_to_point_and_publish(Point point);
+void* move_to_point_and_publish(void* arg);
 
 void apply_trajectory_and_publish(Trajectory trajectory);

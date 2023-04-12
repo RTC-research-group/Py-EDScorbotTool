@@ -34,7 +34,7 @@ add_subdirectory("src/mqtt_server")
 ## is used, also find other catkin packages
 
 SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fPIC --static  -DEDS_VERBOSE")
-SET(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -DEDS_VERBOSE")
+SET(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} --static -DEDS_VERBOSE")
 SET(HEADER_FILES src/include/EDScorbot.hpp)
 #cmake_path(SET project_base_dir ..)
 #message("Directorios: ${CMAKE_BINARY_DIR}\t${CMAKE_SOURCE_DIR}\t${CMAKE_CURRENT_BINARY_DIR}\t${CMAKE_CURRENT_SOURCE_DIR}")
@@ -67,6 +67,7 @@ add_executable(mocked_server src/mqtt_server/mocked_server.cpp src/EDScorbot/dev
 
 add_executable(tests_json_objects src/test_scripts/test_json_objects.cpp)
 
+add_executable(test_pthread src/test_scripts/test_pthread.c)
 
 #add_library(image_generator SHARED src/Image_generator.cpp)
 
@@ -104,9 +105,12 @@ target_include_directories(sendRef PUBLIC "src" "./")
 target_include_directories(mocked_server PUBLIC "src" "${CMAKE_CURRENT_SOURCE_DIR}/json/single_include/")
 target_include_directories(tests_json_objects PUBLIC "src" "${CMAKE_CURRENT_SOURCE_DIR}/json/single_include/")
 
+target_include_directories(test_pthread PUBLIC "src" "${CMAKE_CURRENT_SOURCE_DIR}/json/single_include/")
+
  #TARGET_LINK_LIBRARIES(mocked_server PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/compiled_libs_x86/libmosquitto_static.a" -lpthread )
 TARGET_LINK_LIBRARIES(mocked_server PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/compiled_libs_armhf/libmosquitto.a" -lpthread )
 
+TARGET_LINK_LIBRARIES(test_pthread PRIVATE -lpthread )
 
 #target_include_directories(reset PUBLIC "c/src/include")
 
