@@ -261,6 +261,8 @@ void* move_to_point_and_publish(void* arg) {
     //output.content = realPoint; //
     publish_message("EDScorbot/moved",output.to_json().dump().c_str());
 	std::cout << "Point published " << output.to_json().dump().c_str() << std::endl;
+
+	return 0;
 }
 
 void apply_trajectory_and_publish(Trajectory trajectory){

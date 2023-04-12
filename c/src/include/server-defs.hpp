@@ -264,9 +264,6 @@ class Point {
             return result;
         }
 
-        std::vector<double> to_xyz(){
-            
-        }
 };
 
 class Trajectory {
