@@ -48,7 +48,6 @@ SET(HEADER_FILES src/include/EDScorbot.hpp)
 add_executable(read_joints src/EDScorbot/EDScorbot.cpp src/scripts/read_joints.cpp src/EDScorbot/devmem.cpp ${HEADER_FILES})
 add_executable(test_arrays src/test_scripts/test_arrays.cpp)
 add_executable(test_argparse src/test_scripts/test_argparse.cpp)
-add_executable(test_putenv src/test_scripts/test_putenv.cpp)
 
 # add_executable(receive_server src/receive_server.cpp)
 add_executable(test_json src/test_scripts/test_json.cpp)
@@ -97,7 +96,6 @@ target_include_directories(reset PUBLIC "src" "./")
 target_include_directories(send_home PUBLIC "src" "./")
 
 target_include_directories(test_argparse PUBLIC "src" "./")
-target_include_directories(test_putenv PUBLIC "src" "./")
 
 #target_include_directories(sendRef PUBLIC "src" "./" "${CMAKE_CURRENT_SOURCE_DIR}/json/single_include/")
 target_include_directories(sendRef PUBLIC "src" "./")
@@ -107,8 +105,9 @@ target_include_directories(tests_json_objects PUBLIC "src" "${CMAKE_CURRENT_SOUR
 
 target_include_directories(test_pthread PUBLIC "src" "${CMAKE_CURRENT_SOURCE_DIR}/json/single_include/")
 
- #TARGET_LINK_LIBRARIES(mocked_server PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/compiled_libs_x86/libmosquitto_static.a" -lpthread )
-TARGET_LINK_LIBRARIES(mocked_server PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/compiled_libs_armhf/libmosquitto.a" -lpthread )
+#TARGET_LINK_LIBRARIES(mocked_server PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/compiled_libs_x86/libmosquitto_static.a" -lpthread )
+#TARGET_LINK_LIBRARIES(mocked_server PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/compiled_libs_armhf/libmosquitto.a" -lpthread )
+TARGET_LINK_LIBRARIES(mocked_server PRIVATE /home/adalberto/Downloads/tmp/mosquitto/lib/libmosquitto.a -lpthread )
 
 TARGET_LINK_LIBRARIES(test_pthread PRIVATE -lpthread )
 

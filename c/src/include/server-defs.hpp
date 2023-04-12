@@ -218,27 +218,31 @@ class Point {
     public:
         std::vector<double> coordinates;
         Point() {
-            coordinates = {};
+            coordinates = std::vector<double>();
         }
         Point(std::vector<double> coords){
             coordinates = coords;
         }
 
         bool operator == (Point other){
-            return this->coordinates == other.coordinates;
+            return coordinates == other.coordinates;
         }
 
         bool is_empty(){
-            return this->coordinates.size() == 0;
+            int size = coordinates.size();
+            return coordinates.size() == 0;
         }
         
         json to_json(){
             json result;
             json coords = json::array();
             
-            for (double coord:coordinates) {
-                coords.push_back(coord);
+            if(!is_empty()){
+                for (double coord:coordinates) {
+                    coords.push_back(coord);
+                }
             }
+            
             result["coordinates"] = coords;
 
             return result;

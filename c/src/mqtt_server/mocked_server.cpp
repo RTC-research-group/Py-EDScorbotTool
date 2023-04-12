@@ -11,8 +11,8 @@
 
 #define DEFAULT_SLEEP 125000 //microseconds
 // the server with all implementations
-#define mqtt_host "192.168.1.104"
-//#define mqtt_host "localhost"
+//#define mqtt_host "192.168.1.104"
+#define mqtt_host "localhost"
 #define mqtt_port 1883
 
 static int run = 1;
@@ -44,11 +44,14 @@ void parse_command(char *command, int *t, char *m, char *url, int *n,int* sleep)
 void ftp_trajectory(char *url);
 
 void* home_func(void* arg){
+	/*
 	CommandObjectStruct* output = (CommandObjectStruct*)arg;
 	int signal = output->signal;
 	Client* client = output->client;
 	Point* p = output->p;
 	Trajectory* t = output->t;
+	std::cout << "owner: " << owner.id << std::endl;
+	std::cout << "client: " << client->id << std::endl; 
 	printf("signal: %d\n",signal);
 	printf("point: %s\n",p->to_json().dump().c_str());
 	printf("trajectory: %s\n",t->to_json().dump().c_str());
@@ -57,15 +60,24 @@ void* home_func(void* arg){
 	std::string str_c = client_js.dump();
 	const char* client_c = str_c.c_str();
 	printf("client: %s\n",client_c);
-	
-	
+	*/
+	CommandObject output = CommandObject(ARM_HOME_SEARCHED);
+	output.client = owner;
+	output.error = error_state;
+	//std::cout << "owner: " << owner.id << std::endl;
+	//std::cout << "client: " << output->client.id << std::endl;
+	std::cout << "output: " << output.to_json().dump().c_str() << std::endl;
+	//std::cout << "point: " << output->point.coordinates[1] << std::endl;
+	//std::cout << "point: " << output->point.coordinates[2] << std::endl;  
+
 	//system("/home/root/home");
 	usleep(100);
-	output->signal = ARM_HOME_SEARCHED;
+	
+
 	//json js = output->to_json();
 	// std::string str = js.dump();
 	// const char* c_str = str.c_str();
-	// publish_message("EDScorbot/commands",c_str);
+	publish_message("EDScorbot/commands",output.to_json().dump().c_str());
 
 	std::cout << "Home position reached" << std::endl;
 	return NULL;
@@ -141,6 +153,8 @@ void handle_commands_message(const struct mosquitto_message *message){
 							owner = receivedCommand.client;
 							output.signal = ARM_CONNECTED;
 							output.client = owner;
+							//output.point.coordinates = std::vector<double>();
+
 							publish_message("EDScorbot/commands",output.to_json().dump().c_str());
 							std::cout << "Moving arm to home..." << std::endl;
 							//Ejecucion del home
@@ -151,7 +165,7 @@ void handle_commands_message(const struct mosquitto_message *message){
 							co.p = &receivedCommand.point;
 							co.t = &receivedCommand.trajectory;
 							co.signal = receivedCommand.signal;
-							int err = pthread_create(&cmd_thread,NULL,&home_func,(void*)&co);
+							int err = pthread_create(&cmd_thread,NULL,&home_func,(void*)&output);
 							pthread_detach(cmd_thread);
 							
 
