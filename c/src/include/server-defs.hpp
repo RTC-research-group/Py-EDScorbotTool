@@ -509,7 +509,7 @@ double ref_to_angle(int motor, int ref)
     switch (motor)
     {
     case 1:
-        return ((-1 / 3) * ref);
+        return ((-1.0 / 3.0) * ref);
     case 2:
         return ((-1 / 9.4) * ref);
     case 3:
