@@ -349,7 +349,7 @@ class CommandObject {
 
         CommandObject(CommandsSignal sig){
             signal = sig;
-            client = owner;
+            client = Client();
             error = error_state;
             point = Point();
             trajectory = Trajectory();
@@ -357,7 +357,7 @@ class CommandObject {
 
         CommandObject(CommandsSignal sig, Point p){
             signal = sig;
-            client = owner;
+            client = Client();
             error = error_state;
             point = p;
             trajectory = Trajectory();
@@ -365,7 +365,7 @@ class CommandObject {
 
         CommandObject(CommandsSignal sig, Trajectory t){
             signal = sig;
-            client = owner;
+            client = Client();
             error = error_state;
             point = Point();
             trajectory = t;
@@ -535,8 +535,6 @@ const std::list<JointInfo> METAINFOS =
 };
 
 //signatures of useful functions
-void handle_response(struct mosquitto *mosq, void *obj, const struct mosquitto_message *message);
-
 int publish_message(const char *topic, const char *buf);
 
 bool has_signal(std::string message);
@@ -548,7 +546,3 @@ MetaInfoObject initial_metainfoobj();
 void handle_metainfo_message(std::string mesage);
 
 void handle_commands_message(std::string mesage);
-
-void* move_to_point_and_publish(void* arg);
-
-void apply_trajectory_and_publish(Trajectory trajectory);

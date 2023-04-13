@@ -17,8 +17,9 @@
 
 static int run = 1;
 struct mosquitto *mosq;
-pthread_t cmd_thread;
-pthread_t points[4];
+pthread_t search_home_thread;
+pthread_t move_to_point_thread;
+pthread_t apply_trajectory_thread;
 
 typedef struct
 {
@@ -28,58 +29,129 @@ typedef struct
 	int last;
 } progress_info;
 
-typedef struct{
-	int signal;
-	Client* client;
-	Point* p;
-	Trajectory* t;
-	bool error;
-} CommandObjectStruct;
-
 progress_info progress;
+
+Point current_point;
 
 bool executing_trajectory = false;
 
 void parse_command(char *command, int *t, char *m, char *url, int *n,int* sleep);
 void ftp_trajectory(char *url);
 
-void* home_func(void* arg){
-	/*
-	CommandObjectStruct* output = (CommandObjectStruct*)arg;
-	int signal = output->signal;
-	Client* client = output->client;
-	Point* p = output->p;
-	Trajectory* t = output->t;
-	std::cout << "owner: " << owner.id << std::endl;
-	std::cout << "client: " << client->id << std::endl; 
-	printf("signal: %d\n",signal);
-	printf("point: %s\n",p->to_json().dump().c_str());
-	printf("trajectory: %s\n",t->to_json().dump().c_str());
-	json client_js = client->to_json();
-	std::string id = client_js["id"];
-	std::string str_c = client_js.dump();
-	const char* client_c = str_c.c_str();
-	printf("client: %s\n",client_c);
-	*/
+void* search_home_threaded_function(void* arg){
+	//to execute search home we need the suitable signal, the owner and the error state
+	// the owrner has already been validated to allow this execution in the callback
 	CommandObject output = CommandObject(ARM_HOME_SEARCHED);
 	output.client = owner;
-	output.error = error_state;
-	//std::cout << "owner: " << owner.id << std::endl;
-	//std::cout << "client: " << output->client.id << std::endl;
-	std::cout << "output: " << output.to_json().dump().c_str() << std::endl;
-	//std::cout << "point: " << output->point.coordinates[1] << std::endl;
-	//std::cout << "point: " << output->point.coordinates[2] << std::endl;  
+	output.error = error_state; 
 
+	usleep(4000000);
 	//system("/home/root/home");
-	usleep(100);
 	
-
-	//json js = output->to_json();
-	// std::string str = js.dump();
-	// const char* c_str = str.c_str();
+	//publish message notifying that home has been reached
 	publish_message("EDScorbot/commands",output.to_json().dump().c_str());
-
 	std::cout << "Home position reached" << std::endl;
+	return NULL;
+}
+
+void* move_to_point_threaded_function(void* arg){
+	//to move to a single point we need the owner, the error state and the point
+	// the owrner has already been validated to allow this execution in the callback
+	MovedObject output = MovedObject();
+	output.client = owner;
+	output.error = error_state; 	
+
+	//call the low level function to move to a single point considering 
+	//the coordinates (in refs) stored in current_point (current_point.coordinates) 
+	//system("/home/root/home");
+
+	//get the counters from the arm and convert them into refs to return to the user
+	//it is important to fill the coordinates with the number of joints
+	//informed in the metainfo. 
+
+	//using this snipped of code to fill the real point
+	//usleep(DEFAULT_SLEEP);
+	usleep(2000000);
+
+	//int* dev = open_devmem();
+	//for (int i = 0; i < 6; i++){
+	//	output.content.coordinates[i] = dev[i+1];
+	//}
+
+	//for the moment we use current_point to notify the user
+	output.content = current_point;
+	
+	
+	//publish message notifying that the point has been published
+	publish_message("EDScorbot/moved",output.to_json().dump().c_str());
+	std::cout << "Arm moved to point " << output.content.to_json().dump().c_str() << std::endl;
+
+	//after publishing the message, the current_point must be re-instantiated with empty point
+	current_point = Point();
+
+	return NULL;
+}
+
+
+
+//the function below is intented to be used in trajectory execution because the execution of 
+//alll points of a trajectory cannot be threaded (different points would be execut4ed concurrently,
+//causing a terrible side-effect)
+void move_to_point(Point point){
+	MovedObject output = MovedObject();
+	output.client = owner;
+	output.error = error_state; 
+
+	//call the low level function to move to a single point considering 
+	//the coordinates (in refs) stored in oint (point.coordinates) 
+	//system("/home/root/home");
+
+	//get the counters from the arm and convert them into refs to return to the user
+	//it is important to fill the coordinates with the number of joints
+	//informed in the metainfo. 
+
+	//using this snipped of code to fill the real point
+	//usleep(DEFAULT_SLEEP);
+	usleep(2000000);
+
+	//int* dev = open_devmem();
+	//for (int i = 0; i < 6; i++){
+	//	output.content.coordinates[i] = dev[i+1];
+	//}
+
+	//for the moment we use point to notify the user
+	output.content = point;
+
+	//publish message notifying that the point has been published
+	publish_message("EDScorbot/moved",output.to_json().dump().c_str());
+	std::cout << "Arm moved to point " << output.content.to_json().dump().c_str() << std::endl;
+	return;
+}
+
+Trajectory current_trajectory;
+
+void* apply_trajectory_threaded_function(void* arg){
+	//to apply a trajectory we need the owner, the error state and the trajectory
+	// the owner has already been validated to allow this execution in the callback
+	//the current trajectory is maintained in a global variable current_trajectory
+	//that is updated befoe starting this thread
+	
+	std::list<Point> points = std::list<Point>(current_trajectory.points);
+	executing_trajectory = true;
+
+	while (!points.empty() && executing_trajectory){
+        Point p = points.front();
+		move_to_point(p); 
+		//we need to handle the waiting time after start oving to a point.
+		//this time is the last coordinate of the point parameter
+		//usleep(p.coordinates.end()) // something like this ??????
+
+		points.erase(points.begin());
+	}
+
+	executing_trajectory = false;
+	current_trajectory = Trajectory();
+
 	return NULL;
 }
 
@@ -148,7 +220,6 @@ void handle_commands_message(const struct mosquitto_message *message){
 						break;
 					case ARM_CONNECT:
 						std::cout << "Request comnnect received. " << " Sending message..." << std::endl;
-						
 						if(!owner.is_valid()){
 							owner = receivedCommand.client;
 							output.signal = ARM_CONNECTED;
@@ -157,19 +228,12 @@ void handle_commands_message(const struct mosquitto_message *message){
 
 							publish_message("EDScorbot/commands",output.to_json().dump().c_str());
 							std::cout << "Moving arm to home..." << std::endl;
-							//Ejecucion del home
-							CommandObjectStruct co;
 							
-							co.client = &receivedCommand.client;
-							co.error = error_state;
-							co.p = &receivedCommand.point;
-							co.t = &receivedCommand.trajectory;
-							co.signal = receivedCommand.signal;
-							int err = pthread_create(&cmd_thread,NULL,&home_func,(void*)&output);
-							pthread_detach(cmd_thread);
-							
+							int err = pthread_create(&search_home_thread,NULL,&search_home_threaded_function,NULL);
+							pthread_detach(search_home_thread);
 
-							
+							//handle err?
+
 						} else{
 							std::cout << "Connection refused. Arm is busy" << std::endl;
 						}
@@ -182,11 +246,13 @@ void handle_commands_message(const struct mosquitto_message *message){
 							Client client = receivedCommand.client;
 							if(owner == client){	
 								Point target = receivedCommand.point;
-								//if the point does not come within the message?
-								//coger las 4 referencias
-								int i;
-							
-							//	move_to_point_and_publish(target);
+								if(!target.is_empty()){
+									current_point = target;
+									int err = pthread_create(&move_to_point_thread,NULL,&move_to_point_threaded_function,NULL);
+									pthread_detach(move_to_point_thread);
+
+									//handle err?
+								}
 							} else {
 								//other client is trying to move the arm ==> ignore
 							}
@@ -199,9 +265,11 @@ void handle_commands_message(const struct mosquitto_message *message){
 						if(owner.is_valid()){
 							Client client = receivedCommand.client;
 							if(owner == client){	
-								Trajectory traj = receivedCommand.trajectory;
-								std::thread thread_trajectory(apply_trajectory_and_publish,traj);
-								thread_trajectory.join();
+								current_trajectory = receivedCommand.trajectory;
+								int err = pthread_create(&apply_trajectory_thread,NULL,&apply_trajectory_threaded_function,NULL);
+								pthread_detach(apply_trajectory_thread);
+
+								//handle err?
 							} else {
 								//other client is trying to move the arm ==> ignore
 							}
@@ -212,12 +280,16 @@ void handle_commands_message(const struct mosquitto_message *message){
 					case ARM_CANCEL_TRAJECTORY:
 						std::cout << "Cancel trajectory received. " << std::endl;
 						if(owner.is_valid()){
-							executing_trajectory = false;
-							output.signal = ARM_CANCELED_TRAJECTORY;
-							output.client = owner;
-							output.error = error_state;
-							publish_message("EDScorbot/commands",output.to_json().dump().c_str());
-							std::cout << "Trajectory cancelled. " << std::endl;
+							Client client = receivedCommand.client;
+							if(owner == client){
+								executing_trajectory = false;
+								output.signal = ARM_CANCELED_TRAJECTORY;
+								output.client = owner;
+								output.error = error_state;
+								publish_message("EDScorbot/commands",output.to_json().dump().c_str());
+								std::cout << "Trajectory cancelled. " << std::endl;
+							} 
+							
 						} else {
 							//arm has no owner ==> ignore
 						}
@@ -239,56 +311,6 @@ void handle_commands_message(const struct mosquitto_message *message){
 				}
 }
 
-//point is [j1,j2,j3,j4]
-void* move_to_point_and_publish(void* arg) {
-    
-	Point* p = (Point*) arg;
-	//std::cout << "Moving arm to point " << point.to_json().dump() << std::endl;
-	sleep(1);
-	//TODO
-	// invoke command to move the arm to a specific position (point with degrees)
-	// gets the values and build a real point 
-	//system("/home/root/sendRef ")
-	int i;
-	int refs[4];
-
-	// for(i = 0;i<4;i++){
-	// 	int ref = angle_to_ref(i+1,point.coordinates[i]);
-	// 	refs[i] = ref;
-	// }
-
-
-
-	usleep(DEFAULT_SLEEP);
-
-	int* dev = open_devmem();
-	MovedObject output = MovedObject();
-	for (i = 0; i<6;i++){
-		
-		output.content.coordinates[i] = dev[i+1];
-	}
-	//Point realPoint = point; //change this assignment with the real point coordinates
-	
-
-	output.client = owner;
-    output.error = error_state;
-    //output.content = realPoint; //
-    publish_message("EDScorbot/moved",output.to_json().dump().c_str());
-	std::cout << "Point published " << output.to_json().dump().c_str() << std::endl;
-
-	return 0;
-}
-
-void apply_trajectory_and_publish(Trajectory trajectory){
-	std::list<Point> points = std::list<Point>(trajectory.points);
-	executing_trajectory = true;
-	while (!points.empty() && executing_trajectory){
-        Point p = points.front();
-		//move_to_point_and_publish(p);
-		points.erase(points.begin());
-	}
-	executing_trajectory = false;
-}
 
 void message_callback(struct mosquitto *mosq, void *obj, const struct mosquitto_message *message)
 {
