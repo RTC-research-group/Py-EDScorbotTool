@@ -258,7 +258,7 @@ void EDScorbot::readJoints(int *ret)
 //          {6, -1}};
 
 // Polarities per joint are: 1,-1,-1,-1,-1,-1
-void EDScorbot::searchHome(EDScorbotJoint j, bool v)
+void EDScorbot::searchHome(EDScorbotJoint j, bool v=false)
 {
     // Un poco mas rapido
     int pol = (j.jnum < 4 ? 1 : -1);
