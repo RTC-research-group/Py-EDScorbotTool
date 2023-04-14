@@ -16,6 +16,9 @@
 // using namespace std;
 using json = nlohmann::json;
 
+#include <argparse/argparse.hpp>
+
+
 static std::map<std::string, int> addresses = {
     {"M1", 0x00},
     {"M2", 0x20},
@@ -114,7 +117,7 @@ public:
     /** Joint initialization for EDScorbot handler */
         EDScorbotJoint j1 = {"M1", 1}, j2 = {"M2", 2}, j3 = {"M3", 3}, j4 = {"M4", 4}, j5 = {"M5", 5}, j6 = {"M6", 6};
     ///@}
-
+        EDScorbotJoint joints[6] = {j1,j2,j3,j4,j5,j6};
     /**
      * @brief Construct a new EDScorbot object
      * 
@@ -137,8 +140,12 @@ public:
      * 
      */
 
-    ~EDScorbot();
-
+    ~EDScorbot(){//0xFF --> bram_size en devmem.cpp
+        int r = munmap(reinterpret_cast<void*>(this->bram_ptr),0xFF);
+        if (r  != 0){
+            puts("Be careful! Memory pointer to FPGA registers was NOT unmapped correctly. A reset is highly recommended!");
+        }
+    }
     /**
      * @brief Explicitly initialize joint 1-6 configuration using loaded json config file
      * 
@@ -222,7 +229,7 @@ public:
      * @param angle Value to be converted from position in angles to digital reference
      * @return int Converted position
      */
-    static int angle_to_ref(int, float);
+    static int angle_to_ref(int, double);
 
     /**
      * @brief  Implements digital reference to angle position transformation
