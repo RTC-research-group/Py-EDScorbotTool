@@ -10,7 +10,7 @@ const std::string META_INFO = "metainfo";
 const std::string COMMANDS = "EDScorbot/commands";
 const std::string MOVED = "EDScorbot/moved";
 
-int angle_to_ref(int motor, float angle);
+int angle_to_ref(int motor, double angle);
 double ref_to_angle(int motor, int ref);
 
 //global flag representing error state of the robot
@@ -485,7 +485,7 @@ class MovedObject {
 
 
 
-int angle_to_ref(int motor, float angle)
+int angle_to_ref(int motor, double angle)
 {
     switch (motor)
     {
