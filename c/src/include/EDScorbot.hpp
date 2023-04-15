@@ -179,6 +179,16 @@ public:
      */
     int sendRef(int, EDScorbotJoint);
 
+    
+    /**
+     * @brief Command a specific position to a specific joint
+     * 
+     * 
+     * @param ang Angle (position) to be commanded
+     * @param j Joint to be commanded the angle `ang`
+     */
+    void sendAngle(double, EDScorbotJoint);
+
     /**
      * @brief 
      * 
@@ -202,7 +212,7 @@ public:
      * @param count Value read from the robot's counter register, which indicates absolute position of the joint
      * @return float Converted position value in angles (not radians) for the specified joint
      */
-    float count_to_angle(int, int);
+    double count_to_angle(int, int);
 
     /**
      * @brief Implements digital reference to counter register transformation
@@ -236,9 +246,9 @@ public:
      * 
      * @param motor Joint/Motor for which to perform the conversion (different joints have different conversion values)
      * @param ref Value to be converted from digital reference to position in angles
-     * @return float Converted position in angles (not radians)
+     * @return double Converted position in angles (not radians)
      */
-    static float ref_to_angle(int, int);
+    static double ref_to_angle(int, int);
 
 #ifdef THREADED
     void EDScorbot::readJoints();
@@ -247,12 +257,31 @@ public:
 /**
  * @brief Function to read the state of all the robot's joints
  * 
+ * Shortcut for EDScorbot::readJoints_angle
+ * 
+ * @param joints [in,out] Array of six integers, to be filled with each joint's position per element
+ */
+    void readJoints(double *);
+
+    /**
+ * @brief Function to read the state of all the robot's joints
+ * 
  * This function receives an integer array of 6 elements and assigns each of them the value of one of the robot's joints. As such, if `joints` is the name of the array, 
  * `joints[0]` will hold the position of joint 1, `joints[1]` will hold the position of joint 2, etc., up to `joints[5]`, which would hold the position of joint 6
  * 
  * @param joints [in,out] Array of six integers, to be filled with each joint's position per element
  */
-    void readJoints(int *);
+    void readJoints_angle(double *);
+
+    /**
+ * @brief Function to read the state of all the robot's joints
+ * 
+ * This function receives an integer array of 6 elements and assigns each of them the value of one of the robot's joints. As such, if `joints` is the name of the array, 
+ * `joints[0]` will hold the position of joint 1, `joints[1]` will hold the position of joint 2, etc., up to `joints[5]`, which would hold the position of joint 6
+ * 
+ * @param joints [in,out] Array of six doubles, to be filled with each joint's position per element
+ */
+    void readJoints_counter(int *);
 #endif
 private:
     int *bram_ptr; //!< Pointer to the base memory address in which the FPGA registers are placed
