@@ -113,6 +113,12 @@ EDScorbot::EDScorbot(string config_path)
     this->bram_ptr = bram_ptr;
 };
 
+void EDScorbot::sendAngle(double ang, EDScorbotJoint j){
+    int ref = angle_to_ref(j.jnum,ang);
+    sendRef(ref, j);
+    return ;
+}
+
 int EDScorbot::sendRef(int ref, EDScorbotJoint j)
 {
     uchar offset = 0x02;
@@ -214,7 +220,7 @@ void EDScorbot::stopRead()
 
 #else
 
-void EDScorbot::readJoints(int *ret)
+void EDScorbot::readJoints_counter(int *ret)
 {
     // int base_address = 0x00;//To be defined
     // int offset = 0x20;
@@ -235,6 +241,43 @@ void EDScorbot::readJoints(int *ret)
     ret[4] = this->bram_ptr[5];
     ret[5] = this->bram_ptr[6];
 
+    // std::array<int, 6> ret = {j1, j2, j3, j4, j5, j6};
+    // int reads[6]= {j1,j2,j3,j4,j5,j6};
+    // ret[0] = j1;
+    // ret[1] = j2;
+    // ret[2] = j3;
+    // ret[3] = j4;
+    // ret[4] = j5;
+    // ret[5] = j6;
+    // return ret;
+};
+
+
+void EDScorbot::readJoints_angle(double *ret)
+{
+    // int base_address = 0x00;//To be defined
+    // int offset = 0x20;
+
+    // int j1, j2, j3, j4, j5, j6;
+
+    // j1 = this->bram_ptr[1];
+    // j2 = this->bram_ptr[2];
+    // j3 = this->bram_ptr[3];
+    // j4 = this->bram_ptr[4];
+    // j5 = this->bram_ptr[5];
+    // j6 = this->bram_ptr[6];
+
+    int j[6];
+
+    
+    
+    for(int i = 0; i < 6; i++)
+    {
+        j[i] = this->bram_ptr[i+1];
+        if(i<4)
+            ret[i] = EDScorbot::count_to_angle(i+1,j[i]);
+
+    }
     // std::array<int, 6> ret = {j1, j2, j3, j4, j5, j6};
     // int reads[6]= {j1,j2,j3,j4,j5,j6};
     // ret[0] = j1;
@@ -411,21 +454,21 @@ void EDScorbot::resetJPos(EDScorbotJoint j)
     sendCommand16(address, 0x00, address, this->bram_ptr);
 }
 
-float EDScorbot::count_to_angle(int motor, int count)
+static double EDScorbot::count_to_angle(int motor, int count)
 {
     switch (motor)
     {
     case 1:
-        return (1 / 125.5) * (count - 32768);
+        return (1 / 125.5) * (count - 32768.0);
         break;
     case 2:
-        return (1 / 131) * (count - 32768);
+        return (1 / 131.0) * (count - 32768.0);
         break;
     case 3:
-        return (1 / 127.7) * (count - 32768);
+        return (1 / 127.7) * (count - 32768.0);
         break;
     case 4:
-        return (0.012391573729863692) * (count - 32768);
+        return (0.012391573729863692) * (count - 32768.0);
         break;
     default:
         puts("Maximum actionable joint is J4 for them moment");
@@ -479,7 +522,7 @@ int EDScorbot::count_to_ref(int motor, int count)
     return 0;
 }
 
-int EDScorbot::angle_to_ref(int motor, float angle)
+static int EDScorbot::angle_to_ref(int motor, double angle)
 {
     switch (motor)
     {
@@ -498,12 +541,12 @@ int EDScorbot::angle_to_ref(int motor, float angle)
     return 0;
 }
 
-float EDScorbot::ref_to_angle(int motor, int ref)
+static double EDScorbot::ref_to_angle(int motor, int ref)
 {
     switch (motor)
     {
     case 1:
-        return ((-1 / 3) * ref);
+        return ((-1 / 3.0) * ref);
     case 2:
         return ((-1 / 9.4) * ref);
     case 3:
