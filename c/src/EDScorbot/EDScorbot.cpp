@@ -10,14 +10,14 @@ using json = nlohmann::json;
 
 static int j1_t, j2_t, j3_t, j4_t, j5_t, j6_t;
 
-EDScorbot::~EDScorbot()
-{
-#ifdef THREADED
+// EDScorbot::~EDScorbot()
+// {
+// #ifdef THREADED
 
-    stopRead();
+//     stopRead();
 
-#endif
-}
+// #endif
+// }
 
 // Constructor
 // string config_path -> relative path to json configuration file
@@ -289,6 +289,13 @@ void EDScorbot::readJoints_angle(double *ret)
     // return ret;
 };
 
+
+void EDScorbot::readJoints(double* ret){
+
+    readJoints_angle(ret);
+}
+
+
 #endif
 
 // Un poco mas bonito
@@ -454,7 +461,7 @@ void EDScorbot::resetJPos(EDScorbotJoint j)
     sendCommand16(address, 0x00, address, this->bram_ptr);
 }
 
-static double EDScorbot::count_to_angle(int motor, int count)
+double EDScorbot::count_to_angle(int motor, int count)
 {
     switch (motor)
     {
@@ -522,7 +529,7 @@ int EDScorbot::count_to_ref(int motor, int count)
     return 0;
 }
 
-static int EDScorbot::angle_to_ref(int motor, double angle)
+int EDScorbot::angle_to_ref(int motor, double angle)
 {
     switch (motor)
     {
@@ -541,7 +548,7 @@ static int EDScorbot::angle_to_ref(int motor, double angle)
     return 0;
 }
 
-static double EDScorbot::ref_to_angle(int motor, int ref)
+double EDScorbot::ref_to_angle(int motor, int ref)
 {
     switch (motor)
     {
