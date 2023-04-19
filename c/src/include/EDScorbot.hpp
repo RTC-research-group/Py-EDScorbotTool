@@ -12,6 +12,7 @@
 #define EI_FD_ENABLE_ADDR 0x13
 #define EI_FD_ADDR 0x17
 #define JOINT_STEP 0x20
+#include <sys/mman.h>
 
 // using namespace std;
 using json = nlohmann::json;
