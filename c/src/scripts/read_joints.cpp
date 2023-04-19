@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
 
     while (c != EOF)
     {
-        handler.readJoints(reads);
+        handler.readJoints_counter(reads);
         printf("J%d: %d\tJ%d: %d\tJ%d: %d\tJ%d: %d\tJ%d: %d\tJ%d: %d\t\r", 1, reads[0],2, reads[1],3, reads[2],4, reads[3],5, reads[4],6, reads[5]);
         fflush(stdout);
     
