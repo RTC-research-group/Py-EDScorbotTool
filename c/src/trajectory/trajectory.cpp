@@ -139,7 +139,7 @@ int main(int argc, char *argv[])
         {
             // Do something
             // printf("start: %li, stop:%li, elapsed: %li\n",start.tv_usec,end.tv_usec,elapsed);
-            handler.readJoints(joints);
+            handler.readJoints_counter(joints);
             (gettimeofday(&end, NULL));
             robot_state rs;
             rs.j1 = joints[0];
