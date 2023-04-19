@@ -35,6 +35,8 @@ enum CommandsSignal {
     ARM_HOME_SEARCHED = 13
 };
 
+
+
 class JointInfo {
     public:
         double minimum;
@@ -509,13 +511,13 @@ double ref_to_angle(int motor, int ref)
     switch (motor)
     {
     case 1:
-        return ((-1.0 / 3.0) * ref);
+        return ((-1.0 / 3.0) * (double)ref);
     case 2:
-        return ((-1 / 9.4) * ref);
+        return ((-1.0 / 9.4) * (double)ref);
     case 3:
-        return ((-1 / 3.1) * ref);
+        return ((-1.0 / 3.1) * (double)ref);
     case 4:
-        return (-0.056780795 * ref);
+        return (-0.056780795 * (double)ref);
     default:
         puts("Maximum actionable joint is J4 for them moment");
         break;
