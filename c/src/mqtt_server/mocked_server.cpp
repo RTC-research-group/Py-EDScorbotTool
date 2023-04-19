@@ -12,8 +12,8 @@
 
 #define DEFAULT_SLEEP 125000 //microseconds
 // the server with all implementations
-#define mqtt_host "192.168.1.104"
-//#define mqtt_host "localhost"
+//#define mqtt_host "192.168.1.104"
+#define mqtt_host "localhost"
 #define mqtt_port 1883
 
 static int run = 1;
@@ -21,6 +21,7 @@ struct mosquitto *mosq;
 pthread_t search_home_thread;
 pthread_t move_to_point_thread;
 pthread_t apply_trajectory_thread;
+std::string empty("");
 
 typedef struct
 {
@@ -37,7 +38,7 @@ typedef struct{
 } pthread_args,*ppthread_args;
 
 progress_info progress;
-static ppthread_args args;
+static pthread_args args = {Point(),empty,DEFAULT_SLEEP};
 
 Point current_point;
 
@@ -46,13 +47,13 @@ bool executing_trajectory = false;
 void parse_command(char *command, int *t, char *m, char *url, int *n,int* sleep);
 void ftp_trajectory(char *url);
 
-// void update_pthread_args(ppthread_args args,std::string& config, int sleep, Point& p){
+void update_pthread_args(ppthread_args args,std::string& config, int sleep, Point& p){
 	
-// 	args.config = config;
-// 	args.p = p;
-// 	args.sleep = sleep;
+	args->config = config;
+	args->p = p;
+	args->sleep = sleep;
 
-// }
+}
 
 void* search_home_threaded_function(void* arg){
 	//to execute search home we need the suitable signal, the owner and the error state
@@ -155,7 +156,7 @@ void move_to_point(Point point,ppthread_args args){
 	//call the low level function to move to a single point considering 
 	//the coordinates (in refs) stored in oint (point.coordinates) 
 	//system("/home/root/home");
-	//update_pthread_args(args,args->config,args->sleep,point);
+	update_pthread_args(args,args->config,args->sleep,point);
 	pthread_create(&move_to_point_thread,NULL,move_to_point_threaded_function,reinterpret_cast<void*>(args));
 	//get the counters from the arm and convert them into refs to return to the user
 	//it is important to fill the coordinates with the number of joints
@@ -340,8 +341,8 @@ void handle_commands_message(const struct mosquitto_message *message){
 								Point target = receivedCommand.point;
 								if(!target.is_empty()){
 									current_point = target;
-									//update_pthread_args(args,args->config,args->sleep,target);
-									int err = pthread_create(&move_to_point_thread,NULL,&move_to_point_threaded_function,args);
+									update_pthread_args(&args,args.config,args.sleep,target);
+									int err = pthread_create(&move_to_point_thread,NULL,&move_to_point_threaded_function,&args);
 									pthread_detach(move_to_point_thread);
 
 									//handle err?
@@ -361,8 +362,8 @@ void handle_commands_message(const struct mosquitto_message *message){
 							Client client = receivedCommand.client;
 							if(owner == client){	
 								current_trajectory = receivedCommand.trajectory;
-								//update_pthread_args(args,args->config,args->sleep,args->p);
-								int err = pthread_create(&apply_trajectory_thread,NULL,&apply_trajectory_threaded_function,args);
+								update_pthread_args(&args,args.config,args.sleep,args.p);
+								int err = pthread_create(&apply_trajectory_thread,NULL,&apply_trajectory_threaded_function,&args);
 								pthread_detach(apply_trajectory_thread);
 
 								//handle err?
@@ -549,7 +550,7 @@ int main(int argc, char *argv[])
     std::string config_file = parser.get<std::string>("--config_file");
     bool verbose = parser.get<bool>("--verbose");
 	Point p;
-    //update_pthread_args(*args,config_file,DEFAULT_SLEEP,p);
+    update_pthread_args(&args,config_file,DEFAULT_SLEEP,p);
     
 	uint8_t reconnect = true;
 	char clientid[24];
