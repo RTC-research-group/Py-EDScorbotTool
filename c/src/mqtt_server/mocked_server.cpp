@@ -7,13 +7,13 @@
 #include "mosquitto.h"
 #include "include/devmem.hpp"
 #include <pthread.h>
-#include "EDScorbot.hpp"
+#include "include/EDScorbot.hpp"
 #include <vector>
 
 #define DEFAULT_SLEEP 125000 //microseconds
 // the server with all implementations
-//#define mqtt_host "192.168.1.104"
-#define mqtt_host "localhost"
+#define mqtt_host "192.168.1.104"
+//#define mqtt_host "localhost"
 #define mqtt_port 1883
 
 static int run = 1;
@@ -32,12 +32,13 @@ typedef struct
 
 typedef struct{
 	Point p;
-	char* config;
+	std::string config;
 	int sleep;
 } pthread_args,*ppthread_args;
 
 progress_info progress;
 static ppthread_args args;
+
 Point current_point;
 
 bool executing_trajectory = false;
@@ -45,29 +46,29 @@ bool executing_trajectory = false;
 void parse_command(char *command, int *t, char *m, char *url, int *n,int* sleep);
 void ftp_trajectory(char *url);
 
-void update_pthread_args(ppthread_args args,char* config, int sleep, Point& p){
+// void update_pthread_args(ppthread_args args,std::string& config, int sleep, Point& p){
 	
-	args->config = config;
-	args->p = p;
-	args->sleep = sleep;
+// 	args.config = config;
+// 	args.p = p;
+// 	args.sleep = sleep;
 
-}
+// }
 
 void* search_home_threaded_function(void* arg){
 	//to execute search home we need the suitable signal, the owner and the error state
 	// the owrner has already been validated to allow this execution in the callback
 	CommandObject output = CommandObject(ARM_HOME_SEARCHED);
-	char* config = reinterpret_cast<char*>(arg);
+	char* config = (char*)arg;
 	output.client = owner;
 	output.error = error_state; 
 
-	usleep(4000000);
-	EDScorbot handler(config);
+	//usleep(4000000);
+	EDScorbot handler("/home/root/initial_config.json");
 	handler.searchHome(handler.j2,false);
 	handler.searchHome(handler.j3,false);
 	handler.searchHome(handler.j1,false);
 	//system("/home/root/home");
-	delete &handler;
+	
 	//publish message notifying that home has been reached
 	publish_message("EDScorbot/commands",output.to_json().dump().c_str());
 	std::cout << "Home position reached" << std::endl;
@@ -82,16 +83,16 @@ void* move_to_point_threaded_function(void* arg){
 	//to move to a single point we need the owner, the error state and the point
 	// the owrner has already been validated to allow this execution in the callback
 	ppthread_args args = reinterpret_cast<ppthread_args>(arg);
-	char* config = args->config;
-	Point *p;
-	p = &(args->p);
+	std::string config = args->config;
+	// Point *p;
+	// p = &(args->p);
 	MovedObject output = MovedObject();
 	output.client = owner;
 	output.error = error_state;
-	char* config = reinterpret_cast<char*>(arg);
-	EDScorbot handler(config);	//call the low level function to move to a single point considering 
 	
-	std::vector<double> coords = (*p).coordinates;
+	EDScorbot handler("/home/root/initial_config.json");	//call the low level function to move to a single point considering 
+	
+	std::vector<double> coords = current_point.coordinates;
 	int i;
 	for(i = 0; i < 4 ; i++){
 		int ref = angle_to_ref(i+1,coords[i]);
@@ -117,8 +118,18 @@ void* move_to_point_threaded_function(void* arg){
 	//}
 
 	//for the moment we use current_point to notify the user
-	output.content = current_point;
+	double angles[6];
+	handler.readJoints(angles);
+	Point reached;
+	std::vector<double> reached_v;
+
 	
+	for(i = 0; i< 6;i++){
+		reached_v.push_back(angles[i]);
+	}
+
+	reached.coordinates = reached_v;
+	output.content = reached;
 	
 	//publish message notifying that the point has been published
 	publish_message("EDScorbot/moved",output.to_json().dump().c_str());
@@ -144,7 +155,7 @@ void move_to_point(Point point,ppthread_args args){
 	//call the low level function to move to a single point considering 
 	//the coordinates (in refs) stored in oint (point.coordinates) 
 	//system("/home/root/home");
-	update_pthread_args(args,args->config,args->sleep,point);
+	//update_pthread_args(args,args->config,args->sleep,point);
 	pthread_create(&move_to_point_thread,NULL,move_to_point_threaded_function,reinterpret_cast<void*>(args));
 	//get the counters from the arm and convert them into refs to return to the user
 	//it is important to fill the coordinates with the number of joints
@@ -175,12 +186,17 @@ void* apply_trajectory_threaded_function(void* arg){
 	// the owner has already been validated to allow this execution in the callback
 	//the current trajectory is maintained in a global variable current_trajectory
 	//that is updated befoe starting this thread
+
+	MovedObject output = MovedObject();
+	output.client = owner;
+	output.error = error_state; 
+
 	ppthread_args traj_args = reinterpret_cast<ppthread_args>(arg);
-	char* config = traj_args->config;
+	std::string config = traj_args->config;
 	int sleep = traj_args->sleep;
 	std::list<Point> points = std::list<Point>(current_trajectory.points);
 	executing_trajectory = true;
-	EDScorbot handler(config);
+	EDScorbot handler("/home/root/initial_config.json");
 	int i;
 	int ref;
 	while (!points.empty() && executing_trajectory){
@@ -193,19 +209,41 @@ void* apply_trajectory_threaded_function(void* arg){
 			ref = angle_to_ref(i+1,p.coordinates[i]);
 			handler.sendRef(ref,handler.joints[i]);
 		}
+		double angles[6];
+		handler.readJoints_angle(angles);
+		Point reached;
+
+		std::vector<double> reached_v;
+
+	
+		for(i = 0; i< 6;i++){
+			reached_v.push_back(angles[i]);
+		}
+		
+		output.content = reached;
+		//publish message notifying that the point has been published
+		publish_message("EDScorbot/moved",output.to_json().dump().c_str());
+		std::cout << "Arm moved to point " << output.content.to_json().dump().c_str() << std::endl;
+		int s =  (int) (p.coordinates.back());
+		usleep(s);
+		
 		//we need to handle the waiting time after start oving to a point.
 		//this time is the last coordinate of the point parameter
 		//usleep(p.coordinates.end()) // something like this ??????
 
 		points.erase(points.begin());
+
 	}
 
 	executing_trajectory = false;
 	current_trajectory = Trajectory();
-		delete &handler;
+	
 
+	// there is no need to publish when the trajectory is finished 
+	// because the graphical interface waits for a message in moved 
+	// that is not returned and it itnerprets as the trajectory has been finished successfully
 	//Publish somehting no?
-	//publish_message("EDScorbot/metainfo","TRAJECTORY_COMPLETED"); //o algo asi
+	//publish_message("EDScorbot/commands","TRAJECTORY_COMPLETED"); //o algo asi
 	return NULL;
 }
 
@@ -302,16 +340,18 @@ void handle_commands_message(const struct mosquitto_message *message){
 								Point target = receivedCommand.point;
 								if(!target.is_empty()){
 									current_point = target;
-									update_pthread_args(args,args->config,args->sleep,target);
-									int err = pthread_create(&move_to_point_thread,NULL,&move_to_point_threaded_function,NULL);
+									//update_pthread_args(args,args->config,args->sleep,target);
+									int err = pthread_create(&move_to_point_thread,NULL,&move_to_point_threaded_function,args);
 									pthread_detach(move_to_point_thread);
 
 									//handle err?
 								}
 							} else {
+								printf("err1");
 								//other client is trying to move the arm ==> ignore
 							}
 						} else {
+							printf("err2");
 							//arm has no owner ==> ignore
 						}
 						break;
@@ -506,10 +546,10 @@ int main(int argc, char *argv[])
         std::exit(1);
     }
 
-    const char *config_file = parser.get<std::string>("--config_file").c_str();
+    std::string config_file = parser.get<std::string>("--config_file");
     bool verbose = parser.get<bool>("--verbose");
 	Point p;
-    update_pthread_args(args,(char*)config_file,DEFAULT_SLEEP,p);
+    //update_pthread_args(*args,config_file,DEFAULT_SLEEP,p);
     
 	uint8_t reconnect = true;
 	char clientid[24];
