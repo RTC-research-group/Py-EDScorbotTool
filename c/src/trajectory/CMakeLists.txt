@@ -42,7 +42,7 @@ add_executable(trajectory trajectory.cpp utils.cpp ../EDScorbot/EDScorbot.cpp ..
 
 
 
-#target_include_directories(trajectory PUBLIC "../../json/single_include/")
+target_include_directories(trajectory PUBLIC "../../json/single_include/")
 target_include_directories(trajectory PUBLIC "../")
 target_include_directories(trajectory PUBLIC "../../")
 #target_include_directories(trajectory PUBLIC "/home/enrique/mosquitto-2.0.14/include")
@@ -50,7 +50,7 @@ target_include_directories(trajectory PUBLIC "../../")
 
 #TARGET_LINK_LIBRARIES(test_target PRIVATE ${DV_LIBRARIES})
 
-#TARGET_LINK_LIBRARIES(trajectory PRIVATE nlohmann_json::nlohmann_json ${CMAKE_CURRENT_SOURCE_DIR}/../../lib/libmosquitto_static.a -lpthread)
+TARGET_LINK_LIBRARIES(trajectory PRIVATE nlohmann_json::nlohmann_json ${CMAKE_CURRENT_SOURCE_DIR}/../../compiled_libs_armhf/libmosquitto.a -lpthread)
 
 #INSTALL(TARGETS test_edscorbot DESTINATION "/usr/share/dv/modules")
 #INSTALL(TARGETS image_generator DESTINATION "/usr/share/dv/modules")

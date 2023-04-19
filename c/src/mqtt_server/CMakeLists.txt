@@ -15,7 +15,7 @@ add_compile_options(-std=c++17)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS_INIT}")
-SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fPIC -DEDS_VERBOSE")
+SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fPIC -DEDS_VERBOSE --static")
 set(LANGUAGE C_STANDARD)
 # Custom CMake base module
 
@@ -24,6 +24,7 @@ set(LANGUAGE C_STANDARD)
 
 add_executable(mqtt_server mqtt_server.cpp ../EDScorbot/EDScorbot.cpp ../EDScorbot/devmem.cpp)
 #add_executable(mqtt_client src/mqtt_client.c)
+add_executable(mocked_server mocked_server.cpp ../EDScorbot/devmem.cpp ../EDScorbot/EDScorbot.cpp)
 
 
 
@@ -38,18 +39,18 @@ add_executable(mqtt_server mqtt_server.cpp ../EDScorbot/EDScorbot.cpp ../EDScorb
 
 
 
-#target_include_directories(mqtt_server PUBLIC "../../json/single_include/")
-target_include_directories(mqtt_server PUBLIC "../")
+target_include_directories(mqtt_server PUBLIC "../../json/single_include/" "${CMAKE_CURRENT_SOURCE_DIR}/../../" "${CMAKE_CURRENT_SOURCE_DIR}/../")
+#target_include_directories(mqtt_server PUBLIC "../")
 #target_include_directories(mqtt_server PUBLIC "/home/enrique/mosquitto-2.0.14/include")
-
+target_include_directories(mocked_server PUBLIC "../../json/single_include/" "${CMAKE_CURRENT_SOURCE_DIR}/../../" "${CMAKE_CURRENT_SOURCE_DIR}/../")
 # commented because i have compiled mosquitto and included the header files in the project
 #target_include_directories(mqtt_server PUBLIC "../../mosquitto/include")
 
 #TARGET_LINK_LIBRARIES(test_target PRIVATE ${DV_LIBRARIES})
 #message("###########DIRECTORIO###########3: ${CMAKE_CURRENT_SOURCE_DIR}")
-#TARGET_LINK_LIBRARIES(mqtt_server PRIVATE nlohmann_json::nlohmann_json ${CMAKE_CURRENT_SOURCE_DIR}/../../lib/libmosquitto_static.a -lpthread)
-TARGET_LINK_LIBRARIES(mqtt_server PRIVATE /home/adalberto/Downloads/tmp/mosquitto/lib/libmosquitto.a -lpthread)
-
+TARGET_LINK_LIBRARIES(mqtt_server PRIVATE nlohmann_json::nlohmann_json ${CMAKE_CURRENT_SOURCE_DIR}/../../compiled_libs_armhf/libmosquitto.a -lpthread)
+#TARGET_LINK_LIBRARIES(mqtt_server PRIVATE /home/adalberto/Downloads/tmp/mosquitto/lib/libmosquitto.a -lpthread)
+TARGET_LINK_LIBRARIES(mocked_server PRIVATE nlohmann_json::nlohmann_json ${CMAKE_CURRENT_SOURCE_DIR}/../../compiled_libs_armhf/libmosquitto.a -lpthread)
 #TARGET_LINK_LIBRARIES(mqtt_server )
 
 #INSTALL(TARGETS test_edscorbot DESTINATION "/usr/share/dv/modules")
