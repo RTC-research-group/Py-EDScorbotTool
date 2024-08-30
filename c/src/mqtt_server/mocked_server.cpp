@@ -47,8 +47,6 @@ bool executing_trajectory = false;
 void parse_command(char *command, int *t, char *m, char *url, int *n,int* sleep);
 void ftp_trajectory(char *url);
 
-<<<<<<< HEAD
-=======
 void update_pthread_args(ppthread_args args,std::string& config, int sleep, Point& p){
 	
 	args->config = config;
@@ -56,7 +54,6 @@ void update_pthread_args(ppthread_args args,std::string& config, int sleep, Poin
 	args->sleep = sleep;
 
 }
->>>>>>> 633efd74a41894ecadccbb4627e553f8c407d376
 
 void* search_home_threaded_function(void* arg){
 	//to execute search home we need the suitable signal, the owner and the error state
