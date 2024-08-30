@@ -7,10 +7,10 @@ from tkinter import ttk,messagebox
 from tkinter.ttk import Progressbar
 from tkinter.constants import X
 from tkinter import simpledialog
-
-# import usb.core
-# import usb.util
-# import usb.backend.libusb1
+import tqdm
+import usb.core
+import usb.util
+import usb.backend.libusb1
 import json
 from tkinter import filedialog
 import datetime
@@ -30,86 +30,165 @@ from .utils.transformations import angles_to_refs as a_to_r
 from .utils.transformations import angles_to_xyz as a_to_xyz
 from .utils.transformations import pad_trajectory 
 from .utils.transformations import omegas_to_angles as w_to_a
-from .utils.visualization.xyz import plot3d
+from .utils.visualization.xyz import plot3d,compare_plots
 from .utils.visualization.angles import plotangles
 from .utils.visualization.counters import plotcounters
+
 import pandas
+from pathlib import Path
 
 def on_connect(client, userdata, flags, rc):
-        global traj_name
-        global n
-        print("Connected with result code "+str(rc))
+    '''
+        Callback for successful connection of MQTT client "client" to a broker
 
-        # Subscribing in on_connect() means that if we lose the connection and
-        # reconnect then subscriptions will be renewed.
-        client.subscribe("EDScorbot/trajectory")
-        topic = "/EDScorbot/commands"
-        
- 
-        
-        
+        Prints out a success message and subscribes to "EDScorbot/trajectory" topic. 
+
+        Not a part of pyEDScorbotTool class. pyEDScorbot creates a paho-mqtt client and uses this and 
+        the on_message callbacks to manage itself, there is no need for these functions to go inside 
+        pyEDScorbot class.
+
+        Args:
+            client: The client that has successfully connected to a broker and has this function as its on_connect member
+            userdata: Dictionary that can contain arbitrary user data. The dictionary must have been defined when creating the mqtt client
+            and passed to it via the user_data_set function, which lets us pass a dictionary we have created as the userdata parameter to the client. 
+            This is needed to achieve parameterization within the MQTT processes, as the names of files that have to be transferred are themselves parameters which
+            are needed to be retrieved by some part of the MQTT callbacks.
+            flags: Not used
+            rc: Result code of connection
+            
+
+        '''
+    global traj_name
+    global n
+    
+    print("Connected with result code "+str(rc))
+    
+    # Subscribing in on_connect() means that if we lose the connection and
+    # reconnect then subscriptions will be renewed.
+    client.subscribe("EDScorbot/trajectory")
+    topic = "/EDScorbot/commands"
+    
+
+    
+    
 
         # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
-        
-        parsed = msg.payload.decode('utf8').lstrip('[').rstrip(']').split(',')
-        #print(parsed)
-        #t.update()
-        #global i
-        #i+=1
+    '''
+        Callback for successful receival of message from "EDScorbot/trajectory" topic.
 
-        j1 = int(parsed[0])
-        j2 = int(parsed[1])
-        j3 = int(parsed[2])
-        j4 = int(parsed[3])
-        j5 = int(parsed[4])
-        j6 = int(parsed[5])
-        ts = int(parsed[6])
-        iter = int(parsed[7])
-        
-        
-        userdata['pos_data'].append([j1,j2,j3,j4,j5,j6,ts])
+        Takes the message/payload and extracts the relevant information from it. The expected format of these messages is [j1,j2,j3,j4,j5,j6,timestamp,iteration].
+        Trajectory information is stored in the userdata parameter to ensure proper collection throughout the entire trajectory.
+        When iteration < 0, trajectory has finished executing and all information collected is saved in a NumPy file (which can be set in `userdata['filename']`)
 
-        if int(iter) < 0:
-            arr = np.array(userdata['pos_data'])
-            userdata['pos_data'] = []
-           #name of folder in localhost where to save the data 
-            savename = filedialog.asksaveasfilename()
-            np.save(savename,arr[:-1])
-            #np.save("output_data.npy",arr[:-1])
-            userdata['progressbar'].stop()
-           #name of ouput file in remote server 
-            out_fname = userdata['filename'][:-5] + "_out_cont.json"
-            cmd = "scp -i /media/HDD/home/enrique/Proyectos/SMALL/zynq/zynq root@192.168.1.115:/home/root/refs_out_cont.json {}".format(os.path.join(savename,"out_cont.json"))
-            #cmd = "scp -i /media/HDD/home/enrique/Proyectos/SMALL/zynq/zynq {} root@192.168.1.115:/home/root/{}".format(filename.name,real_name)
-            os.system(cmd)
+        Not a part of pyEDScorbotTool class. pyEDScorbot creates a paho-mqtt client and uses this and 
+        the on_connect callbacks to manage itself, there is no need for these functions to go inside 
+        pyEDScorbot class.
+
+        Args:
+            client: The client that has successfully subscribed to and received a message from the "EDScorbot/trajectory" topic
+            userdata: Check `on_connect` description 
+            msg: Message that has been received from the topic, as a bytes object
             
-            #sys.exit()
-        if userdata['visible'] == True and iter > 0:
-            userdata['textbox'].insert(tk.END,msg.topic+" "+str(msg.payload) + "\n")
-            userdata['progressbar'].step()
-        print(msg.topic+" "+str(msg.payload))
+            
+
+        '''
+    ## [1874,63673,125125,16126,126126,12616,125215]
+    ##
+    parsed = msg.payload.decode('utf8').lstrip('[').rstrip(']').split(',')
+    #print(parsed)
+    #t.update()
+    #global i
+    #i+=1
+
+    j1 = int(parsed[0])
+    j2 = int(parsed[1])
+    j3 = int(parsed[2])
+    j4 = int(parsed[3])
+    j5 = int(parsed[4])
+    j6 = int(parsed[5])
+    ts = int(parsed[6])
+    global iter
+    iter = int(parsed[7])
+    
+    
+    userdata['pos_data'].append([j1,j2,j3,j4,j5,j6,ts])
+    global running
+    
+    if int(iter) < 0:
+        running = False
+        arr = np.array(userdata['pos_data'])
+        userdata['pos_data'] = []
+        #name of folder in localhost where to save the data 
+        if userdata['visible']:
+            savename = filedialog.asksaveasfilename()
+            userdata['progressbar'].stop()
+        else:
+            savename = userdata['savename']
+            userdata['progressbar'].reset()
+        np.save(savename,arr[:-1])
+        base = Path(os.environ['HOME'])
+        filename = base / Path(".tmp") / Path("trajectory_execution.txt")
+        os.makedirs(filename.parent,exist_ok=True)
+        with open(filename,'w') as f:
+            f.write("0")
+        #np.save("output_data.npy",arr[:-1])
         
+
+            
+        
+            
+        #name of ouput file in remote server 
+        fname = Path(userdata['filename'])
+        out_json_fname = fname.stem + "_out_cont.json"
+        json_abspath = fname.parent / out_json_fname
+        
+        #out_fname = userdata['filename'][:-5] + "_out_cont.json"
+        cmd = "scp -i /media/HDD/home/enrique/Proyectos/SMALL/zynq/zynq root@192.168.1.115:/home/root/{} {}".format(out_json_fname,json_abspath)
+        #cmd = "scp -i /media/HDD/home/enrique/Proyectos/SMALL/zynq/zynq {} root@192.168.1.115:/home/root/{}".format(filename.name,real_name)
+        os.system(cmd)
+        
+        #sys.exit()
+    if userdata['visible'] == True and iter > 0:
+        
+        running = True
+        userdata['textbox'].insert(tk.END,msg.topic+" "+str(msg.payload) + "\n")
+        userdata['textbox'].see("end")
+        userdata['progressbar'].step()
+        print(msg.topic+" "+str(msg.payload))
+    elif userdata['visible'] == False and iter>0:
+        running = True
+        userdata['progressbar'].update()
+        userdata['progressbar'].write(msg.topic+" "+str(msg.payload))
+
+
+    
+    
 class pyEDScorbotTool:
     '''
     py-EDScorbotTool software, replacement of jAER filter for EDScorbot
 
-    This class is used for establishing a communication with ED-Scorbot 
-    Robot in order to be able to control it via neuromorphic control, also called SPID
+    This class is used for establishing a communication with ED-Scorbot  
+    Robot framework in order to be able to control it remotely. It also provides
+    some functionality that helps convert data to and from the different data 
+    formats that are needed to use to move the robot.
 
-    :ivar self.d: Dictionary in which there are stored the variables that allow for SPID configuration. Every input of the graphical interface corresponds to a variable that is stored in this dictionary. It contains three other dictionaries: Motor Config, Joints and Scan Parameters, which in turn hold the corresponding variables. The keys for the dictionaries are "Motor Config", "Joints" and "Scan Parameters", respectively.
-    :ivar self.visible: Boolean variable that indicates whether the graphical interface should be rendered or not
-    :ivar self.root: Root of the graphical interface's window
-    :ivar self.checked_usb: Variable that holds the state of the checkbox that indicates whether USB is enabled or not.
+    Args:
+        visible (bool): Boolean variable that indicates whether the graphical interface should be rendered or not. Default: True
+        remote (bool): Boolean variable to connect to MQTT broker in pyEDScorbotTool constructor. Usually used for non-GUI mode. Default: False
+        config_file (str): When specified, a string indicating if a custom configuration file should be used. Default: empty string (looks for initial_config.json)
+        savename (str): When specified, the name of the output .npy file that is generated after a trajectory is executed. Usually used for non-GUI mode. Default: `out.npy`
+        
+        
     '''
-    def __init__(self,visible=True):
+    def __init__(self,visible=True,remote=False,config_file="",savename="out_cont.npy"):
         '''
         Constructor
 
         Initializes GUI by creating the root Tk object, sets icon of the app,
         initializes data structures to hold the value of all variables that 
         are displayed, creating a dictionary (self.d) to access their values
-        and sets constants and handles needed for USB connection
+        and sets constants and handles needed for remote connection
         '''
         #Initialize GUI: create root Tk object
         self.visible = visible
@@ -118,9 +197,12 @@ class pyEDScorbotTool:
         
             #self.root = tk.Tk()
                 #Set the icon
-            self.root.iconphoto(False,tk.PhotoImage(file="atc.png"))
+            parent_folder = Path(__file__).parent
+            img_path = parent_folder / "atc.png"
+            self.root.iconphoto(False,tk.PhotoImage(file=img_path))
         else:
             self.root.withdraw()
+            self.filename=""
         #Create dictionaries where the interface data will be stored
         self.d = {}
         self.d["Motor Config"] = {}
@@ -136,7 +218,7 @@ class pyEDScorbotTool:
         self.j6 = -1
         #Standalone variable to control if USB is enabled
         self.checked_usb = False
-
+        self.checked_remote = remote
         #Set USB constants needed
         self.VID = 0x10c4
         self.PID = 0x0000
@@ -144,7 +226,11 @@ class pyEDScorbotTool:
         self.ENDPOINT_IN = 0x81
         self.PACKET_LENGTH = 64
         
-        self.filename = ""
+        if config_file == "":
+            parent_folder = Path(__file__).parent
+            self.config_file = parent_folder / "initial_config.json"
+        else:
+            self.config_gile = config_file
 
         #Handle for USB connection
         self.dev = None
@@ -157,6 +243,9 @@ class pyEDScorbotTool:
         self.updating = True
         logging.basicConfig(filemode='w',level=logging.INFO)
 
+        self.savename = savename
+        self.filename = ""
+        self.mqtt_client = None
         #Progress bar
         #self.self.pb = None
 
@@ -166,6 +255,8 @@ class pyEDScorbotTool:
     def millis_now(self):
         '''
         This function returns the time at the moment of the call in milliseconds
+        Returns:
+            int: current time in milliseconds from 1/1/1970
         
         '''
         return (time.time()*1000) #time.time() returns seconds, so mult. by 1000 to get ms
@@ -403,12 +494,12 @@ class pyEDScorbotTool:
             ttk.Button(labelframe,text="Count to angles (from npy)",command=self.count_to_angles_npy).grid(row=5,column=1,sticky=(tk.W,tk.E))
             ttk.Button(labelframe,text="Count to XYZ (from json)",command=self.count_to_xyz_json).grid(row=6,column=1,sticky=(tk.W,tk.E))
             ttk.Button(labelframe,text="Count to angles (from json)",command=self.count_to_angles_json).grid(row=7,column=1,sticky=(tk.W,tk.E))
-            ttk.Button(labelframe,text="Send Trajectory",command=self.send_trajectory).grid(row=8,column=1,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Send Trajectory",command=self.send_trajectory_button).grid(row=8,column=1,sticky=(tk.W,tk.E))
             ttk.Button(labelframe,text="Plot 3D trajectory",command=self.plot_traj_3d).grid(row=9,column=1,sticky=(tk.W,tk.E))
             ttk.Button(labelframe,text="Plot counters",command=self.plot_counters).grid(row=10,column=1,sticky=(tk.W,tk.E))
             ttk.Button(labelframe,text="Plot angles",command=self.plot_angles).grid(row=1,column=2,sticky=(tk.W,tk.E))
-            # ttk.Button(labelframe,text="ScanMotor6",command=self.scanMotor6).grid(row=2,column=2,sticky=(tk.W,tk.E))
-            # ttk.Button(labelframe,text="Search_Home",command=self.search_Home_all).grid(row=3,column=2,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Compare plots",command=self.plt_compare).grid(row=2,column=2,sticky=(tk.W,tk.E))
+            ttk.Button(labelframe,text="Fix center & Plot",command=self.plot_center).grid(row=3,column=2,sticky=(tk.W,tk.E))
             # ttk.Button(labelframe,text="Send_Home",command=self.send_Home_all).grid(row=4,column=2,sticky=(tk.W,tk.E))
             # ttk.Button(labelframe,text="SendFPGAReset",command=self.SendFPGAReset).grid(row=5,column=2,sticky=(tk.W,tk.E))
             # ttk.Button(labelframe,text="SetAERIN_ref",command=self.SetAERIN_ref).grid(row=6,column=2,sticky=(tk.W,tk.E))
@@ -478,28 +569,58 @@ class pyEDScorbotTool:
 
         pass
 
-    def send_trajectory(self):
+    def send_trajectory(self,filename,n,sleep):
+
+        if self.visible:
+            if self.checked_remote.get() == False:
+                self.alert("Remote mode must be activated")
+                return
+            elif self.checked_remote == False:
+                print("Remote mode must be activated")
+                return 
+        
+        real_name = filename.split("/")[-1]
+        
+        #cmd = "python3 mqtt/client_traj.py -t {} -n 500 &".format(real_name)
+        #################################
+        #MUST BE PARAMETERIZED CORRECTLY#
+        #################################
+        if self.visible:
+            self.pb["maximum"] = n
+        else:
+            self.pb.total = n
+        msg = "[1,S,/home/root/{},{},{}]".format(real_name,n,sleep)
+        self.filename = real_name
+        self.mqtt_client.publish(self.topic,msg,qos=0)
+        base = Path(os.environ['HOME'])
+        filename = base / Path(".tmp") / Path("trajectory_execution.txt")
+        try:
+            os.mkdir(filename.parent)
+        except FileExistsError as e:
+            pass
+
+        with open(filename,'w') as f:
+            f.write("1")
+        
+
+    def send_trajectory_button(self):
         
         if self.checked_remote.get() == False:
             self.alert("Remote mode must be activated")
             return
         
+            
 
         filename = filedialog.askopenfile(mode="r")
-        real_name = filename.name.split("/")[-1]
         n = simpledialog.askinteger("Trajectory sender","Number of points of trajectory (integer)")
+        self.filename = filename.name
+        if type(self.mqtt_client) == type(None):
+            self.mqtt_client = self.open_mqtt("192.168.1.104")
+        real_name = filename.name.split("/")[-1]
+
         cmd = "scp -i /media/HDD/home/enrique/Proyectos/SMALL/zynq/zynq {} root@192.168.1.115:/home/root/{}".format(filename.name,real_name)
         os.system(cmd)
-        #cmd = "python3 mqtt/client_traj.py -t {} -n 500 &".format(real_name)
-        #################################
-        #MUST BE PARAMETERIZED CORRECTLY#
-        #################################
-        self.pb["maximum"] = n
-        msg = "[1,S,/home/root/{},{}]".format(real_name,n)
-        self.filename = real_name
-        self.mqtt_client.publish(self.topic,msg,qos=0)
-        #os.system(cmd)
-        i = 0
+        self.send_trajectory(filename.name,n,sleep=125)
 
         
         
@@ -550,19 +671,22 @@ class pyEDScorbotTool:
             col (int): Column of the grid in which the checkbox will be displayed
         '''
         if self.visible:
-            labelframe = ttk.LabelFrame(self.root, text="USB")
+            labelframe = ttk.LabelFrame(self.root, text="Remote")
             labelframe.grid(column=col, row=row, sticky=(
             tk.N, tk.W), padx=5, pady=5)
 
-        checked_usb = tk.BooleanVar()
+        #checked_usb = tk.BooleanVar()
         checked_remote = tk.BooleanVar()
+        checked_visualkin = tk.BooleanVar()
 
         if self.visible:
-            ttk.Checkbutton(labelframe,text="Open device",command=self.checkUSB,variable=checked_usb,onvalue=True,offvalue=False).grid(column=1,row=3,sticky=(tk.W))
-            ttk.Checkbutton(labelframe,text="Remote mode",command=self.checkRemote,variable=checked_remote,onvalue=True,offvalue=False).grid(column=2,row=3,sticky=(tk.W))
+            #ttk.Checkbutton(labelframe,text="Open device",command=self.checkUSB,variable=checked_usb,onvalue=True,offvalue=False).grid(column=1,row=3,sticky=(tk.W))
+            ttk.Checkbutton(labelframe,text="Open MQTT connection",command=self.checkRemote,variable=checked_remote,onvalue=True,offvalue=False).grid(column=1,row=3,sticky=(tk.W))
+            ttk.Checkbutton(labelframe,text="Visual Kinematics",variable=checked_visualkin,onvalue=True,offvalue=False).grid(column=2,row=3,sticky=(tk.W))
 
-        self.checked_usb = checked_usb
+        #self.checked_usb = checked_usb
         self.checked_remote = checked_remote
+        self.checked_visualkin = checked_visualkin
    
     # def openUSB(self):
     #     '''
@@ -652,16 +776,26 @@ class pyEDScorbotTool:
         If it hasn't, it disconnects from the broker
         '''
         #Check if USB is enabled
-        if self.checked_remote.get() == False:
-            #If not, close the connection
-            self.close_mqtt()
+        #GUI is visible
+        if self.visible:
+
+            if self.checked_remote.get() == False:
+                #If not, close the connection
+                self.close_mqtt()        
             
-        
+                
+
         else:
             
             #If remote usage is enabled, try to connect to mqtt broker
-            self.checked_usb.set(False)
-            self.mqtt_client = self.open_mqtt("192.168.1.104")
+            if self.checked_remote == False:
+                self.close_mqtt()
+
+
+            else:
+                self.mqtt_client = self.open_mqtt("192.168.1.104")
+                
+            
             #self.mqtt_client = self.open_mqtt("150.214.140.189")
 
     
@@ -672,12 +806,17 @@ class pyEDScorbotTool:
         client = mqtt.Client()
         client.on_connect = on_connect
         client.on_message = on_message
+        if not self.visible:
+            self.textbox = None
+            self.pb = tqdm.tqdm(file=sys.stdout,leave=False)
+            
         d = {
             'visible':self.visible,
             'textbox':self.textbox,
             'pos_data':[],
             'progressbar':self.pb,
-            'filename':self.filename
+            'filename':self.filename,
+            'savename':self.savename
         }
         self.topic = "/EDScorbot/commands"
         client.user_data_set(d)
@@ -826,19 +965,19 @@ class pyEDScorbotTool:
     
 
     
-    def render_cameras(self,row,col):
+    # def render_cameras(self,row,col):
         
-        if self.visible:
-            labelframe = ttk.LabelFrame(self.root, text="Cameras")
-            labelframe.grid(column=col, row=row, sticky=(
-            tk.N, tk.W), padx=5, pady=5)
-        camera1_enabled = tk.BooleanVar()
-        camera2_enabled = tk.BooleanVar()
-        if self.visible:
-            ttk.Checkbutton(labelframe,text="Camera 1 (Front)",command=self.openCamera1,variable=camera1_enabled,onvalue=True,offvalue=False).grid(column=1,row=1,sticky=(tk.W))
-            ttk.Checkbutton(labelframe,text="Camera 2 (Side)",command=self.openCamera2,variable=camera2_enabled,onvalue=True,offvalue=False).grid(column=1,row=2,sticky=(tk.W))
-        self.cam1_enable = camera1_enabled
-        self.cam2_enable = camera2_enabled
+    #     if self.visible:
+    #         labelframe = ttk.LabelFrame(self.root, text="Cameras")
+    #         labelframe.grid(column=col, row=row, sticky=(
+    #         tk.N, tk.W), padx=5, pady=5)
+    #     camera1_enabled = tk.BooleanVar()
+    #     camera2_enabled = tk.BooleanVar()
+    #     if self.visible:
+    #         ttk.Checkbutton(labelframe,text="Camera 1 (Front)",command=self.openCamera1,variable=camera1_enabled,onvalue=True,offvalue=False).grid(column=1,row=1,sticky=(tk.W))
+    #         ttk.Checkbutton(labelframe,text="Camera 2 (Side)",command=self.openCamera2,variable=camera2_enabled,onvalue=True,offvalue=False).grid(column=1,row=2,sticky=(tk.W))
+    #     self.cam1_enable = camera1_enabled
+    #     self.cam2_enable = camera2_enabled
 
     def render_gui(self):
         '''
@@ -877,63 +1016,63 @@ class pyEDScorbotTool:
         self.render_textbox(3,4)
         self.render_progressbar(4,4)
         self.init_config()
-        self.update()
+        #self.update()
         #And call mainloop to display GUI
         if self.visible:
             self.root.mainloop()
         
 
-    def openCamera1(self):
+    # def openCamera1(self):
 
-        if(self.cam1_enable.get()):
+    #     if(self.cam1_enable.get()):
 
-            self.camera1 = cv2.VideoCapture('/dev/video0')
+    #         self.camera1 = cv2.VideoCapture('/dev/video0')
                 
-        else:
-            try:
-                self.camera1.release()
-                cv2.destroyWindow('front')
-            except:
-                pass
+    #     else:
+    #         try:
+    #             self.camera1.release()
+    #             cv2.destroyWindow('front')
+    #         except:
+    #             pass
 
         
 
-    def openCamera2(self):
+    # def openCamera2(self):
 
-        if(self.cam2_enable.get()):
+    #     if(self.cam2_enable.get()):
 
-            self.camera2 = cv2.VideoCapture('/dev/video2')
+    #         self.camera2 = cv2.VideoCapture('/dev/video2')
                 
-        else:
-            try:
-                self.camera2.release()
-                cv2.destroyWindow('side')
-            except:
-                pass
-    def toggle_record(self,filename=None):
-        if self.record:
-            date = datetime.datetime.now()
-            if filename == None:
-                timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
-            else:
-                timeStamp=filename
+    #     else:
+    #         try:
+    #             self.camera2.release()
+    #             cv2.destroyWindow('side')
+    #         except:
+    #             pass
+    # def toggle_record(self,filename=None):
+    #     if self.record:
+    #         date = datetime.datetime.now()
+    #         if filename == None:
+    #             timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
+    #         else:
+    #             timeStamp=filename
             
-            P.dump(self.array,open(timeStamp + '.pkl','wb'))
-            self.array = []
-        self.record = not self.record
+    #         P.dump(self.array,open(timeStamp + '.pkl','wb'))
+    #         self.array = []
+    #     self.record = not self.record
 
-    def print_updates(self,):
+    # def print_updates(self,):
         
-        self.j1 = self.execute_script("bash/readJoint.bash 1")
-        self.j2 = self.execute_script("bash/readJoint.bash 2")
-        self.j3 = self.execute_script("bash/readJoint.bash 3")
-        self.j4 = self.execute_script("bash/readJoint.bash 4")
-        self.j5 = self.execute_script("bash/readJoint.bash 5")
-        self.j6 = self.execute_script("bash/readJoint.bash 6")
+    #     self.j1 = self.execute_script("bash/readJoint.bash 1")
+    #     self.j2 = self.execute_script("bash/readJoint.bash 2")
+    #     self.j3 = self.execute_script("bash/readJoint.bash 3")
+    #     self.j4 = self.execute_script("bash/readJoint.bash 4")
+    #     self.j5 = self.execute_script("bash/readJoint.bash 5")
+    #     self.j6 = self.execute_script("bash/readJoint.bash 6")
 
-        print("Joint\tPosition\tHex\nJ1\t{}\t{}\nJ2\t{}\t{}\nJ3\t{}\t{}\nJ4\t{}\t{}\nJ5\t{}\t{}\nJ6\t{}\t{}\n"
-        .format(self.j1,hex(self.j1),self.j2,hex(self.j2),self.j3,hex(self.j3),self.j4,hex(self.j4),self.j5,hex(self.j5),self.j6,hex(self.j6))
-        ,end='/r')
+    #     print("Joint\tPosition\tHex\nJ1\t{}\t{}\nJ2\t{}\t{}\nJ3\t{}\t{}\nJ4\t{}\t{}\nJ5\t{}\t{}\nJ6\t{}\t{}\n"
+    #     .format(self.j1,hex(self.j1),self.j2,hex(self.j2),self.j3,hex(self.j3),self.j4,hex(self.j4),self.j5,hex(self.j5),self.j6,hex(self.j6))
+    #     ,end='/r')
 
 
     def update(self,ref=None):
@@ -2807,124 +2946,124 @@ class pyEDScorbotTool:
         self.dev = self.openUSB()
         self.checked_usb.set(True)
         
-    def ConfigureLeds(self):
-        '''
-        Under development
-        '''
-        if self.dev==None:
-            self.alert("There is no opened device. Try opening one first")
-            return
-        else:
-            if self.checked_usb.get():
-                self.sendCommand16( 0,  (0x00), ((self.d["Motor Config"]["leds_M1"].get()) & 0xFF), True) #LEDs M1
-                self.sendCommand16( 0x20,  (0x00), ((self.d["Motor Config"]["leds_M2"].get()) & 0xFF), True) #LEDs M2
-                self.sendCommand16( 0x40,  (0x00), ((self.d["Motor Config"]["leds_M3"].get()) & 0xFF), True) #LEDs M3
-                self.sendCommand16( 0x60,  (0x00), ((self.d["Motor Config"]["leds_M4"].get()) & 0xFF), True) #LEDs M4
-                self.sendCommand16( 0x80,  (0x00), ((self.d["Motor Config"]["leds_M5"].get()) & 0xFF), True) #LEDs M5
-                self.sendCommand16( 0xA0,  (0x00), ((self.d["Motor Config"]["leds_M6"].get()) & 0xFF), True) #LEDs M6
+    # def ConfigureLeds(self):
+    #     '''
+    #     Under development
+    #     '''
+    #     if self.dev==None:
+    #         self.alert("There is no opened device. Try opening one first")
+    #         return
+    #     else:
+    #         if self.checked_usb.get():
+    #             self.sendCommand16( 0,  (0x00), ((self.d["Motor Config"]["leds_M1"].get()) & 0xFF), True) #LEDs M1
+    #             self.sendCommand16( 0x20,  (0x00), ((self.d["Motor Config"]["leds_M2"].get()) & 0xFF), True) #LEDs M2
+    #             self.sendCommand16( 0x40,  (0x00), ((self.d["Motor Config"]["leds_M3"].get()) & 0xFF), True) #LEDs M3
+    #             self.sendCommand16( 0x60,  (0x00), ((self.d["Motor Config"]["leds_M4"].get()) & 0xFF), True) #LEDs M4
+    #             self.sendCommand16( 0x80,  (0x00), ((self.d["Motor Config"]["leds_M5"].get()) & 0xFF), True) #LEDs M5
+    #             self.sendCommand16( 0xA0,  (0x00), ((self.d["Motor Config"]["leds_M6"].get()) & 0xFF), True) #LEDs M6
 
-    def SwitchOffLEDS(self):
-        '''
-        Under development
-        '''
-        if self.dev==None:
-            self.alert("There is no opened device. Try opening one first")
-            return
-        else:
-            if self.checked_usb.get():
-                self.sendCommand16( 0,  0,  0, False) #LEDs M1 off
-                self.sendCommand16( 0x20,  0,  0, False) #LEDs M2 off
-                self.sendCommand16( 0x40,  0,  0, False) #LEDs M3 off
-                self.sendCommand16( 0x60,  0,  0, False) #LEDs M4 off
-                self.sendCommand16( 0x80,  0,  0, False) #LEDs M5 off
-                self.sendCommand16( 0xA0,  0,  0, False) #LEDs M6 off
+    # def SwitchOffLEDS(self):
+    #     '''
+    #     Under development
+    #     '''
+    #     if self.dev==None:
+    #         self.alert("There is no opened device. Try opening one first")
+    #         return
+    #     else:
+    #         if self.checked_usb.get():
+    #             self.sendCommand16( 0,  0,  0, False) #LEDs M1 off
+    #             self.sendCommand16( 0x20,  0,  0, False) #LEDs M2 off
+    #             self.sendCommand16( 0x40,  0,  0, False) #LEDs M3 off
+    #             self.sendCommand16( 0x60,  0,  0, False) #LEDs M4 off
+    #             self.sendCommand16( 0x80,  0,  0, False) #LEDs M5 off
+    #             self.sendCommand16( 0xA0,  0,  0, False) #LEDs M6 off
 
-    def Draw8xy(self):
-        '''
-        Under development
-        '''
-        if self.dev==None:
-            self.alert("There is no opened device. Try opening one first")
-            return
-        else:
-            if self.checked_usb.get():
-                scan_Wait_Time = self.d["Scan Parameters"]["scan_Wait_Time"]
-                refsM1 = [0,-200,0,200,0]
-                refsM2 = [0,-50,0,-50,0]
-                refsM3 = [0, -200,    0, -200,    0]
-                refsM4 = [0, -200,    0, -200,    0]
+    # def Draw8xy(self):
+    #     '''
+    #     Under development
+    #     '''
+    #     if self.dev==None:
+    #         self.alert("There is no opened device. Try opening one first")
+    #         return
+    #     else:
+    #         if self.checked_usb.get():
+    #             scan_Wait_Time = self.d["Scan Parameters"]["scan_Wait_Time"]
+    #             refsM1 = [0,-200,0,200,0]
+    #             refsM2 = [0,-50,0,-50,0]
+    #             refsM3 = [0, -200,    0, -200,    0]
+    #             refsM4 = [0, -200,    0, -200,    0]
                 
-                date = datetime.datetime.now()
-                timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
-                #Abrir archivo de log con el nombre de la fecha
-                filename='./logs/8xy' + timeStamp + '.log'
-                logger_file = logging.FileHandler(filename)
-                logger = logging.getLogger("logger_8xy")
-                logger.addHandler(logger_file)  
-                logger.info("CITEC ED-BioRob Print 8 x,y Log file") #Se usa esta funcion??
+    #             date = datetime.datetime.now()
+    #             timeStamp = date.strftime("%Y_%b_%d_%H_%M_%S")
+    #             #Abrir archivo de log con el nombre de la fecha
+    #             filename='./logs/8xy' + timeStamp + '.log'
+    #             logger_file = logging.FileHandler(filename)
+    #             logger = logging.getLogger("logger_8xy")
+    #             logger.addHandler(logger_file)  
+    #             logger.info("CITEC ED-BioRob Print 8 x,y Log file") #Se usa esta funcion??
 
-                self.sendCommand16( 0x03,  (0x00),  ((3)&0xFF), True) #I banks disabled M1
-                self.sendCommand16( 0x07,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
-                self.sendCommand16( 0x08,  (0x00),  ((3)&0xFF), True) #D banks disabled M1
-                self.sendCommand16( 0x0C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
-                self.sendCommand16( 0x12,  ((self.d["Motor Config"]["spike_expansor_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M1"].get()) & 0xFF), True) #spike expansor M1
-                self.sendCommand16( 0x13,  (0x00),  ((3)&0xFF), True) #EI bank enabled M1
-                self.sendCommand16( 0x17,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
-                self.sendCommand16( 0x02,  ((refsM1[0] >> 8) & 0xFF),  ((refsM1[0]) & 0xFF), True) #Ref M1 0
+    #             self.sendCommand16( 0x03,  (0x00),  ((3)&0xFF), True) #I banks disabled M1
+    #             self.sendCommand16( 0x07,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
+    #             self.sendCommand16( 0x08,  (0x00),  ((3)&0xFF), True) #D banks disabled M1
+    #             self.sendCommand16( 0x0C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
+    #             self.sendCommand16( 0x12,  ((self.d["Motor Config"]["spike_expansor_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M1"].get()) & 0xFF), True) #spike expansor M1
+    #             self.sendCommand16( 0x13,  (0x00),  ((3)&0xFF), True) #EI bank enabled M1
+    #             self.sendCommand16( 0x17,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M1"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M1"].get()) & 0xFF), True) #FD I&G bank 3 M1
+    #             self.sendCommand16( 0x02,  ((refsM1[0] >> 8) & 0xFF),  ((refsM1[0]) & 0xFF), True) #Ref M1 0
                 
-                self.sendCommand16( 0x23,  (0x00),  ((3)&0xFF), True) #I banks disabled M1
-                self.sendCommand16( 0x27,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M1
-                self.sendCommand16( 0x28,  (0x00),  ((3)&0xFF), True) #D banks disabled M1
-                self.sendCommand16( 0x2C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M1
-                self.sendCommand16( 0x32,  ((self.d["Motor Config"]["spike_expansor_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M2"].get()) & 0xFF), True) #spike expansor M1
-                self.sendCommand16( 0x33,  (0x00),  ((3)&0xFF), True) #EI bank enabled M1
-                self.sendCommand16( 0x37,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M1
-                self.sendCommand16( 0x22,  ((refsM2[0] >> 8) & 0xFF),  ((refsM2[0]) & 0xFF), True) #Ref M1 0
+    #             self.sendCommand16( 0x23,  (0x00),  ((3)&0xFF), True) #I banks disabled M1
+    #             self.sendCommand16( 0x27,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M1
+    #             self.sendCommand16( 0x28,  (0x00),  ((3)&0xFF), True) #D banks disabled M1
+    #             self.sendCommand16( 0x2C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M1
+    #             self.sendCommand16( 0x32,  ((self.d["Motor Config"]["spike_expansor_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M2"].get()) & 0xFF), True) #spike expansor M1
+    #             self.sendCommand16( 0x33,  (0x00),  ((3)&0xFF), True) #EI bank enabled M1
+    #             self.sendCommand16( 0x37,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M2"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M2"].get()) & 0xFF), True) #FD I&G bank 3 M1
+    #             self.sendCommand16( 0x22,  ((refsM2[0] >> 8) & 0xFF),  ((refsM2[0]) & 0xFF), True) #Ref M1 0
                 
-                self.sendCommand16( 0x43,  (0x00),  ((3)&0xFF), True) #I banks disabled M1
-                self.sendCommand16( 0x47,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M1
-                self.sendCommand16( 0x48,  (0x00),  ((3)&0xFF), True) #D banks disabled M1
-                self.sendCommand16( 0x4C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M1
-                self.sendCommand16( 0x52,  ((self.d["Motor Config"]["spike_expansor_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M3"].get()) & 0xFF), True) #spike expansor M1
-                self.sendCommand16( 0x53,  (0x00),  ((3)&0xFF), True) #EI bank enabled M1
-                self.sendCommand16( 0x57,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M1
-                self.sendCommand16( 0x42,  ((refsM3[0] >> 8) & 0xFF),  ((refsM3[0]) & 0xFF), True) #Ref M1 0
+    #             self.sendCommand16( 0x43,  (0x00),  ((3)&0xFF), True) #I banks disabled M1
+    #             self.sendCommand16( 0x47,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M1
+    #             self.sendCommand16( 0x48,  (0x00),  ((3)&0xFF), True) #D banks disabled M1
+    #             self.sendCommand16( 0x4C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M1
+    #             self.sendCommand16( 0x52,  ((self.d["Motor Config"]["spike_expansor_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M3"].get()) & 0xFF), True) #spike expansor M1
+    #             self.sendCommand16( 0x53,  (0x00),  ((3)&0xFF), True) #EI bank enabled M1
+    #             self.sendCommand16( 0x57,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M3"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M3"].get()) & 0xFF), True) #FD I&G bank 3 M1
+    #             self.sendCommand16( 0x42,  ((refsM3[0] >> 8) & 0xFF),  ((refsM3[0]) & 0xFF), True) #Ref M1 0
                 
-                self.sendCommand16( 0x63,  (0x00),  ((3)&0xFF), True) #I banks disabled M4
-                self.sendCommand16( 0x67,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
-                self.sendCommand16( 0x68,  (0x00),  ((3)&0xFF), True) #D banks disabled M4
-                self.sendCommand16( 0x6C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
-                self.sendCommand16( 0x72,  ((self.d["Motor Config"]["spike_expansor_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M4"].get()) & 0xFF), True) #spike expansor M4
-                self.sendCommand16( 0x73,  (0x00),  ((3)&0xFF), True) #EI bank enabled M4
-                self.sendCommand16( 0x77,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
-                self.sendCommand16( 0x62,  ((refsM4[0] >> 8) & 0xFF),  ((refsM4[0]) & 0xFF), True) #Ref M4 0
+    #             self.sendCommand16( 0x63,  (0x00),  ((3)&0xFF), True) #I banks disabled M4
+    #             self.sendCommand16( 0x67,  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PI_FD_bank3_18bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
+    #             self.sendCommand16( 0x68,  (0x00),  ((3)&0xFF), True) #D banks disabled M4
+    #             self.sendCommand16( 0x6C,  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["PD_FD_bank3_22bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
+    #             self.sendCommand16( 0x72,  ((self.d["Motor Config"]["spike_expansor_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["spike_expansor_M4"].get()) & 0xFF), True) #spike expansor M4
+    #             self.sendCommand16( 0x73,  (0x00),  ((3)&0xFF), True) #EI bank enabled M4
+    #             self.sendCommand16( 0x77,  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M4"].get() >> 8) & 0xFF),  ((self.d["Motor Config"]["EI_FD_bank3_18bits_M4"].get()) & 0xFF), True) #FD I&G bank 3 M4
+    #             self.sendCommand16( 0x62,  ((refsM4[0] >> 8) & 0xFF),  ((refsM4[0]) & 0xFF), True) #Ref M4 0
 
-                logger.info("Time\tM1 Ref\tJ1 Pos\tM2 Ref\tJ2 Pos\tM3 Ref\tJ3 Pos\tM4 Ref\tJ4 Pos\t")
-                start = self.millis_now()
-                now = self.millis_now()
+    #             logger.info("Time\tM1 Ref\tJ1 Pos\tM2 Ref\tJ2 Pos\tM3 Ref\tJ3 Pos\tM4 Ref\tJ4 Pos\t")
+    #             start = self.millis_now()
+    #             now = self.millis_now()
                 
-                while(abs(now-start)< 3000):
-                    lap = self.millis_now()
-                    while(abs(now-lap)<100):
-                        now = self.millis_now()
-                    logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),refsM1[0],self.Read_J1_pos(),refsM2[0],self.Read_J2_pos(),refsM3[0],self.Read_J3_pos(),refsM4[0],self.Read_J4_pos()))
-                    now = self.millis_now()
+    #             while(abs(now-start)< 3000):
+    #                 lap = self.millis_now()
+    #                 while(abs(now-lap)<100):
+    #                     now = self.millis_now()
+    #                 logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((self.millis_now()-start),refsM1[0],self.Read_J1_pos(),refsM2[0],self.Read_J2_pos(),refsM3[0],self.Read_J3_pos(),refsM4[0],self.Read_J4_pos()))
+    #                 now = self.millis_now()
                 
-                for j in range(0,2):
-                    for i in range(0,5):
-                        self.sendCommand16( 0x62,  ((refsM4[i] >> 8) & 0xFF),  ((refsM4[i]) & 0xFF), True) #Ref M4 0
-                        self.sendCommand16( 0x42,  ((refsM3[i] >> 8) & 0xFF),  ((refsM3[i]) & 0xFF), True) #Ref M4 0
-                        self.sendCommand16( 0x22,  ((refsM2[i] >> 8) & 0xFF),  ((refsM2[i]) & 0xFF), True) #Ref M4 0
-                        self.sendCommand16( 0x02,  ((refsM1[i] >> 8) & 0xFF),  ((refsM1[i]) & 0xFF), True) #Ref M4 0
+    #             for j in range(0,2):
+    #                 for i in range(0,5):
+    #                     self.sendCommand16( 0x62,  ((refsM4[i] >> 8) & 0xFF),  ((refsM4[i]) & 0xFF), True) #Ref M4 0
+    #                     self.sendCommand16( 0x42,  ((refsM3[i] >> 8) & 0xFF),  ((refsM3[i]) & 0xFF), True) #Ref M4 0
+    #                     self.sendCommand16( 0x22,  ((refsM2[i] >> 8) & 0xFF),  ((refsM2[i]) & 0xFF), True) #Ref M4 0
+    #                     self.sendCommand16( 0x02,  ((refsM1[i] >> 8) & 0xFF),  ((refsM1[i]) & 0xFF), True) #Ref M4 0
 
-                        start2 = self.millis_now()
-                        now = self.millis_now()
-                        while(abs(now-start2) < scan_Wait_Time):
-                            lap = self.millis_now()
-                            while(abs(now-lap) < 100):
-                                now = self.millis_now()
-                            logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),refsM1[i],self.Read_J1_pos(),refsM2[i],self.Read_J2_pos(),refsM3[i],self.Read_J3_pos(),refsM4[i],self.Read_J4_pos()))
-                            now = self.millis_now()
+    #                     start2 = self.millis_now()
+    #                     now = self.millis_now()
+    #                     while(abs(now-start2) < scan_Wait_Time):
+    #                         lap = self.millis_now()
+    #                         while(abs(now-lap) < 100):
+    #                             now = self.millis_now()
+    #                         logger.info("{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t,{}\t".format((now-start),refsM1[i],self.Read_J1_pos(),refsM2[i],self.Read_J2_pos(),refsM3[i],self.Read_J3_pos(),refsM4[i],self.Read_J4_pos()))
+    #                         now = self.millis_now()
     
     def search_Joint_home(self,JOINTNUM,pol):
         '''
@@ -3468,7 +3607,7 @@ class pyEDScorbotTool:
         directly from the latest master branch of the repository 
         '''
         try:
-            f = open('./initial_config.json')
+            f = open(self.config_file)
             j = json.loads(f.read())
 
         except FileNotFoundError:
@@ -3732,50 +3871,50 @@ class pyEDScorbotTool:
         # pass
 
 
-    def devmem(self,addr,length,data=None):
-        cmd = "devmem " + hex(addr) + " " + str(length)
-        if data is not None:
-            cmd += " " + str(data)
+    # def devmem(self,addr,length,data=None):
+    #     cmd = "devmem " + hex(addr) + " " + str(length)
+    #     if data is not None:
+    #         cmd += " " + str(data)
 
-        print("Executing command: ",cmd)  
+    #     print("Executing command: ",cmd)  
 
-        #system(cmd)
-        proc = subprocess.Popen(cmd.split(' '), stdout=subprocess.PIPE)
-        tmp = proc.stdout.read()
-        return tmp
+    #     #system(cmd)
+    #     proc = subprocess.Popen(cmd.split(' '), stdout=subprocess.PIPE)
+    #     tmp = proc.stdout.read()
+    #     return tmp
   
-    def execute_script(self,script):
-        cmd = script
-        proc = proc = subprocess.Popen(cmd.split(' '), stdout=subprocess.PIPE)
-        tmp = proc.stdout.read()
-        return tmp
+    # def execute_script(self,script):
+    #     cmd = script
+    #     proc = proc = subprocess.Popen(cmd.split(' '), stdout=subprocess.PIPE)
+    #     tmp = proc.stdout.read()
+    #     return tmp
         
 
-    def calculate_error(self,motor, gt, cmd, t='ref'):
-        if t not in ['ref','angle','counter']:
-            raise TypeError('Type not supported. Type must be one of ["ref","angle","counter"]')
-        else:
-            if t=='ref':
-                #Convert ground truth to ref
-                gt = self.count_to_ref(motor,gt)
-                pass
-            elif t =='angle':
-                #Convert both to angles
-                cmd = self.ref_to_angle(motor,cmd)
-                gt = self.count_to_angle(motor,gt)
-                pass
-            elif t=='counter':
-                #Convert commanded to counter 
-                cmd = self.ref_to_count(motor,cmd)
-                pass
+    # def calculate_error(self,motor, gt, cmd, t='ref'):
+    #     if t not in ['ref','angle','counter']:
+    #         raise TypeError('Type not supported. Type must be one of ["ref","angle","counter"]')
+    #     else:
+    #         if t=='ref':
+    #             #Convert ground truth to ref
+    #             gt = self.count_to_ref(motor,gt)
+    #             pass
+    #         elif t =='angle':
+    #             #Convert both to angles
+    #             cmd = self.ref_to_angle(motor,cmd)
+    #             gt = self.count_to_angle(motor,gt)
+    #             pass
+    #         elif t=='counter':
+    #             #Convert commanded to counter 
+    #             cmd = self.ref_to_count(motor,cmd)
+    #             pass
         
-            error = []
-            for ground_truth,command in zip(gt,cmd):
-                rmse = np.sqrt(np.mean((command - ground_truth)**2))
-                error.append(rmse)
+    #         error = []
+    #         for ground_truth,command in zip(gt,cmd):
+    #             rmse = np.sqrt(np.mean((command - ground_truth)**2))
+    #             error.append(rmse)
             
                 
-        return error
+    #     return error
         
     @staticmethod
     def count_to_ref(motor,count):
@@ -3879,8 +4018,10 @@ class pyEDScorbotTool:
     
     def traj_to_json(self):
         '''
-        [[q1],q2],q3],q4] to [r1,r2,r3,r4,r5,r6] with padding
-        input file is .npy in qx format
+        This function asks the user to select a numpy file with the specified format below and converts it to JSON format compatible with the C/C++ runtime.
+        The name of the output file is also provided by the user. 
+        [q1],q2],q3],q4] to [r1,r2,r3,r4,r5,r6] with padding (0s for unused joints)
+        input file is .npy in [q1],q2],q3],q4] format
         '''
         
         filename = filedialog.askopenfile(mode="r")
@@ -3901,7 +4042,12 @@ class pyEDScorbotTool:
 
 
     def angles_to_ref(self):
-        
+        '''
+        This function asks the user to select a numpy file with the specified format below and converts it to their equivalent references per joint, maintaining format.
+        The name of the output file is also provided by the user. 
+        [q1],q2],q3],q4] to [r1],r2],r3],r4]
+        input file is .npy in [q1],q2],q3],q4] format
+        '''
         
         filename = filedialog.askopenfile(mode="r")
         real_name = filename.name.split("/")[-1]
@@ -3917,34 +4063,53 @@ class pyEDScorbotTool:
         pass
     
     def count_to_xyz_json(self):
-       
+        '''
+        This function asks the user to select a JSON counters file with the specified format below and converts it a 3D trajectory, point per point.
+        The name of the output file is also provided by the user. 
+        [j1,j2,j3,j4,j5,j6,timestamp] to [x,y,z]
+        input file is .json [j1,j2,j3,j4,j5,j6,timestamp] format
+        '''
         
         filename = filedialog.askopenfile(mode="r")
         real_name = filename.name.split("/")[-1]
         conts = np.array(json.load(open(filename.name,'r')))
-        xyz = c_to_xyz.cont_to_xyz(conts,True)
+        xyz,xyz_visual = c_to_xyz.cont_to_xyz(conts,self.checked_visualkin.get())
         savename = filedialog.asksaveasfilename()
+        savename_visual = Path(savename).stem + "_visual.npy"
         np.save(savename,xyz)
+        np.save(savename_visual,xyz_visual)
         self.alert("Saved output to file {}".format(savename))
 
         pass
 
     def count_to_xyz_npy(self):
-       
+        '''
+        This function asks the user to select a numpy counters file with the specified format below and converts it to a 3D trajectory, point per point.
+        The name of the output file is also provided by the user. 
+        [j1,j2,j3,j4,j5,j6] to [x,y,z]
+        input file is .json [j1,j2,j3,j4,j5,j6] format
+        '''
         
         filename = filedialog.askopenfile(mode="r")
         real_name = filename.name.split("/")[-1]
         conts = np.load(filename.name)
-        xyz = c_to_xyz.cont_to_xyz(conts,True)
+        xyz,xyz_visual = c_to_xyz.cont_to_xyz(conts,self.checked_visualkin.get())
         savename = filedialog.asksaveasfilename()
+        savename_visual = Path(savename).stem + "_visual.npy"
         np.save(savename,xyz)
+        np.save(savename_visual,xyz_visual)
         self.alert("Saved output to file {}".format(savename))
 
         pass
 
 
     def count_to_angles_json(self):
-        
+        '''
+        This function asks the user to select a JSON counters file with the specified format below and converts it to their angle equivalent, point per point.
+        The name of the output file is also provided by the user.
+        [j1,j2,j3,j4,j5,j6,timestamp] to [q1,q2,q3,q4]
+        input file is .json [j1,j2,j3,j4,j5,j6,timestamp] format
+        '''
         
         filename = filedialog.askopenfile(mode="r")
         real_name = filename.name.split("/")[-1]
@@ -3956,7 +4121,12 @@ class pyEDScorbotTool:
         pass
 
     def count_to_angles_npy(self):
-        
+        '''
+        This function asks the user to select a numpy counters file with the specified format below and converts it to their angle equivalent, point per point.
+        The name of the output file is also provided by the user. 
+        [j1,j2,j3,j4,j5,j6,timestamp] to [x,y,z]
+        input file is .npy [j1,j2,j3,j4,j5,j6] format
+        '''
         
         filename = filedialog.askopenfile(mode="r")
         real_name = filename.name.split("/")[-1]
@@ -3968,6 +4138,12 @@ class pyEDScorbotTool:
         pass
     
     def angles_to_xyz(self):
+        '''
+        This function asks the user to select a numpy abgles file with the specified format below and converts it a 3D trajectory, point per point.
+        The name of the output file is also provided by the user. 
+        [q1,q2,q3,q4] to [x,y,z]
+        input file is .npy [q1,q2,q3,q4] format
+        '''
         filename = filedialog.askopenfile(mode="r")
         real_name = filename.name.split("/")[-1]
         angles = np.load(filename.name)   
@@ -3980,7 +4156,12 @@ class pyEDScorbotTool:
         self.alert("Saved output to file {}".format(savename))
     
     def w_to_angles(self):
-        
+        '''
+        This function asks the user to select a numpy trajectory file with data in units of angular velocity, with the specified format below and converts it to a position-based trajectory, point per point.
+        The name of the output file is also provided by the user. 
+        [w1],w2],w3],w4] to [q1],q2],q3],q4]
+        input file is .npy [w1],w2],w3],w4] format
+        '''
         
         filename = filedialog.askopenfile(mode="r")
         real_name = filename.name.split("/")[-1]
@@ -3992,12 +4173,19 @@ class pyEDScorbotTool:
         self.alert("Saved output to file {}".format(savename))
 
     def plot_traj_3d(self):
-
+        '''
+        This function asks the user to select a numpy trajectory file with the specified format below and represents the 3D trajectory in a matplotlib plot
+        input file is .npy [x,y,z] format
+        '''
         filename = filedialog.askopenfile(mode="r")
         xyz = np.load(filename.name,allow_pickle=True)
         plot3d(xyz[:,0],xyz[:,1],xyz[:,2],label="Trajectory data",title="3D Trajectory",order=False)
     
     def plot_counters(self):
+        '''
+        This function asks the user to select a counters trajectory file with the specified format below and represents them in a matplotlib plot
+        input file is .npy or .json [j1,j2,j3,j4,j5,j6] format
+        '''
         filename = filedialog.askopenfile(mode="r")
         if filename.name.lower().endswith('.json'):
             conts = np.array(json.load(open(filename.name,'r')))
@@ -4007,11 +4195,44 @@ class pyEDScorbotTool:
             self.alert("You tried to open an invalid file")
         plotcounters(conts[:,:-1],label="Counter data",title="")
     def plot_angles(self):
-
+        '''
+        This function asks the user to select an angles file with the specified format below and represents them in a matplotlib plot
+        input file is .npy [q1],q2],q3],q4] format
+        '''
         filename = filedialog.askopenfile(mode="r")
         angles = np.load(filename.name,allow_pickle=True)
         plotangles(angles,label="Angle data",title="Angle Space")
         pass
+    
+    def plt_compare(self):
+        filename1 = filedialog.askopenfile(mode="r",title="Source XYZ")
+        filename2 = filedialog.askopenfile(mode="r",title="Output XYZ")
+        
+        xyz1 = np.load(filename1.name,allow_pickle=True)
+        xyz2 = np.load(filename2.name,allow_pickle=True)
+        p = Path(filename1.name)
+        compare_plots(xyz1[:,0],xyz1[:,1],xyz1[:,2],xyz2[:,0],xyz2[:,1],xyz2[:,2],label1="Commanded",label2="Collected",title="3D comparison\n({})".format(p.parent.name))
+    
+    @staticmethod 
+    def fix_center(orig,out):
+        diff_x = out[0,0] - orig[0,0]  
+        diff_y = out[0,1] - orig[0,1]  
+        diff_z = out[0,2] - orig[0,2]  
+
+        out[:,0] = out[:,0]-diff_x
+        out[:,1] = out[:,1]-diff_y
+        out[:,2] = out[:,2]-diff_z  
+
+        return out
+
+    def plot_center(self):
+        filename1 = filedialog.askopenfile(mode="r",title="Source XYZ")
+        filename2 = filedialog.askopenfile(mode="r",title="Output XYZ")
+        xyz1 = np.load(filename1.name,allow_pickle=True)
+        xyz2 = np.load(filename2.name,allow_pickle=True)
+
+        out = self.fix_center(xyz1,xyz2)
+        compare_plots(xyz1[:,0],xyz1[:,1],xyz1[:,2],out[:,0],out[:,1],out[:,2],label1="Commanded",label2="Collected",title="3D comparison")
 
 # if __name__ == "__main__":
 
@@ -4021,3 +4242,287 @@ class pyEDScorbotTool:
     
 #     pass
 
+def send_trajectory_cli():
+    global iter
+    global running
+    iter = 1
+    from argparse import ArgumentParser
+    parser = ArgumentParser()
+    parser.add_argument("input_dir",type=str,action="store",help="Numpy file (.npy or pickled) with angles in format (q1,q2,q3,q4) to be used as trajectory")
+    parser.add_argument("--output_file","-o",type=str,action="store",help="Name of the output file",default="out_cont.npy")
+    parser.add_argument("--broker_ip","-ip",type=str,action="store",help="IP of the broker we want to connect to",default="192.168.1.104")#TO BE CHANGED
+
+    args = parser.parse_args()
+    input_dir = Path(args.input_dir)
+    output_file = Path(args.output_file)
+
+    ip = args.broker_ip
+    arr = np.load(input_dir,allow_pickle=True)
+    n = arr.shape[0]
+    
+    #1.- convert to json
+    
+    handler = pyEDScorbotTool(visible=False,remote=True,savename=output_file)
+    handler.filename = input_dir
+    handler.mqtt_client = handler.open_mqtt(ip)
+    arr = np.load(input_dir)
+    df = pandas.DataFrame(arr)
+    out = a_to_j.angles_to_json(df)
+    real_name = input_dir.name.split("/")[-1]
+    mid_json_fname = input_dir.stem + "_refs.json"
+    json_abspath = input_dir.parent / mid_json_fname
+    f = open(json_abspath,"w")
+    
+    js = json.dump(out.tolist(),f,indent=4)
+        
+    f.close()
+    
+    cmd = "scp -i /media/HDD/home/enrique/Proyectos/SMALL/zynq/zynq {} root@192.168.1.115:/home/root/{}".format(json_abspath,mid_json_fname)
+    os.system(cmd)
+    
+    handler.send_trajectory(json_abspath.name,n)
+    
+    while(iter >= 0):
+        time.sleep(0.25)
+    
+
+def process_dataset_dir_with_aedats():
+    #añadir logging
+    from argparse import ArgumentParser
+    import pandas as pd
+    parser = ArgumentParser()
+    parser.add_argument("input_dir",type=str,action="store",help="Root directory with dataset structure")
+    parser.add_argument("weight",type=str,action="store",help="Name of the output file",default="out_cont.npy")
+    parser.add_argument("--broker_ip","-ip",type=str,action="store",help="IP of the broker we want to connect to",default="192.168.1.104")#TO BE CHANGED
+    parser.add_argument("--visual_kin","-vk",action="store_true",help="Flag to indicate if trajectories were generated with visual kinematics framework",default=False)#TO BE CHANGED
+    args = parser.parse_args()
+    input_dir = Path(args.input_dir)
+   # output_file = Path(args.output_file)
+
+    ip = args.broker_ip
+    weight = args.weight
+    visual = args.visual_kin
+    # 
+    handler = pyEDScorbotTool(visible=False,remote=True,savename="out_cont.npy")
+    handler.mqtt_client = handler.open_mqtt(ip)
+    global running
+    with open("/media/NAS_SMALL/Dataset_SMALL/Shared/wpython.txt",'w') as f:
+            f.write("2")
+    for angle_path in sorted(input_dir.rglob("angles.npy")):
+        out_path = angle_path.parent / "out_cont.npy"
+        if out_path.exists():
+            continue
+        arr = np.load(angle_path,allow_pickle=True)
+        n = arr.shape[0]
+        #df = pd.DataFrame(arr)
+        padded_refs = a_to_j.angles_to_json(arr,visual=visual)
+        real_name = angle_path.name
+        mid_json_fname = angle_path.stem+"_refs.json"
+        json_abspath = angle_path.parent/mid_json_fname
+        f = open(json_abspath,"w")
+    
+        js = json.dump(padded_refs.tolist(),f,indent=4)
+        
+        f.close()
+        #escribir los datos con open -- write --close
+        #cmd = "echo {} > /media/NAS_SMALL/Dataset_SMALL/Shared/current.txt".format(angle_path.parent)
+        with open("/media/NAS_SMALL/Dataset_SMALL/Shared/wpython.txt",'w') as f:
+            f.write("{}".format(Path(*angle_path.parts[3:]).parent))
+        #os.system(cmd)
+        handler.mqtt_client._userdata['savename'] = angle_path.parent / "out_cont.npy"
+        handler.mqtt_client._userdata['filename'] = angle_path.parent / json_abspath.name
+        
+        print("Echo dir > current.txt")
+        state = 0
+        while state != 1:
+            with open('/media/NAS_SMALL/Dataset_SMALL/Shared/wjaer.txt','r',encoding='ascii') as f:
+                r = f.readline()
+                try:
+                    state = int(r)
+                except ValueError:
+                    state = 0
+                    pass
+                time.sleep(0.1)
+        
+        with open("/media/NAS_SMALL/Dataset_SMALL/Shared/wpython.txt",'w') as f:
+            f.write("2")
+
+        print("State = 1")       
+            
+
+
+        cmd = "scp -i /media/HDD/home/enrique/Proyectos/SMALL/zynq/zynq {} root@192.168.1.115:/home/root/{}".format(json_abspath,mid_json_fname)
+        os.system(cmd)
+        running = True
+        print("Scp json --> zynq")
+
+        cmd = '/bin/bash /media/HDD/home/enrique/Proyectos/SMALL/scripts_camaras/run_all_record.bash {}'.format(angle_path.parent)
+        os.system(cmd)
+        print("Camaras grabando")
+
+        handler.send_trajectory(json_abspath.name,n,angle_path.parent.name)
+        print("Trayectoria enviada")
+        while running:
+            while state != 2:
+                with open('/media/NAS_SMALL/Dataset_SMALL/Shared/wjaer.txt','r',encoding="ascii") as f:
+                    r = f.readline()
+                    try:
+                        state = int(r)
+                    except ValueError:
+                        state = 0
+                        pass
+                time.sleep(1)
+        
+        # base = Path(os.environ['HOME'])
+        # filename = base / Path(".tmp") / Path("trajectory_execution.txt")
+        # os.makedirs(filename.parent,exist_ok=True)
+        # with open(filename,'w') as f:
+        #     f.write("0")
+
+        #cmd = "echo 0 > /media/lara/Dataset_SMALL/Shared/current.txt"
+        # with open("/media/lara/Dataset_SMALL/Shared/wpython.txt",'w') as f:
+        #     f.write("0")
+    #1.- convert to json
+    
+    handler.pb.close()
+   # handler.filename = input_dir
+    
+
+def process_dataset_dir():
+    #añadir logging
+    from argparse import ArgumentParser
+    import pandas as pd
+    parser = ArgumentParser()
+    parser.add_argument("input_dir",type=str,action="store",help="Root directory with dataset structure")
+    parser.add_argument("weight",type=str,action="store",help="Name of the output file",default="out_cont.npy")
+    parser.add_argument("--broker_ip","-ip",type=str,action="store",help="IP of the broker we want to connect to",default="192.168.1.104")#TO BE CHANGED
+    parser.add_argument("--visual_kin","-vk",action="store_true",help="Flag to indicate if trajectories were generated with visual kinematics framework",default=False)
+    parser.add_argument("--generate_xyz","-xyz",action="store_true",help="Flag to indicate if output xyz data should be generated",default=False)
+    parser.add_argument("--generate_angles","-angs",action="store_true",help="Flag to indicate if output angle-space data should be generated",default=False)
+    parser.add_argument("--generate_omegas","-omega",action="store_true",help="Flag to indicate if output angular velocity data should be generated",default=False)
+    parser.add_argument("--no_run","-nr",action="store_true",help="Flag to indicate if output angular velocity data should be generated",default=False)
+    parser.add_argument("--radians","-rad",action="store_true",help="Flag to indicate if output angles should be in radians",default=False)
+    parser.add_argument("--record","-r",action="store_true",help="Whether to record cameras output or not",default=False)
+    args = parser.parse_args()
+    input_dir = Path(args.input_dir)
+   # output_file = Path(args.output_file)
+
+    ip = args.broker_ip
+    weight = args.weight
+    visual = args.visual_kin
+    xyz = args.generate_xyz
+    angles = args.generate_angles
+    omega = args.generate_omegas
+    no_run = args.no_run
+    radians = args.radians
+    record = args.record
+    # 
+
+    if not no_run:
+        handler = pyEDScorbotTool(visible=False,remote=True,savename="out_cont.npy")
+        handler.mqtt_client = handler.open_mqtt(ip)
+        global running
+        # with open("/media/NAS_SMALL/Dataset_SMALL/Shared/wpython.txt",'w') as f:
+        #         f.write("2")
+        for angle_path in sorted(input_dir.rglob("angles.npy")):
+            out_path = angle_path.parent / "out_cont.npy"
+            if out_path.exists():
+                continue
+            arr = np.load(angle_path,allow_pickle=True)
+            n = arr.shape[0]
+            #df = pd.DataFrame(arr)
+            padded_refs = a_to_j.angles_to_json(arr,visual=visual)
+            real_name = angle_path.name
+            mid_json_fname = angle_path.stem+"_refs.json"
+            json_abspath = angle_path.parent/mid_json_fname
+            f = open(json_abspath,"w")
+        
+            js = json.dump(padded_refs.tolist(),f,indent=4)
+            
+            f.close()
+            #escribir los datos con open -- write --close
+            #cmd = "echo {} > /media/NAS_SMALL/Dataset_SMALL/Shared/current.txt".format(angle_path.parent)
+            # with open("/media/NAS_SMALL/Dataset_SMALL/Shared/wpython.txt",'w') as f:
+            #     f.write("{}".format(Path(*angle_path.parts[3:]).parent))
+            #os.system(cmd)
+            handler.mqtt_client._userdata['savename'] = angle_path.parent / "out_cont.npy"
+            handler.mqtt_client._userdata['filename'] = angle_path.parent / json_abspath.name
+            
+            # print("Echo dir > current.txt")
+            # state = 0
+            # while state != 1:
+            #     with open('/media/NAS_SMALL/Dataset_SMALL/Shared/wjaer.txt','r',encoding='ascii') as f:
+            #         r = f.readline()
+            #         try:
+            #             state = int(r)
+            #         except ValueError:
+            #             state = 0
+            #             pass
+            #         time.sleep(0.1)
+            
+            # with open("/media/NAS_SMALL/Dataset_SMALL/Shared/wpython.txt",'w') as f:
+            #     f.write("2")
+
+            # print("State = 1")       
+                
+
+
+            cmd = "scp -i /media/HDD/home/enrique/Proyectos/SMALL/zynq/zynq {} root@192.168.1.115:/home/root/{}".format(json_abspath,mid_json_fname)
+            os.system(cmd)
+            running = True
+            print("Scp json --> zynq")
+            if record:
+                script = "run_all_record.bash"
+            else:
+                script = "run_all.bash"
+            cmd = '/bin/bash /media/HDD/home/enrique/Proyectos/SMALL/scripts_camaras/{} {}'.format(script,angle_path.parent)
+            os.system(cmd)
+            print("Camaras grabando")
+
+            handler.send_trajectory(json_abspath.name,n,angle_path.parent.name)
+            print("Trayectoria enviada")
+            while running:
+                # while state != 2:
+                #     with open('/media/NAS_SMALL/Dataset_SMALL/Shared/wjaer.txt','r',encoding="ascii") as f:
+                #         r = f.readline()
+                #         try:
+                #             state = int(r)
+                #         except ValueError:
+                #             state = 0
+                #             pass
+                time.sleep(1)
+            
+            # base = Path(os.environ['HOME'])
+            # filename = base / Path(".tmp") / Path("trajectory_execution.txt")
+            # os.makedirs(filename.parent,exist_ok=True)
+            # with open(filename,'w') as f:
+            #     f.write("0")
+
+            #cmd = "echo 0 > /media/lara/Dataset_SMALL/Shared/current.txt"
+            # with open("/media/lara/Dataset_SMALL/Shared/wpython.txt",'w') as f:
+            #     f.write("0")
+        
+        handler.pb.close()
+    if xyz:
+        for out_cont in sorted(input_dir.rglob("out_cont.npy")):
+            from pyEDScorbotTool.utils.transformations.cont_to_xyz import cont_to_xyz
+            conts = np.load(out_cont)
+            xyz_traj = cont_to_xyz(conts)
+            np.save(out_cont.parent /"out_xyz.npy",xyz_traj)
+        #xyz generation from conts
+    if angles:
+        for out_cont in sorted(input_dir.rglob("out_cont.npy")):
+            from pyEDScorbotTool.utils.transformations.count_to_angle import cont_to_angle
+            conts = np.load(out_cont)
+            angles,qs,_ = cont_to_angle(conts,radians)
+            np.save(out_cont.parent /"out_angles.npy",angles)
+        #angle generation from conts
+
+    if omega:
+        for out_cont in sorted(input_dir.rglob("out_cont.npy")):
+            from pyEDScorbotTool.utils.transformations.count_to_angle import cont_to_angle
+            conts = np.load(out_cont)
+            angles,cs,_ = cont_to_angle(conts,rad=True)
+            omegas = np.diff(angles,axis=0)
+            np.save(out_cont.parent /"out_omega.npy",omegas*100)
+        #omegas generation from angles

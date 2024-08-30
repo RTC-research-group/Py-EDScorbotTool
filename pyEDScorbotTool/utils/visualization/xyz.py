@@ -3,9 +3,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def plot3d(x,y,z,label,title,order=False):
+def plot3d(x,y,z,label="",title="",order=False,finish=True,f=None):
 
+    
     fig = plt.figure(figsize=(10,10))
+    
 
     ax = plt.axes(projection='3d')
     ax.set_title(title)
@@ -24,10 +26,39 @@ def plot3d(x,y,z,label,title,order=False):
 
     ax.legend(loc='best')
 
+    
+    plt.show()
+
+def compare_plots(x1,y1,z1,x2,y2,z2,label1,label2,title,order=False):
+    
+    fig = plt.figure(figsize=(10,10))
+    
+
+    ax = plt.axes(projection='3d')
+    ax.set_title(title)
+    if order:
+        rang = np.arange(1,x1.shape[0]+1)*0.001
+        ax.scatter(x1,y1,z1,marker=".",label=label1,s=rang)
+        ax.scatter(x2,y2,z2,marker=",",label=label2,s=rang)
+    else:
+        ax.plot(x1,y1,z1,marker=".",label=label1)
+        ax.plot(x2,y2,z2,marker=",",label=label2)
+    ax.set_xlabel('X', linespacing=4)
+    ax.set_ylabel('Y', linespacing=4)
+    ax.set_zlabel('Z', linespacing=4)
+
+    ax.set_xlim(-1,1)
+    ax.set_ylim(-1,1)
+    ax.set_zlim(0,1)
+
+    ax.legend(loc='best')
+
+    
+    plt.show()
+
     plt.show()
         
-
-if __name__== '__main__':
+def main():
     parser = ArgumentParser()
     parser.add_argument("input_file",type=str,action="store",help="Numpy file with xyz output transformed from EDScorbot execution. Data file can include timestamps")
     parser.add_argument("--output_file","-o",type=str,action="store",help="Name of the output figure",default="3d_out.jpg")
@@ -50,3 +81,6 @@ if __name__== '__main__':
     xyz = np.load(input_file,allow_pickle=True)
     plot3d(xyz[:,0],xyz[:,1],xyz[:,2],label=label,title=title,order=order)
 
+if __name__ == "__main__":
+    import sys
+    sys.exit(main())

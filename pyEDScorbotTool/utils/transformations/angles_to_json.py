@@ -19,7 +19,8 @@ def angles_to_json(df,visual=False):
     new_arr = pad(df2.to_numpy()) #pad reference trajectory
     return new_arr
 
-if __name__ == "__main__":
+
+def main():
     parser = ArgumentParser()
     parser.add_argument("input_file",type=str,action="store",help="Numpy file (.npy or pickled) with angles in format (q1,q2,q3,q4) to be converted to references")
     parser.add_argument("--output_file","-o",type=str,action="store",help="Name of the output file",default="6dims_converted_out.npy")
@@ -44,3 +45,5 @@ if __name__ == "__main__":
     
     f.close()
     print("Saved output to file {}".format(output_file))
+#if __name__ == "__main__":
+    

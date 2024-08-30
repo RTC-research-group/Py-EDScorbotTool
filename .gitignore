@@ -137,6 +137,7 @@ docs/doxy/xml
 
 c/src/json
 c/json
+c/mosquitto
 
 docs/build
 

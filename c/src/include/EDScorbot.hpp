@@ -12,9 +12,13 @@
 #define EI_FD_ENABLE_ADDR 0x13
 #define EI_FD_ADDR 0x17
 #define JOINT_STEP 0x20
+#include <sys/mman.h>
 
 // using namespace std;
 using json = nlohmann::json;
+
+#include <argparse/argparse.hpp>
+
 
 static std::map<std::string, int> addresses = {
     {"M1", 0x00},
@@ -114,7 +118,7 @@ public:
     /** Joint initialization for EDScorbot handler */
         EDScorbotJoint j1 = {"M1", 1}, j2 = {"M2", 2}, j3 = {"M3", 3}, j4 = {"M4", 4}, j5 = {"M5", 5}, j6 = {"M6", 6};
     ///@}
-
+        EDScorbotJoint joints[6] = {j1,j2,j3,j4,j5,j6};
     /**
      * @brief Construct a new EDScorbot object
      * 
@@ -137,8 +141,12 @@ public:
      * 
      */
 
-    ~EDScorbot();
-
+    ~EDScorbot(){//0xFF --> bram_size en devmem.cpp
+        int r = munmap(reinterpret_cast<void*>(this->bram_ptr),0xFF);
+        if (r  != 0){
+            puts("Be careful! Memory pointer to FPGA registers was NOT unmapped correctly. A reset is highly recommended!");
+        }
+    }
     /**
      * @brief Explicitly initialize joint 1-6 configuration using loaded json config file
      * 
@@ -172,6 +180,16 @@ public:
      */
     int sendRef(int, EDScorbotJoint);
 
+    
+    /**
+     * @brief Command a specific position to a specific joint
+     * 
+     * 
+     * @param ang Angle (position) to be commanded
+     * @param j Joint to be commanded the angle `ang`
+     */
+    void sendAngle(double, EDScorbotJoint);
+
     /**
      * @brief 
      * 
@@ -195,7 +213,7 @@ public:
      * @param count Value read from the robot's counter register, which indicates absolute position of the joint
      * @return float Converted position value in angles (not radians) for the specified joint
      */
-    float count_to_angle(int, int);
+    double count_to_angle(int, int);
 
     /**
      * @brief Implements digital reference to counter register transformation
@@ -222,16 +240,16 @@ public:
      * @param angle Value to be converted from position in angles to digital reference
      * @return int Converted position
      */
-    static int angle_to_ref(int, float);
+    static int angle_to_ref(int, double);
 
     /**
      * @brief  Implements digital reference to angle position transformation
      * 
      * @param motor Joint/Motor for which to perform the conversion (different joints have different conversion values)
      * @param ref Value to be converted from digital reference to position in angles
-     * @return float Converted position in angles (not radians)
+     * @return double Converted position in angles (not radians)
      */
-    static float ref_to_angle(int, int);
+    static double ref_to_angle(int, int);
 
 #ifdef THREADED
     void EDScorbot::readJoints();
@@ -240,12 +258,31 @@ public:
 /**
  * @brief Function to read the state of all the robot's joints
  * 
+ * Shortcut for EDScorbot::readJoints_angle
+ * 
+ * @param joints [in,out] Array of six integers, to be filled with each joint's position per element
+ */
+    void readJoints(double *);
+
+    /**
+ * @brief Function to read the state of all the robot's joints
+ * 
  * This function receives an integer array of 6 elements and assigns each of them the value of one of the robot's joints. As such, if `joints` is the name of the array, 
  * `joints[0]` will hold the position of joint 1, `joints[1]` will hold the position of joint 2, etc., up to `joints[5]`, which would hold the position of joint 6
  * 
  * @param joints [in,out] Array of six integers, to be filled with each joint's position per element
  */
-    void readJoints(int *);
+    void readJoints_angle(double *);
+
+    /**
+ * @brief Function to read the state of all the robot's joints
+ * 
+ * This function receives an integer array of 6 elements and assigns each of them the value of one of the robot's joints. As such, if `joints` is the name of the array, 
+ * `joints[0]` will hold the position of joint 1, `joints[1]` will hold the position of joint 2, etc., up to `joints[5]`, which would hold the position of joint 6
+ * 
+ * @param joints [in,out] Array of six doubles, to be filled with each joint's position per element
+ */
+    void readJoints_counter(int *);
 #endif
 private:
     int *bram_ptr; //!< Pointer to the base memory address in which the FPGA registers are placed

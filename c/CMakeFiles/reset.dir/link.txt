@@ -1,0 +1,1 @@
+/usr/bin/c++  -fPIC --static  -DEDS_VERBOSE -g CMakeFiles/reset.dir/src/scripts/reset_all.cpp.o CMakeFiles/reset.dir/src/EDScorbot/EDScorbot.cpp.o CMakeFiles/reset.dir/src/EDScorbot/devmem.cpp.o -o reset 

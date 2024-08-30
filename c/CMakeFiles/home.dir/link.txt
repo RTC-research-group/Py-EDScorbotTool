@@ -1,0 +1,1 @@
+/usr/bin/c++  -fPIC --static  -DEDS_VERBOSE -g CMakeFiles/home.dir/src/scripts/home.cpp.o CMakeFiles/home.dir/src/EDScorbot/EDScorbot.cpp.o CMakeFiles/home.dir/src/EDScorbot/devmem.cpp.o -o home 

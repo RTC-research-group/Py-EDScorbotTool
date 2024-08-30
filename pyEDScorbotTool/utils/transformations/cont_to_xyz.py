@@ -7,24 +7,25 @@ from argparse import ArgumentParser
 import numpy as np
 import json as j
 
-def cont_to_xyz(cont,visual):
-    qs,cs,timestamps= cont_to_angle(cont,visual)
+def cont_to_xyz(cont,visual=False):
+    qs,cs,ts= cont_to_angle(cont,rad=True,visual=visual)
 
-    xyz,_ = angles_to_xyz(qs)
-    return xyz
+    xyz,_,xyz_visual = angles_to_xyz(qs)
+    return xyz,xyz_visual
 
 def cont_to_xyz_cli(args):
     #print(args)
     input_file = args.input_file
     output_file = args.output_file
     include_timestamps = args.include_timestamps
+    visual_kin = args.visual_kinematics
     numpy =  args.numpy
 
     if numpy:
         conts = np.load(input_file,allow_pickle=True)
     else:
         conts = np.array(j.load(open(input_file,'r')))    
-    qs,cs,timestamps= cont_to_angle(conts)
+    qs,cs,timestamps= cont_to_angle(conts,timestamps=include_timestamps,visual=visual_kin)
 
     xyz,_ = angles_to_xyz(qs)
     
@@ -42,13 +43,14 @@ def cont_to_xyz_cli(args):
 
     pass
 
-if __name__== '__main__':
+def main():
 
     parser = ArgumentParser()
     parser.add_argument("input_file",type=str,action="store",help="JSON file with counters output in EDScorbot format n tuples of (j1,j2,j3,j4,j5,j6,timestamp) elements")
     parser.add_argument("--output_file","-o",type=str,action="store",help="Name of the output file",default="xyz_out.npy")
     parser.add_argument("--include_timestamps","-ts",action="store_true",help="Include timestamps in the output file. Output will be in (q1,q2,q3,q4,timestamp) format",default=False)
     parser.add_argument("--numpy","-np",action="store_true",help="Convert file from Numpy array instead of JSON",default=False)
+    parser.add_argument("--visual_kinematics","-vk",action="store_true",help="Convert from a visual kinematics trajectory",default=False)
     args = parser.parse_args()
     cont_to_xyz_cli(args)
     

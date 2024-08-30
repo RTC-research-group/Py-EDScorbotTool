@@ -1,6 +1,8 @@
 #include "utils.h"
 #include <argparse/argparse.hpp>
-using json = nlohmann::json;
+#include "../include/mosquitto.h"
+
+//using json = nlohmann::json;
 
 int main(int argc, char *argv[])
 {
@@ -95,7 +97,7 @@ int main(int argc, char *argv[])
     handler.sendRef(pjx[2][0], handler.j3);
     handler.sendRef(pjx[3][0], handler.j4);
     mosquitto_lib_init();
-    usleep(3000000); // Wait for 3 seconds to let the arm come back to home position
+    usleep(10000000); // Wait for 10 seconds to let the arm come back to home position
     struct mosquitto *mosq;
     mosq = mosquitto_new(NULL, true, 0);
 
@@ -137,7 +139,7 @@ int main(int argc, char *argv[])
         {
             // Do something
             // printf("start: %li, stop:%li, elapsed: %li\n",start.tv_usec,end.tv_usec,elapsed);
-            handler.readJoints(joints);
+            handler.readJoints_counter(joints);
             (gettimeofday(&end, NULL));
             robot_state rs;
             rs.j1 = joints[0];
@@ -189,4 +191,7 @@ int main(int argc, char *argv[])
     }
 
     return 0;
+
+    
+
 }
