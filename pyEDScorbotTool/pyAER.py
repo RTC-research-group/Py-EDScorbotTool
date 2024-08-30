@@ -4205,6 +4205,9 @@ class pyEDScorbotTool:
         pass
     
     def plt_compare(self):
+        '''
+        This function asks the user to select two 3D files to compare them in the same plot
+        '''
         filename1 = filedialog.askopenfile(mode="r",title="Source XYZ")
         filename2 = filedialog.askopenfile(mode="r",title="Output XYZ")
         
@@ -4215,6 +4218,10 @@ class pyEDScorbotTool:
     
     @staticmethod 
     def fix_center(orig,out):
+        '''
+        This function receives two 3D points lists and makes sure that the 1st point is exactly the same, effectively "centering" them at the same point. 
+        Use this if trajectories look apart by a constant offset.
+        '''
         diff_x = out[0,0] - orig[0,0]  
         diff_y = out[0,1] - orig[0,1]  
         diff_z = out[0,2] - orig[0,2]  
@@ -4226,6 +4233,9 @@ class pyEDScorbotTool:
         return out
 
     def plot_center(self):
+        '''
+        This function works just like plt_compare but it calls fix_center before plotting the information
+        '''
         filename1 = filedialog.askopenfile(mode="r",title="Source XYZ")
         filename2 = filedialog.askopenfile(mode="r",title="Output XYZ")
         xyz1 = np.load(filename1.name,allow_pickle=True)
@@ -4243,6 +4253,10 @@ class pyEDScorbotTool:
 #     pass
 
 def send_trajectory_cli():
+    '''
+    This function allows to send a single trajectory using the CLI. setup.cfg includes the correct path to expose this function to the shell once 
+    pyEDScorbotTool package is installed. As a CLI util, you can invoke it without parameters or with --help/-h flag and get the help message.
+    '''
     global iter
     global running
     iter = 1
@@ -4287,6 +4301,13 @@ def send_trajectory_cli():
     
 
 def process_dataset_dir_with_aedats():
+    '''
+    This function takes all angles.npy files recursively starting from a base directory, converts them to the controller's format, executes and 
+    record them, all automatically. Logic to account for spiking information recording has been added, as only jAER is able to monitor and record
+    the spiking information that comes out of the controller. The 3 cameras around the robot are also activated to record during the trajectory's execution.
+    Output files are stored each in the same directory angles.npy were, with name out_cont.npy. These files are in counters format and may need to 
+    be converted to angles or 3D points
+    '''
     #añadir logging
     from argparse import ArgumentParser
     import pandas as pd
@@ -4389,6 +4410,12 @@ def process_dataset_dir_with_aedats():
     
 
 def process_dataset_dir():
+    '''
+    This function takes all angles.npy files recursively starting from a base directory, converts them to the controller's format, executes and 
+    record them, all automatically. The 3 cameras around the robot are also activated to record during the trajectory's execution. Output files are
+    stored each in the same directory angles.npy were, with name out_cont.npy. These files are in counters format and may need to be converted to angles or
+    3D points.
+    '''
     #añadir logging
     from argparse import ArgumentParser
     import pandas as pd
