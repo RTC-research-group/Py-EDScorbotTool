@@ -19,7 +19,7 @@ using json = nlohmann::json;
 
 #include <argparse/argparse.hpp>
 
-
+/** @brief Basic map to correspond each joint/motor with its base address inside the FPGA logic.*/
 static std::map<std::string, int> addresses = {
     {"M1", 0x00},
     {"M2", 0x20},
@@ -56,13 +56,13 @@ public:
     /**
      * @brief Construct a new EDScorbotJoint object specifying each parameter
      *
-     * @param EI_FD
-     * @param PD_FD
-     * @param PI_FD
-     * @param leds
-     * @param spike_exp
-     * @param address
-     * @param id
+     * @param EI_FD Frequency divider value for I&G bank
+     * @param PD_FD Frequency divider value for I&G bank
+     * @param PI_FD Frequency divider value for I&G bank; For more information, check INFO_URL
+     * @param leds Led parameter to check that communication works
+     * @param spike_exp Spike expansor parameter value
+     * @param address Base value for joint operations. 
+     * @param id Parameter to indicate which joint we are creating, ranging from M1 to M6
      */
     EDScorbotJoint(int EI_FD, int PD_FD, int PI_FD, int leds, int spike_exp, int address, std::string id)
     {
