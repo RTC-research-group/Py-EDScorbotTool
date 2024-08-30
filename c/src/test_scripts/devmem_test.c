@@ -14,7 +14,7 @@ typedef long long int u64;
 int main()
 {
    unsigned int bram_size = 0xFF;
-   off_t bram_pbase = 0x43c00000; // physical base address
+   off_t bram_pbase = 0x40000000; // physical base address
    int *bram64_vptr;
    int fd;
   
