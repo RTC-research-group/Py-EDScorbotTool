@@ -46,7 +46,7 @@ target_include_directories(trajectory PUBLIC "../../json/single_include/")
 target_include_directories(trajectory PUBLIC "../")
 target_include_directories(trajectory PUBLIC "../../")
 #target_include_directories(trajectory PUBLIC "/home/enrique/mosquitto-2.0.14/include")
-#target_include_directories(trajectory PUBLIC "../../mosquitto/include")
+target_include_directories(trajectory PUBLIC "../include")
 
 #TARGET_LINK_LIBRARIES(test_target PRIVATE ${DV_LIBRARIES})
 
