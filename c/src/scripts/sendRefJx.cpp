@@ -1,10 +1,21 @@
+/** @file sendRefJx.cpp
+*/ 
+
 #include "include/EDScorbot.hpp"
 #include <argparse/argparse.hpp>
 
+/**
+ * @brief This is a CLI util to be used whithin the Zynq's environment. It receives a joint and a reference and sets that joint to that reference. Invocation without parameters or with -help/-h flag will print a help message.
+ * 
+ * @param joint Joint to be moved. Must be a value between 1 and 6.
+ * @param ref Reference to set the joint to. Must be an integer.
+ * @param config_file Configuration file to use, in JSON format. This file can be used to configure each joint's controller parameters. Default is 'initial_config.json'.
+ * @param verbose Choose verbosity of output. Only True/False can be used.
+ */
 int main(int argc, char *argv[])
 {
     argparse::ArgumentParser parser("sendRef");
-    parser.add_argument("joint").help("Joint to be moved. Integer").scan<'i', int>();
+    parser.add_argument("joint").help("Joint to be moved. Must be a value between 1 and 6").scan<'i', int>();
     parser.add_argument("ref").help("Digital reference to be commanded to the joint. Integer").scan<'i', int>();
     parser.add_argument("-c", "--config_file").help("Optional. Configuration file in JSON format. This file can be used to configure each joint's controller parameters. Default is 'initial_config.json'").default_value(std::string("initial_config.json"));
     parser.add_argument("-v", "--verbose").help("Increase verbosity of output").default_value(false).implicit_value(true);

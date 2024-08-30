@@ -1,9 +1,19 @@
+/** @file home.cpp
+*/ 
+
 #include "include/EDScorbot.hpp"
 #include <time.h>
 #include <unistd.h>
 #include <argparse/argparse.hpp>
 
 
+/**
+ * @brief This is a CLI util to be used whithin the Zynq's environment. It performs the home routine of EDScorbot. Invocation without parameters or with -help/-h flag will print a help message.
+ * 
+ * @param config_file Configuration file to use, in JSON format. This file can be used to configure each joint's controller parameters. Default is 'initial_config.json'.
+ * @param verbose Choose verbosity of output. Only True/False can be used.
+ 
+ */
 int main(int argc, char* argv[])
 {   
     

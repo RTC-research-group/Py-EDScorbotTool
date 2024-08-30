@@ -1,8 +1,15 @@
+/** @file reset_all.cpp
+*/ 
 #include "include/EDScorbot.hpp"
 
 #include <argparse/argparse.hpp>
 
-
+/**
+ * @brief This is a CLI util to be used whithin the Zynq's environment. Sets current position of each joint to be their 'Home' position (i.e. the position they will go to if the controller is given a reference value of 0). Invocation without parameters or with -help/-h flag will print a help message.
+ * 
+ * @param config_file Configuration file to use, in JSON format. This file can be used to configure each joint's controller parameters. Default is 'initial_config.json'.
+ * @param verbose Choose verbosity of output. Only True/False can be used.
+ */
 int main(int argc, char* argv[])
 {   
     

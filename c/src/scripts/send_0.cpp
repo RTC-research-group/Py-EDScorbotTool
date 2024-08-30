@@ -1,6 +1,14 @@
+/** @file send_0.cpp
+*/ 
+
 #include "include/EDScorbot.hpp"
 
-
+/**
+ * @brief This is a CLI util to be used whithin the Zynq's environment. It sends all joints to their home position (reference 0). Invocation without parameters or with -help/-h flag will print a help message.
+ * 
+ * @param config_file Configuration file to use, in JSON format. This file can be used to configure each joint's controller parameters. Default is 'initial_config.json'.
+ * @param verbose Choose verbosity of output. Only True/False can be used.
+ */
 int main(int argc, char* argv[])
 {   
     //int j = atoi(argv[1]);
