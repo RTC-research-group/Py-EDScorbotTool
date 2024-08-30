@@ -45,7 +45,7 @@ SET(HEADER_FILES src/include/EDScorbot.hpp)
 #add_library(test_target SHARED src/testModule.cpp)
 #add_executable(test_edscorbot src/EDScorbot.cpp src/test_joints.cpp src/devmem.cpp)
 #add_executable(server src/server.cpp src/EDScorbot.cpp src/devmem.cpp)
-add_executable(read_joints src/EDScorbot/EDScorbot.cpp src/scripts/read_joints.cpp src/EDScorbot/devmem.cpp ${HEADER_FILES})
+add_executable(read_joints src/EDScorbot/EDScorbot.cpp src/scripts/read_joints.cpp src/EDScorbot/devmem.cpp src/trajectory/utils.cpp ${HEADER_FILES})
 add_executable(test_arrays src/test_scripts/test_arrays.cpp)
 add_executable(test_argparse src/test_scripts/test_argparse.cpp)
 
@@ -109,6 +109,7 @@ target_include_directories(test_pthread PUBLIC "src" "${CMAKE_CURRENT_SOURCE_DIR
 #TARGET_LINK_LIBRARIES(mocked_server PRIVATE /home/adalberto/Downloads/tmp/mosquitto/lib/libmosquitto.a -lpthread )
 
 TARGET_LINK_LIBRARIES(test_pthread PRIVATE -lpthread )
+TARGET_LINK_LIBRARIES(read_joints PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/compiled_libs_armhf/libmosquitto.a -lpthread)
 
 #target_include_directories(reset PUBLIC "c/src/include")
 
