@@ -15,7 +15,7 @@
 #define mqtt_host "192.168.1.104"
 //#define mqtt_host "localhost"
 #define mqtt_port 1883
-
+EDScorbot handler("/home/root/initial_config.json");
 static int run = 1;
 struct mosquitto *mosq;
 pthread_t search_home_thread;
@@ -46,13 +46,6 @@ bool executing_trajectory = false;
 void parse_command(char *command, int *t, char *m, char *url, int *n,int* sleep);
 void ftp_trajectory(char *url);
 
-// void update_pthread_args(ppthread_args args,std::string& config, int sleep, Point& p){
-	
-// 	args.config = config;
-// 	args.p = p;
-// 	args.sleep = sleep;
-
-// }
 
 void* search_home_threaded_function(void* arg){
 	//to execute search home we need the suitable signal, the owner and the error state
@@ -63,7 +56,7 @@ void* search_home_threaded_function(void* arg){
 	output.error = error_state; 
 
 	//usleep(4000000);
-	EDScorbot handler("/home/root/initial_config.json");
+	
 	handler.searchHome(handler.j2,false);
 	handler.searchHome(handler.j3,false);
 	handler.searchHome(handler.j1,false);
@@ -90,7 +83,7 @@ void* move_to_point_threaded_function(void* arg){
 	output.client = owner;
 	output.error = error_state;
 	
-	EDScorbot handler("/home/root/initial_config.json");	//call the low level function to move to a single point considering 
+		//call the low level function to move to a single point considering 
 	
 	std::vector<double> coords = current_point.coordinates;
 	int i;
@@ -99,7 +92,7 @@ void* move_to_point_threaded_function(void* arg){
 		handler.sendRef(ref,handler.joints[i]);
 	}
 	
-		delete &handler;
+		
 
 	//the coordinates (in refs) stored in current_point (current_point.coordinates) 
 	//system("/home/root/home");
@@ -110,7 +103,7 @@ void* move_to_point_threaded_function(void* arg){
 
 	//using this snipped of code to fill the real point
 	usleep(DEFAULT_SLEEP);
-	//usleep(2000000);
+	
 
 	//int* dev = open_devmem();
 	//for (int i = 0; i < 6; i++){
