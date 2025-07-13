@@ -1,0 +1,15 @@
+1.- Probar comandos de movimiento (ref A a ref B)
+2.- Probar Home
+3.- Probar trayectoria (ejecucion)
+4.- Probar trayectoria (recogida de datos)
+5.- Probar comunicacion MQTT
+
+-------------------------------------------------------
+|Prueba|  J1  |   J2  |   J3  |   J4  |   J5  |   J6  |
+-------------------------------------------------------
+|   1  |  XX  |   XX  |   XX  |   XX  |   XX  |   XX  |
+|   2  |  XX  |   XX  |   XX  |   XX  |   XX  |   XX  |
+|   3  |  XX  |   XX  |   XX  |   XX  |   XX  |   XX  |
+|   4  |  XX  |   XX  |   XX  |   XX  |   XX  |   XX  |
+|   5  |  XX  |   XX  |   XX  |   XX  |   XX  |   XX  |
+-------------------------------------------------------
