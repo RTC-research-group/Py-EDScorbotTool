@@ -32,7 +32,13 @@ author = 'Enrique Piñero'
 extensions = [
     'sphinx_rtd_theme',
     'sphinx.ext.autodoc',
-    'sphinx.ext.napoleon'
+    'sphinx.ext.napoleon',
+    'sphinx.ext.doctest',
+    'sphinx.ext.mathjax',
+    'sphinx.ext.viewcode',
+    'sphinx.ext.imgmath', 
+    'sphinx.ext.todo',
+    'breathe',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -50,14 +56,26 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # a list of builtin themes.
 #
 
+import subprocess, os
 
+read_the_docs_build = os.environ.get('READTHEDOCS', None) == 'True'
 
+if read_the_docs_build:
 
+    subprocess.call('cd ../doxygen; doxygen', shell=True)
+breathe_projects = { "EDScorbot": "doxy/xml/" }
+breathe_default_project = "EDScorbot"
+numfig = True
 html_theme = 'sphinx_rtd_theme'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
-html_logo = "../atc.png"
-html_favicon = "../atc.png"
+html_logo = "../pyEDScorbotTool/atc.png"
+html_favicon = "../pyEDScorbotTool/atc.png"
+
+subprocess.call('make clean', shell=True)
+subprocess.call('cd doxy; doxygen', shell=True)
+
+

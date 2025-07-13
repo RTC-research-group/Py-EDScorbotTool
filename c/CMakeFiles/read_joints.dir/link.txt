@@ -1,0 +1,1 @@
+/usr/bin/c++  -fPIC --static  -DEDS_VERBOSE -g CMakeFiles/read_joints.dir/src/EDScorbot/EDScorbot.cpp.o CMakeFiles/read_joints.dir/src/scripts/read_joints.cpp.o CMakeFiles/read_joints.dir/src/EDScorbot/devmem.cpp.o -o read_joints 

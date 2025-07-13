@@ -1,0 +1,1 @@
+/usr/bin/c++  -fPIC --static  -DEDS_VERBOSE -g CMakeFiles/mocked_server.dir/src/mqtt_server/mocked_server.cpp.o -o mocked_server  /home/adalberto/Downloads/tmp/mosquitto/lib/libmosquitto.a -lpthread 
