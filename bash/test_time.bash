@@ -1,0 +1,6 @@
+
+#command block that takes time to complete...
+#........
+
+devmem 0x43c00000 32 0x12344321
+

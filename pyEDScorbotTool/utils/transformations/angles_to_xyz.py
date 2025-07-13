@@ -51,6 +51,7 @@ def angles_to_xyz(angles):
         angles = aux
     qs = []
     xyz = []
+    xyz_visual = []
     
     for row in angles:
 
@@ -64,10 +65,10 @@ def angles_to_xyz(angles):
         
         x,y,z = direcKin(q1,q2,q3,q4)
         xyz.append([x/100,y/100,z/100])
-       # xyz.append(f.t_3_1.reshape([3, ]))
+        xyz_visual.append(f.t_3_1.reshape([3, ]))
         qs.append([q1,q2,q3,q4])
         
-    return np.array(xyz),(np.array(qs)*(180/np.pi))
+    return np.array(xyz),(np.array(qs)*(180/np.pi)),np.array(xyz_visual)
 
 if __name__ == "__main__":
     parser = ArgumentParser()

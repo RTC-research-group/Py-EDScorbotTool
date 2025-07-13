@@ -93,7 +93,8 @@ def on_message(client, userdata, msg):
             
 
         '''
-    
+    ## [1874,63673,125125,16126,126126,12616,125215]
+    ##
     parsed = msg.payload.decode('utf8').lstrip('[').rstrip(']').split(',')
     #print(parsed)
     #t.update()
@@ -124,7 +125,7 @@ def on_message(client, userdata, msg):
             userdata['progressbar'].stop()
         else:
             savename = userdata['savename']
-            userdata['progressbar'].close()
+            userdata['progressbar'].reset()
         np.save(savename,arr[:-1])
         base = Path(os.environ['HOME'])
         filename = base / Path(".tmp") / Path("trajectory_execution.txt")
@@ -676,13 +677,16 @@ class pyEDScorbotTool:
 
         #checked_usb = tk.BooleanVar()
         checked_remote = tk.BooleanVar()
+        checked_visualkin = tk.BooleanVar()
 
         if self.visible:
             #ttk.Checkbutton(labelframe,text="Open device",command=self.checkUSB,variable=checked_usb,onvalue=True,offvalue=False).grid(column=1,row=3,sticky=(tk.W))
             ttk.Checkbutton(labelframe,text="Open MQTT connection",command=self.checkRemote,variable=checked_remote,onvalue=True,offvalue=False).grid(column=1,row=3,sticky=(tk.W))
+            ttk.Checkbutton(labelframe,text="Visual Kinematics",variable=checked_visualkin,onvalue=True,offvalue=False).grid(column=2,row=3,sticky=(tk.W))
 
         #self.checked_usb = checked_usb
         self.checked_remote = checked_remote
+        self.checked_visualkin = checked_visualkin
    
     def openUSB(self):
         '''
@@ -4069,9 +4073,11 @@ class pyEDScorbotTool:
         filename = filedialog.askopenfile(mode="r")
         real_name = filename.name.split("/")[-1]
         conts = np.array(json.load(open(filename.name,'r')))
-        xyz = c_to_xyz.cont_to_xyz(conts,True)
+        xyz,xyz_visual = c_to_xyz.cont_to_xyz(conts,self.checked_visualkin.get())
         savename = filedialog.asksaveasfilename()
+        savename_visual = Path(savename).stem + "_visual.npy"
         np.save(savename,xyz)
+        np.save(savename_visual,xyz_visual)
         self.alert("Saved output to file {}".format(savename))
 
         pass
@@ -4087,9 +4093,11 @@ class pyEDScorbotTool:
         filename = filedialog.askopenfile(mode="r")
         real_name = filename.name.split("/")[-1]
         conts = np.load(filename.name)
-        xyz = c_to_xyz.cont_to_xyz(conts,True)
+        xyz,xyz_visual = c_to_xyz.cont_to_xyz(conts,self.checked_visualkin.get())
         savename = filedialog.asksaveasfilename()
+        savename_visual = Path(savename).stem + "_visual.npy"
         np.save(savename,xyz)
+        np.save(savename_visual,xyz_visual)
         self.alert("Saved output to file {}".format(savename))
 
         pass
@@ -4251,7 +4259,9 @@ def send_trajectory_cli():
     ip = args.broker_ip
     arr = np.load(input_dir,allow_pickle=True)
     n = arr.shape[0]
+    
     #1.- convert to json
+    
     handler = pyEDScorbotTool(visible=False,remote=True,savename=output_file)
     handler.filename = input_dir
     handler.mqtt_client = handler.open_mqtt(ip)
@@ -4276,7 +4286,7 @@ def send_trajectory_cli():
         time.sleep(0.25)
     
 
-def process_dataset_dir():
+def process_dataset_dir_with_aedats():
     #añadir logging
     from argparse import ArgumentParser
     import pandas as pd
@@ -4296,7 +4306,7 @@ def process_dataset_dir():
     handler = pyEDScorbotTool(visible=False,remote=True,savename="out_cont.npy")
     handler.mqtt_client = handler.open_mqtt(ip)
     global running
-    with open("/media/lara/Dataset_SMALL/Shared/wpython.txt",'w') as f:
+    with open("/media/NAS_SMALL/Dataset_SMALL/Shared/wpython.txt",'w') as f:
             f.write("2")
     for angle_path in sorted(input_dir.rglob("angles.npy")):
         out_path = angle_path.parent / "out_cont.npy"
@@ -4315,8 +4325,8 @@ def process_dataset_dir():
         
         f.close()
         #escribir los datos con open -- write --close
-        #cmd = "echo {} > /media/lara/Dataset_SMALL/Shared/current.txt".format(angle_path.parent)
-        with open("/media/lara/Dataset_SMALL/Shared/wpython.txt",'w') as f:
+        #cmd = "echo {} > /media/NAS_SMALL/Dataset_SMALL/Shared/current.txt".format(angle_path.parent)
+        with open("/media/NAS_SMALL/Dataset_SMALL/Shared/wpython.txt",'w') as f:
             f.write("{}".format(Path(*angle_path.parts[3:]).parent))
         #os.system(cmd)
         handler.mqtt_client._userdata['savename'] = angle_path.parent / "out_cont.npy"
@@ -4325,7 +4335,7 @@ def process_dataset_dir():
         print("Echo dir > current.txt")
         state = 0
         while state != 1:
-            with open('/media/lara/Dataset_SMALL/Shared/wjaer.txt','r',encoding='ascii') as f:
+            with open('/media/NAS_SMALL/Dataset_SMALL/Shared/wjaer.txt','r',encoding='ascii') as f:
                 r = f.readline()
                 try:
                     state = int(r)
@@ -4334,7 +4344,7 @@ def process_dataset_dir():
                     pass
                 time.sleep(0.1)
         
-        with open("/media/lara/Dataset_SMALL/Shared/wpython.txt",'w') as f:
+        with open("/media/NAS_SMALL/Dataset_SMALL/Shared/wpython.txt",'w') as f:
             f.write("2")
 
         print("State = 1")       
@@ -4354,7 +4364,7 @@ def process_dataset_dir():
         print("Trayectoria enviada")
         while running:
             while state != 2:
-                with open('/media/lara/Dataset_SMALL/Shared/wjaer.txt','r',encoding="ascii") as f:
+                with open('/media/NAS_SMALL/Dataset_SMALL/Shared/wjaer.txt','r',encoding="ascii") as f:
                     r = f.readline()
                     try:
                         state = int(r)
@@ -4374,5 +4384,145 @@ def process_dataset_dir():
         #     f.write("0")
     #1.- convert to json
     
+    handler.pb.close()
    # handler.filename = input_dir
     
+
+def process_dataset_dir():
+    #añadir logging
+    from argparse import ArgumentParser
+    import pandas as pd
+    parser = ArgumentParser()
+    parser.add_argument("input_dir",type=str,action="store",help="Root directory with dataset structure")
+    parser.add_argument("weight",type=str,action="store",help="Name of the output file",default="out_cont.npy")
+    parser.add_argument("--broker_ip","-ip",type=str,action="store",help="IP of the broker we want to connect to",default="192.168.1.104")#TO BE CHANGED
+    parser.add_argument("--visual_kin","-vk",action="store_true",help="Flag to indicate if trajectories were generated with visual kinematics framework",default=False)
+    parser.add_argument("--generate_xyz","-xyz",action="store_true",help="Flag to indicate if output xyz data should be generated",default=False)
+    parser.add_argument("--generate_angles","-angs",action="store_true",help="Flag to indicate if output angle-space data should be generated",default=False)
+    parser.add_argument("--generate_omegas","-omega",action="store_true",help="Flag to indicate if output angular velocity data should be generated",default=False)
+    parser.add_argument("--no_run","-nr",action="store_true",help="Flag to indicate if output angular velocity data should be generated",default=False)
+    parser.add_argument("--radians","-rad",action="store_true",help="Flag to indicate if output angles should be in radians",default=False)
+    parser.add_argument("--record","-r",action="store_true",help="Whether to record cameras output or not",default=False)
+    args = parser.parse_args()
+    input_dir = Path(args.input_dir)
+   # output_file = Path(args.output_file)
+
+    ip = args.broker_ip
+    weight = args.weight
+    visual = args.visual_kin
+    xyz = args.generate_xyz
+    angles = args.generate_angles
+    omega = args.generate_omegas
+    no_run = args.no_run
+    radians = args.radians
+    record = args.record
+    # 
+
+    if not no_run:
+        handler = pyEDScorbotTool(visible=False,remote=True,savename="out_cont.npy")
+        handler.mqtt_client = handler.open_mqtt(ip)
+        global running
+        # with open("/media/NAS_SMALL/Dataset_SMALL/Shared/wpython.txt",'w') as f:
+        #         f.write("2")
+        for angle_path in sorted(input_dir.rglob("angles.npy")):
+            out_path = angle_path.parent / "out_cont.npy"
+            if out_path.exists():
+                continue
+            arr = np.load(angle_path,allow_pickle=True)
+            n = arr.shape[0]
+            #df = pd.DataFrame(arr)
+            padded_refs = a_to_j.angles_to_json(arr,visual=visual)
+            real_name = angle_path.name
+            mid_json_fname = angle_path.stem+"_refs.json"
+            json_abspath = angle_path.parent/mid_json_fname
+            f = open(json_abspath,"w")
+        
+            js = json.dump(padded_refs.tolist(),f,indent=4)
+            
+            f.close()
+            #escribir los datos con open -- write --close
+            #cmd = "echo {} > /media/NAS_SMALL/Dataset_SMALL/Shared/current.txt".format(angle_path.parent)
+            # with open("/media/NAS_SMALL/Dataset_SMALL/Shared/wpython.txt",'w') as f:
+            #     f.write("{}".format(Path(*angle_path.parts[3:]).parent))
+            #os.system(cmd)
+            handler.mqtt_client._userdata['savename'] = angle_path.parent / "out_cont.npy"
+            handler.mqtt_client._userdata['filename'] = angle_path.parent / json_abspath.name
+            
+            # print("Echo dir > current.txt")
+            # state = 0
+            # while state != 1:
+            #     with open('/media/NAS_SMALL/Dataset_SMALL/Shared/wjaer.txt','r',encoding='ascii') as f:
+            #         r = f.readline()
+            #         try:
+            #             state = int(r)
+            #         except ValueError:
+            #             state = 0
+            #             pass
+            #         time.sleep(0.1)
+            
+            # with open("/media/NAS_SMALL/Dataset_SMALL/Shared/wpython.txt",'w') as f:
+            #     f.write("2")
+
+            # print("State = 1")       
+                
+
+
+            cmd = "scp -i /media/HDD/home/enrique/Proyectos/SMALL/zynq/zynq {} root@192.168.1.115:/home/root/{}".format(json_abspath,mid_json_fname)
+            os.system(cmd)
+            running = True
+            print("Scp json --> zynq")
+            if record:
+                script = "run_all_record.bash"
+            else:
+                script = "run_all.bash"
+            cmd = '/bin/bash /media/HDD/home/enrique/Proyectos/SMALL/scripts_camaras/{} {}'.format(script,angle_path.parent)
+            os.system(cmd)
+            print("Camaras grabando")
+
+            handler.send_trajectory(json_abspath.name,n,angle_path.parent.name)
+            print("Trayectoria enviada")
+            while running:
+                # while state != 2:
+                #     with open('/media/NAS_SMALL/Dataset_SMALL/Shared/wjaer.txt','r',encoding="ascii") as f:
+                #         r = f.readline()
+                #         try:
+                #             state = int(r)
+                #         except ValueError:
+                #             state = 0
+                #             pass
+                time.sleep(1)
+            
+            # base = Path(os.environ['HOME'])
+            # filename = base / Path(".tmp") / Path("trajectory_execution.txt")
+            # os.makedirs(filename.parent,exist_ok=True)
+            # with open(filename,'w') as f:
+            #     f.write("0")
+
+            #cmd = "echo 0 > /media/lara/Dataset_SMALL/Shared/current.txt"
+            # with open("/media/lara/Dataset_SMALL/Shared/wpython.txt",'w') as f:
+            #     f.write("0")
+        
+        handler.pb.close()
+    if xyz:
+        for out_cont in sorted(input_dir.rglob("out_cont.npy")):
+            from pyEDScorbotTool.utils.transformations.cont_to_xyz import cont_to_xyz
+            conts = np.load(out_cont)
+            xyz_traj = cont_to_xyz(conts)
+            np.save(out_cont.parent /"out_xyz.npy",xyz_traj)
+        #xyz generation from conts
+    if angles:
+        for out_cont in sorted(input_dir.rglob("out_cont.npy")):
+            from pyEDScorbotTool.utils.transformations.count_to_angle import cont_to_angle
+            conts = np.load(out_cont)
+            angles,qs,_ = cont_to_angle(conts,radians)
+            np.save(out_cont.parent /"out_angles.npy",angles)
+        #angle generation from conts
+
+    if omega:
+        for out_cont in sorted(input_dir.rglob("out_cont.npy")):
+            from pyEDScorbotTool.utils.transformations.count_to_angle import cont_to_angle
+            conts = np.load(out_cont)
+            angles,cs,_ = cont_to_angle(conts,rad=True)
+            omegas = np.diff(angles,axis=0)
+            np.save(out_cont.parent /"out_omega.npy",omegas*100)
+        #omegas generation from angles

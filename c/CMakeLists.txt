@@ -13,10 +13,10 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(argparse)
 
-execute_process(
-    COMMAND bash "-c" "../mosquitto_build.sh" 
-    OUTPUT_VARIABLE FOO
-)
+#execute_process(
+#    COMMAND bash "-c" "../mosquitto_build.sh" 
+#    OUTPUT_VARIABLE FOO
+#)
 
 
 ## Compile as C++11, supported in ROS Kinetic and newer
@@ -26,6 +26,7 @@ add_subdirectory("json")
 add_subdirectory("mosquitto")
 
 #add_subdirectory("src/include")
+# remove trajectory dolfer due to compilation problems(dependencies)
 add_subdirectory("src/trajectory")
 add_subdirectory("src/mqtt_server")
 #set(nlohmann_json_DIR "/home/enrique/Trabajo/Py-EDScorbotTool/c/src/json/cmake")
@@ -35,7 +36,7 @@ add_subdirectory("src/mqtt_server")
 ## is used, also find other catkin packages
 
 SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fPIC --static  -DEDS_VERBOSE")
-SET(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -DEDS_VERBOSE")
+SET(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} --static -DEDS_VERBOSE")
 SET(HEADER_FILES src/include/EDScorbot.hpp)
 #cmake_path(SET project_base_dir ..)
 #message("Directorios: ${CMAKE_BINARY_DIR}\t${CMAKE_SOURCE_DIR}\t${CMAKE_CURRENT_BINARY_DIR}\t${CMAKE_CURRENT_SOURCE_DIR}")
@@ -46,7 +47,7 @@ SET(HEADER_FILES src/include/EDScorbot.hpp)
 #add_library(test_target SHARED src/testModule.cpp)
 #add_executable(test_edscorbot src/EDScorbot.cpp src/test_joints.cpp src/devmem.cpp)
 #add_executable(server src/server.cpp src/EDScorbot.cpp src/devmem.cpp)
-add_executable(read_joints src/EDScorbot/EDScorbot.cpp src/scripts/read_joints.cpp src/EDScorbot/devmem.cpp ${HEADER_FILES})
+add_executable(read_joints src/EDScorbot/EDScorbot.cpp src/scripts/read_joints.cpp src/EDScorbot/devmem.cpp src/trajectory/utils.cpp ${HEADER_FILES})
 add_executable(test_arrays src/test_scripts/test_arrays.cpp)
 add_executable(test_argparse src/test_scripts/test_argparse.cpp)
 
@@ -60,7 +61,13 @@ add_executable(sendRef src/scripts/sendRefJx.cpp src/EDScorbot/EDScorbot.cpp src
 #add_executable(trajectory src/trajectory.cpp src/EDScorbot.cpp src/devmem.cpp)
 # add_executable(mqtt_client src/mqtt_client.c)
 
+#executable for mocked server
 
+#executable for conversion tests of objects, json and strings (new model)
+
+add_executable(tests_json_objects src/test_scripts/test_json_objects.cpp)
+
+add_executable(test_pthread src/test_scripts/test_pthread.c)
 
 #add_library(image_generator SHARED src/Image_generator.cpp)
 
@@ -76,22 +83,35 @@ add_executable(sendRef src/scripts/sendRefJx.cpp src/EDScorbot/EDScorbot.cpp src
 
 #message("My test's working directory: ${PROJECT_SOURCE_DIR}")
 # target_include_directories(read_joints PUBLIC "c/json/single_include/")
-target_include_directories(read_joints PUBLIC "src")
+target_include_directories(read_joints PUBLIC "src" "./" "${CMAKE_CURRENT_SOURCE_DIR}/json/single_include/")
 
 # target_include_directories(test_json PUBLIC "c/json/single_include/")
-target_include_directories(test_json PUBLIC "src")
+target_include_directories(test_json PUBLIC "src" "${CMAKE_CURRENT_SOURCE_DIR}/json/single_include/")
 
 # target_include_directories(home PUBLIC "c/json/single_include/")
-target_include_directories(home PUBLIC "src" "./")
+target_include_directories(home PUBLIC "src" "./" "${CMAKE_CURRENT_SOURCE_DIR}/json/single_include/")
 
 
 # target_include_directories(reset PUBLIC "c/json/single_include/")
-target_include_directories(reset PUBLIC "src" "./")
-target_include_directories(send_home PUBLIC "src" "./")
+target_include_directories(reset PUBLIC "src" "./" "${CMAKE_CURRENT_SOURCE_DIR}/json/single_include/")
+target_include_directories(send_home PUBLIC "src" "./" "${CMAKE_CURRENT_SOURCE_DIR}/json/single_include/")
 
 target_include_directories(test_argparse PUBLIC "src" "./")
 
+#target_include_directories(sendRef PUBLIC "src" "./" "${CMAKE_CURRENT_SOURCE_DIR}/json/single_include/")
 target_include_directories(sendRef PUBLIC "src" "./" "${CMAKE_CURRENT_SOURCE_DIR}/json/single_include/")
+
+
+target_include_directories(tests_json_objects PUBLIC "src" "${CMAKE_CURRENT_SOURCE_DIR}/json/single_include/")
+
+target_include_directories(test_pthread PUBLIC "src" "${CMAKE_CURRENT_SOURCE_DIR}/json/single_include/")
+
+#TARGET_LINK_LIBRARIES(mocked_server PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/compiled_libs_x86/libmosquitto_static.a" -lpthread )
+
+#TARGET_LINK_LIBRARIES(mocked_server PRIVATE /home/adalberto/Downloads/tmp/mosquitto/lib/libmosquitto.a -lpthread )
+
+TARGET_LINK_LIBRARIES(test_pthread PRIVATE -lpthread )
+TARGET_LINK_LIBRARIES(read_joints PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/compiled_libs_armhf/libmosquitto.a -lpthread)
 
 #target_include_directories(reset PUBLIC "c/src/include")
 
@@ -111,16 +131,18 @@ target_include_directories(sendRef PUBLIC "src" "./" "${CMAKE_CURRENT_SOURCE_DIR
 
 #TARGET_LINK_LIBRARIES(test_target PRIVATE ${DV_LIBRARIES})
 # TARGET_LINK_LIBRARIES(test_edscorbot PRIVATE nlohmann_json::nlohmann_json)
-TARGET_LINK_LIBRARIES(read_joints PRIVATE nlohmann_json::nlohmann_json)
-TARGET_LINK_LIBRARIES(test_json PRIVATE nlohmann_json::nlohmann_json)
 
-TARGET_LINK_LIBRARIES(home PRIVATE nlohmann_json::nlohmann_json)
+## commented because nlohmann lib has been compiled and installed with make install
+#TARGET_LINK_LIBRARIES(read_joints PRIVATE nlohmann_json::nlohmann_json)
+#TARGET_LINK_LIBRARIES(test_json PRIVATE nlohmann_json::nlohmann_json)
 
-TARGET_LINK_LIBRARIES(reset PRIVATE nlohmann_json::nlohmann_json)
-TARGET_LINK_LIBRARIES(send_home PRIVATE nlohmann_json::nlohmann_json)
+#TARGET_LINK_LIBRARIES(home PRIVATE nlohmann_json::nlohmann_json)
 
-TARGET_LINK_LIBRARIES(test_argparse PUBLIC argparse)
-TARGET_LINK_LIBRARIES(test_argparse PRIVATE argparse nlohmann_json::nlohmann_json)
+#TARGET_LINK_LIBRARIES(reset PRIVATE nlohmann_json::nlohmann_json)
+#TARGET_LINK_LIBRARIES(send_home PRIVATE nlohmann_json::nlohmann_json)
+
+#TARGET_LINK_LIBRARIES(test_argparse PUBLIC argparse)
+#TARGET_LINK_LIBRARIES(test_argparse PRIVATE argparse nlohmann_json::nlohmann_json)
 
 
 

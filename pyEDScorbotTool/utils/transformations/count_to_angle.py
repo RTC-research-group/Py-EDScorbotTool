@@ -40,7 +40,7 @@ def count_to_angle(motor,count):
         
 
         return f(count)
-def cont_to_angle(conts,timestamps=False,visual=False):
+def cont_to_angle(conts,rad=False,timestamps=False,visual=False):
     
     qs = []
     cs = []
@@ -54,14 +54,16 @@ def cont_to_angle(conts,timestamps=False,visual=False):
         if timestamps:
             ts = row[6]
         
-        if not visual:
-            q1 = -(count_to_angle(1,c1) * np.pi/180)
-            q2 = -(count_to_angle(2,c2) * np.pi/180)
-        else:
-            q1 = (count_to_angle(1,c1) * np.pi/180)
-            q2 = (count_to_angle(2,c2) * np.pi/180)    
-        q3 = count_to_angle(3,c3) * np.pi/180
-        q4 = count_to_angle(4,c4) * np.pi/180
+        
+        if visual:
+            c1 = -c1
+            c2 = -c2
+            
+        
+        q1 = count_to_angle(1,c1)# * np.pi/180)
+        q2 = count_to_angle(2,c2)# * np.pi/180)
+        q3 = count_to_angle(3,c3) #* np.pi/180
+        q4 = count_to_angle(4,c4) #* np.pi/180
         
         qs.append([q1,q2,q3,q4])
         cs.append([c1,c2,c3,c4])
@@ -69,7 +71,17 @@ def cont_to_angle(conts,timestamps=False,visual=False):
             timestamps.append(ts)
         except:
             pass 
-    return np.array(qs),np.array(cs)#,np.array(timestamps)
+    if timestamps:
+
+        if rad:
+            return (np.array(qs)*(np.pi/180)),np.array(cs),np.array(timestamps)
+        else:
+            return np.array(qs),np.array(cs),np.array(timestamps)
+    else:
+        if rad:
+            return (np.array(qs)*(np.pi/180)),np.array(cs),None
+        else:
+            return np.array(qs),np.array(cs),None
 
 
 

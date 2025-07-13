@@ -1,0 +1,1 @@
+/usr/bin/c++    -fPIC -DEDS_VERBOSE -g CMakeFiles/mqtt_server.dir/mqtt_server.cpp.o CMakeFiles/mqtt_server.dir/__/EDScorbot/EDScorbot.cpp.o CMakeFiles/mqtt_server.dir/__/EDScorbot/devmem.cpp.o -o mqtt_server  /home/adalberto/Downloads/tmp/mosquitto/lib/libmosquitto.a -lpthread 
