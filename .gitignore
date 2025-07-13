@@ -141,4 +141,4 @@ docs/
 pyEDScorbotTool/20230116_target_trajectories*/*
 pyEDScorbotTool/FIXED*/**
 .gdbinit
-.npy
+*.npy
