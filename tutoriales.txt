@@ -1,0 +1,4 @@
+posibles tutoriales:
+
+- enviar una trayectoria y recoger los datos
+- enviar una trayectoria con diferentes tiempos de espera entre puntos

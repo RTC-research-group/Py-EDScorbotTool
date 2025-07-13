@@ -26,4 +26,5 @@ Py-EDScorbotTool's documentation
    
    pyapi
    capi
+   tutoriales
    
