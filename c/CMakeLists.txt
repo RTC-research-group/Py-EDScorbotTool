@@ -23,6 +23,8 @@ FetchContent_MakeAvailable(argparse)
 add_compile_options(-std=c++17)
 
 add_subdirectory("json")
+add_subdirectory("mosquitto")
+
 #add_subdirectory("src/include")
 # remove trajectory dolfer due to compilation problems(dependencies)
 add_subdirectory("src/trajectory")
